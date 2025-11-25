@@ -1,0 +1,41 @@
+version: "3.8"
+
+
+services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - app-networks
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: fastapi_database
+
+  backend:
+    build: ./backend       # สร้าง Image จาก Dockerfile ในโฟลเดอร์ backend
+    container_name: fastapi-backend
+    ports:
+      - "8000:8000"        # Map Port 8000 ของเครื่องเรา เข้าหา 8000 ของ Container
+    volumes:
+      - ./backend:/app    
+    networks:
+      - app-networks
+    depends_on:
+      - db                 
+    environment:
+      - DATABASE_URL=postgresql://myuser:password@db:5432/fastapi_database
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+  
+
+volumes:
+  pg_data:    
+
+networks:
+  app-networks:
+    driver: bridge
+

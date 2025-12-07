@@ -2,6 +2,7 @@ version: "3.8"
 
 
 services:
+  
   db:
     image: postgres:15-alpine
     restart: always
@@ -30,6 +31,8 @@ services:
     environment:
       - DATABASE_URL=postgresql://myuser:password@db:5432/fastapi_database
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    env_file:
+      - .env
   
 
 volumes:

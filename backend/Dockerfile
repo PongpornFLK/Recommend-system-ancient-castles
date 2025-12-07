@@ -1,16 +1,15 @@
 # เลือก Base Image
 FROM python:3.9-slim
 
-# Setup working directory ภายใน Img
+# Setup dir ใน Img
 WORKDIR /app
 
-# คัดลอก FILE ที่จำเป็นเข้าไปใน Img
+# คัดลอก FILE เข้า Img
 COPY requirements.txt .
 
-#RUN Command เพื่อติดตั้ง dependencies ภายใน Img
 RUN pip install -r requirements.txt
 
-# คัดลอก Source Code เข้าไปใน Img
+# คัดลอก Source Code เข้า Img
 COPY . .
 
 # กำหนดคำสั่งเริ่มต้นเมื่อ Run Container ทำงาน

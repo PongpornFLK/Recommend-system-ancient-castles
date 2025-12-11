@@ -16,6 +16,11 @@ services:
       POSTGRES_USER: myuser
       POSTGRES_PASSWORD: password
       POSTGRES_DB: fastapi_database
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U myuser -d fastapi_database"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   backend:
     build: ./backend       # สร้าง Image จาก Dockerfile ในโฟลเดอร์ backend
@@ -27,7 +32,8 @@ services:
     networks:
       - app-networks
     depends_on:
-      - db                 
+      db:
+        condition: service_healthy
     environment:
       - DATABASE_URL=postgresql://myuser:password@db:5432/fastapi_database
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload

@@ -2,8 +2,12 @@ from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 from datetime import datetime
 
+#### TOKEN เพื่อ check 
+class Token(BaseModel):
+    access_token : str
+    token_type : str
 
-##### User 
+##### UserRegister
 class UserBase(BaseModel):
     username: str
     email: EmailStr
@@ -11,12 +15,18 @@ class UserBase(BaseModel):
     roles: str = "user"
 
 class UserCreate(UserBase): # สำหรับรับ field ทั้งหมดจาก UserBase + password เพื่อสร้าง
-    password: str  
+    password: str
+    
+class UserUpdate(BaseModel):
+    username: Optional[str] = None
+    email: Optional[EmailStr] = None
+    tel: Optional[str] = None
 
 class UserResponse(UserBase): # สำหรับ Response -> ห้ามส่ง Password กลับ
     user_id: int
     class Config: # อ่านข้อมูลจาก SQLAlchemy
         from_attributes = True
+        
 
 ##### Search History 
 class SearchHistoryBase(BaseModel):

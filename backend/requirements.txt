@@ -1,7 +1,12 @@
 fastapi
 uvicorn
 sqlalchemy
+passlib==1.7.4
 psycopg2-binary
 python-dotenv
 pydantic
+pyjwt
+python-multipart
 email-validator
+loguru
+bcrypt==3.2.0

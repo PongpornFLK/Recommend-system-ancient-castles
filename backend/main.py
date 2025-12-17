@@ -33,6 +33,9 @@ app = FastAPI()
 
 app.include_router(routeApi)
 
+
+# ------------------------------------------------------------------ Functions ------------------------------------------------------------------
+
 # สำหรับ Encrypt pwd ใช้ตอน Register
 def get_password_hash(password):
     return pwd_context.hash(password)
@@ -54,7 +57,7 @@ def authenticate_user(username : str , password : str , db):
 # print(f"Hashed password: {hashed}")
 
 def createToken(username : str , user_id : int , expires_delta: Optional[timedelta] = None):
-    encode = {'sub' : username , 'id' : user_id}
+    encode = {'sub' : username , 'user_id' : user_id}
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
@@ -63,6 +66,22 @@ def createToken(username : str , user_id : int , expires_delta: Optional[timedel
     isJWT = jwt.encode(encode, SECRET_KEY, algorithm=ALGORITHM)
     return isJWT
 
+async def getCurrentUser(token : Annotated[str , Depends(oauth2_scheme)]):
+    try:
+        payload = jwt.decode(token , SECRET_KEY , algorithms=[ALGORITHM])
+        username : str = payload.get('sub')
+        user_id : int = payload.get('user_id')
+        
+        if username is None or user_id is None:
+            raise HTTPException(status_code=401 , detail="Not Validate")
+        return {'username' : username , "user_id" : user_id}
+    
+    except JWTError:
+        raise HTTPException(status_code=401 , detail="Not Validate ")
+        
+    
+
+# ------------------------------------------------------------------ PATH ------------------------------------------------------------------
 
 @app.get("/")
 def testServer():
@@ -81,7 +100,7 @@ def loginAccessToken( user : Annotated[OAuth2PasswordRequestForm , Depends()] , 
     
     return {"access_token" : token , "token_type" : "bearer"}
 
-### User ( Register )###
+### Role : User ( Register )###
 @app.post("/users" , response_model = UserResponse)
 def createUser(user: UserCreate , db: Session = Depends(get_db)):
 
@@ -93,17 +112,21 @@ def createUser(user: UserCreate , db: Session = Depends(get_db)):
     logger.info(f"success- id : {db_user.user_id} pass: {db_user.password}")
     return db_user
 
-# get บางตัว
-@app.get("/users/{user_id}"  , response_model = UserResponse )
+@app.get("/users/{user_id}"  , response_model = UserResponse ) #### get บางตัว
 def readUser(user_id : int , db : Session = Depends(get_db)):
 	db_user = db.query(User).filter(User.user_id == user_id).first()
 	return db_user
 
-# get all
-@app.get("/users"  , response_model = List[UserResponse] )
+@app.get("/users"  , response_model = List[UserResponse] ) #### get all
 def readUserAll(db : Session = Depends(get_db)):
 	db_user = db.query(User).all()
 	return db_user
+
+@app.get("/users/active"  , status_code=200)
+async def readUserActive(user : Annotated[dict , Depends(getCurrentUser)] , db : Annotated[Session ,Depends(get_db)]):
+    if user is None :  
+        raise HTTPException(status_code=401, detail="Auth Fail")
+    return user
 	
 @app.put("/users/{user_id}"  , response_model = UserResponse )
 async def updateUser(user_id : int ,user: UserUpdate ,db : Session=Depends(get_db)):
@@ -124,3 +147,8 @@ async def deleteUser(user_id: int, db: Session = Depends(get_db)):
     db.delete(db_user)
     db.commit()
     return {"message": "Delete Success"}
+
+
+### Role : User get data ###
+
+### Role : Admin manage data ###

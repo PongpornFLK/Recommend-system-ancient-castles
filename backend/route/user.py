@@ -49,10 +49,17 @@ async def updateUser(user_id : int ,user: UserUpdate ,db : Session=Depends(get_d
 
 
 @router.delete("/{user_id}")
-async def deleteUser(user_id: int, db: Session = Depends(get_db)):
+async def deleteUser(user_id : int , user : Annotated[dict , Depends(getCurrentUser)], db: Session = Depends(get_db)):
+    
+    if user["roles"] != "admin":
+        raise HTTPException(status_code=404 , detail = "Only Admin can Delete!!")
+    
     db_user = db.query(User).filter(User.user_id == user_id).first()
+    
     if db_user is None:
         raise HTTPException(status_code=404, detail="Not Found")
+    
     db.delete(db_user)
     db.commit()
+        
     return {"message": "Delete Success"}

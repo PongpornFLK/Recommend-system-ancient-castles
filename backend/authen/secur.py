@@ -35,8 +35,8 @@ def authenticate_user(username : str , password : str , db):
 # hashed = get_password_hash(password)
 # print(f"Hashed password: {hashed}")
 
-def createToken(username : str , user_id : int , expires_delta: Optional[timedelta] = None):
-    encode = {'sub' : username , 'user_id' : user_id}
+def createToken(username : str , user_id : int , roles : str , expires_delta: Optional[timedelta] = None):
+    encode = {'sub' : username , 'user_id' : user_id , 'roles' : roles}
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
@@ -50,10 +50,11 @@ async def getCurrentUser(token : Annotated[str , Depends(oauth2_scheme)]):
         payload = jwt.decode(token , SECRET_KEY , algorithms=[ALGORITHM])
         username : str = payload.get('sub')
         user_id : int = payload.get('user_id')
+        roles : str = payload.get('roles')
         
         if username is None or user_id is None:
             raise HTTPException(status_code=401 , detail="Not Validate")
-        return {'username' : username , "user_id" : user_id}
+        return {'username' : username , "user_id" : user_id , "roles" : roles}
     
     except JWTError:
         raise HTTPException(status_code=401 , detail="Not Validate ")

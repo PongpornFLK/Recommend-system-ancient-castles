@@ -12,7 +12,7 @@ class UserBase(BaseModel):
     username: str
     email: EmailStr
     tel: str
-    roles: str = "user"
+    roles: str = "user" or "admin"
 
 class UserCreate(UserBase): # สำหรับรับ field ทั้งหมดจาก UserBase + password เพื่อสร้าง
     password: str

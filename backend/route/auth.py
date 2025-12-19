@@ -19,7 +19,8 @@ def loginAccessToken( user : Annotated[OAuth2PasswordRequestForm , Depends()] , 
         raise HTTPException(status_code=401 , detail="Incorrect username or password")
     token = createToken(
         username = userAuth.username,  
-        user_id = userAuth.user_id,   
+        user_id = userAuth.user_id,
+        roles = user['roles'],
         expires_delta = timedelta(minutes=20)
     )
     

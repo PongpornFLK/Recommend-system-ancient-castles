@@ -7,6 +7,11 @@ yarn-error.log*
 pnpm-debug.log*
 .next/cache
 
+# bun
+bun-debug.log*
+.bun
+bun.lockb.gz
+
 # Next.js build output
 .next
 /out

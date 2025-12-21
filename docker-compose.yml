@@ -2,12 +2,17 @@ version: "3.8"
 
 
 services:
-  app:
-    build: ./frontend
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
+  
+  # app:
+  # # ใช้ตอน deploy
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile      
+  #   ports:
+  #     - "80:3000"                 
+  #   environment:
+  #     - NODE_ENV=production
+    
       
   db:
     image: postgres:15-alpine

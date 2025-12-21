@@ -1,33 +1,36 @@
-FROM node:23-alpine AS builder
+# Stage 1: Install dependencies
+FROM oven/bun:1.1-alpine AS deps
 WORKDIR /app
+COPY package.json bun.lockb ./
+RUN bun install --frozen-lockfile
 
-# Copy package.json เข้าไปใน Container เพื่อติดตั้ง Package ต่างๆ
-COPY package.json ./
-
-# ติดตั้ง Package ต่างๆที่ต้องใช้
-RUN npm install
-
-# Copy code ส่วนที่เหลือเช้าไปใน Container
+# Stage 2: Build the application
+FROM oven/bun:1.1-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+ENV NEXT_TELEMETRY_DISABLED 1
+RUN bun run build
 
-# Build Next application
-RUN npm run build
-
-# เราควรจะใช้ Base Image ตัวเดียวกับ Builder ตัวก่อนหน้าเพื่อไม่ให้มีปัญหาเรื่อง Version
-FROM node:23-alpine AS runner
+# Stage 3: Production runner
+FROM oven/bun:1.1-alpine AS runner
 WORKDIR /app
 
-# ติดตั้ง Next CLI
-RUN npm install -g next
+ENV NODE_ENV production
+ENV NEXT_TELEMETRY_DISABLED 1
 
-# กำหนด Environment เป็น Production
-ENV NODE_ENV=production
+# Create a non-root user for security
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
-# Copy output และ dependencies จาก Builder
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/node_modules ./node_modules
+# Copy standalone build and static files
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+USER nextjs
 EXPOSE 3000
-# Start Next application
-CMD ["npm", "run", "start"]
+ENV PORT 3000
+
+# Next.js standalone server uses node to run
+CMD ["bun", "server.js"]

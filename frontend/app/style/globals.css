@@ -1,0 +1,23 @@
+/* 
+A. เรียกใช้งาน Tailwind
+B. ตั้งค่า Default ของทั้งเว็บ เช่น การกำหนด Font หลัก, สีพื้นหลัง Default ของ Body
+C. สร้าง Custom Class ด้วย @apply (ใช้เมื่อจำเป็น) 
+*/
+
+@import "tailwindcss";
+@plugin './hero.ts';
+@source '../../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
+@custom-variant dark (&:is(.dark *));
+
+/* Root Color */
+@theme {
+  --color-tone-orange: #D2691E;
+  --color-tone-olive: #6B8E23;
+  --color-tone-gray: #8B7D6B;
+  --color-tone-cream: #F7F3E9;
+  --color-tone-blue: #2596FF;
+}
+
+html {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}

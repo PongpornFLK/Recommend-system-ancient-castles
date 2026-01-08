@@ -20,7 +20,7 @@ def loginAccessToken( user : Annotated[OAuth2PasswordRequestForm , Depends()] , 
     token = createToken(
         username = userAuth.username,  
         user_id = userAuth.user_id,
-        roles = user['roles'],
+        roles = userAuth.roles,
         expires_delta = timedelta(minutes=20)
     )
     

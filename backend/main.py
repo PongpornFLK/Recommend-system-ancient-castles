@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from db import Base , engine
 from route import auth , user
+from fastapi.middleware.cors import CORSMiddleware
 
 # Create Table และ Check err
 try:
@@ -10,6 +11,21 @@ except Exception as e:
     print(f"Error Err : {e} ")
     
 app = FastAPI()
+
+origins = [
+    "http://localhost:3000",      
+    "http://127.0.0.1:8000/auth/token",
+    "http://127.0.0.1:8000/users",
+                   
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,       
+    allow_credentials=True,    
+    allow_methods=["*"],         
+    allow_headers=["*"],         
+)
 
 app.include_router(auth.router)
 app.include_router(user.router)

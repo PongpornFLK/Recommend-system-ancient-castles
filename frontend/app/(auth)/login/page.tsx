@@ -1,8 +1,7 @@
 "use client";
 import React, { useState } from "react";
-import { Button, Input, Image, Form } from "@heroui/react";
-import { Eye, EyeOff, LockKeyhole, User, LogIn } from "lucide-react";
-// import { LoginSuccess, LoginError } from "@/app/components/alert";
+import { Button, Input, Image, Form ,addToast} from "@heroui/react";
+import { Eye, EyeOff, LockKeyhole, User, LogIn ,  X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
@@ -48,13 +47,34 @@ export default function Login() {
       // console.log("Decode : ", decode.roles);
 
       if (decode.roles === "user") {
+        addToast({
+          hideIcon: true,
+          title: "Login Success",
+          description : "Role : User",
+          classNames: {
+            closeButton: "opacity-100 absolute right-4 top-1/2 -translate-y-1/2 font-bold",
+          },
+          closeIcon: <X />,
+          color: "success"
+        });
         router.push("/landing");
       } else if (decode.roles === "admin") {
+        addToast({
+          hideIcon: true,
+          title: "Login Success",
+          description : "Role : Admin",
+          classNames: {
+            closeButton: "opacity-100 absolute right-4 top-1/2 -translate-y-1/2 font-bold",
+          },
+          closeIcon: <X />,
+          color: "success"
+        });
         router.push("/");
       }
 
       setIsData(res.data);
     } catch (err) {
+      
       console.error("Login Error", err);
     } finally {
       setIsLoading(0);
@@ -68,27 +88,37 @@ export default function Login() {
   const toggleVisibility = () => setIsVisible(!isVisible);
 
   return (
-    <section className="min-h-screen flex items-center justify-center">
-      <div className="shadow-md mx-8 my-5 bg-white rounded-xl h-full max-h-full md:max-h-screen max-w-4xl w-full">
-        <div className="grid grid-cols-2 place-items-center">
-          <div className="justify-items-center my-10">
-            <div className="grid grid-cols-2 justify-items-center">
-              <h1 className="text-[52px] font-bold">Login</h1>
-              <LogIn size={80} />
+    <section className="min-h-screen flex items-center justify-center p-4">
+      <div className="shadow-xl bg-white rounded-2xl w-full max-w-5xl overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-2">
+          <div className="flex flex-col justify-center p-8 md:p-12 lg:p-16">
+            <div className="flex items-center justify-center gap-4 mb-6">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-tone-orange">
+                Login
+              </h1>
+              <div>
+                <LogIn
+                  size={72}
+                  className="w-12 h-12 md:w-16 md:h-16 lg:w-18 lg:h-18 text-tone-orange"
+                />
+              </div>
             </div>
-            <h2 className="my-5">
+            <h2 className="my-5 text-center">
               Please enter your username and password to login
             </h2>
+            <div className="flex items-center justify-center">
+
+
             <Form onSubmit={handleLogin} className="w-full max-w-xs">
               <Input
                 isRequired
-                errorMessage="Please enter your username"
-                className="font-bold my-5"
+                errorMessage={username === "" ? "Please enter your username" : undefined}
+                className="font-bold"
                 label="Username"
                 labelPlacement="outside"
                 placeholder="Type your username"
                 type="text"
-                startContent={<User />}
+                startContent={<User size={18}/>}
                 variant="bordered"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -100,7 +130,7 @@ export default function Login() {
                 label="Password"
                 labelPlacement="outside"
                 placeholder="Enter your password"
-                startContent={<LockKeyhole />}
+                startContent={<LockKeyhole size={18}/>}
                 variant="bordered"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -111,12 +141,12 @@ export default function Login() {
                     type="button"
                     onClick={toggleVisibility}
                   >
-                    {isVisible ? <Eye /> : <EyeOff />}
+                    {isVisible ? <Eye size={18}/> : <EyeOff size={18}/>}
                   </button>
                 }
                 type={isVisible ? "text" : "password"}
               />
-              <div className="my-5 w-full">
+              <div className="mt-8 w-full">
                 <Button
                   className="bg-tone-orange w-full text-white font-bold"
                   type="submit"
@@ -125,25 +155,29 @@ export default function Login() {
                 </Button>
               </div>
             </Form>
-            <div className="my-5">
+            </div>
+            <div className="mt-2 text-center">
               Don’t have an account?{" "}
               <Link
                 aria-current="page"
-                href="#"
+                href="/register"
                 className="text-blue-500 hover:underline font-semibold"
               >
                 Create account
               </Link>
             </div>
           </div>
-          <div className="my-10 mx-4">
+          <div className="hidden md:flex items-center justify-center p-8">
+          <div className="w-full h-full max-h-[600px] rounded-2xl overflow-hidden shadow-lg">
             <Image
               as={NextImage}
               alt="Login castle"
               src="/assets/castle/image.png"
-              width={500}
-              height={300}
+              width={600}
+              height={600}
+              className="w-full h-full object-cover"
             />
+          </div>
           </div>
         </div>
       </div>

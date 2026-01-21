@@ -12,10 +12,13 @@ C. สร้าง Custom Class ด้วย @apply (ใช้เมื่อจ
 /* Root Color */
 @theme {
   --color-tone-orange: #D2691E;
-  --color-tone-olive: #6B8E23;
+  --color-tone-green: #6B8E23;
   --color-tone-gray: #8B7D6B;
+  --color-tone-oldgray: #2F2F2F;
   --color-tone-cream: #F7F3E9;
   --color-tone-blue: #2596FF;
+  --color-tone-red: #E02C2C;
+
 }
 
 html {

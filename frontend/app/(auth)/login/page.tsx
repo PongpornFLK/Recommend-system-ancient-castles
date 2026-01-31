@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button, Input, Image, Form ,addToast} from "@heroui/react";
 import { Eye, EyeOff, LockKeyhole, User, LogIn ,  X } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -11,6 +11,8 @@ import NextImage from "next/image";
 export default function Login() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(0);
+  const [isClient, setIsClient] = useState(false)
+
 
   // fetch Data
   const [data, setIsData] = useState([]);
@@ -27,6 +29,10 @@ export default function Login() {
     exp: number;
   }
 
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+  
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setIsLoading(1);
@@ -44,7 +50,13 @@ export default function Login() {
 
       const token = res.data.access_token;
       const decode = jwtDecode<customToken>(token);
-      // console.log("Decode : ", decode.roles);
+
+      localStorage.setItem("token", token)
+      localStorage.setItem("user_id", decode.user_id.toString());
+
+      console.log("Decode : ", decode.roles);
+      console.log("User_id : " , decode.user_id);
+      console.log("Token : " , token);
 
       if (decode.roles === "user") {
         addToast({
@@ -87,6 +99,7 @@ export default function Login() {
   const [isVisible, setIsVisible] = React.useState(false);
   const toggleVisibility = () => setIsVisible(!isVisible);
 
+  if (!isClient) return <div>Loading...</div>;
   return (
     <section className="min-h-screen flex items-center justify-center p-4">
       <div className="shadow-xl bg-white rounded-2xl w-full max-w-5xl overflow-hidden">
@@ -183,4 +196,4 @@ export default function Login() {
       </div>
     </section>
   );
-}
+} 

@@ -22,7 +22,7 @@ def getHistory(user_id : int , db: Session = Depends(get_db) , current_user : Us
     if(current_user["user_id"] != user_id):
         raise HTTPException(status_code=403 , detail="You don't have permission")
     
-    db_history = db.query(TripPlan).filter(TripPlan.user_id == user_id).order_by(desc(TripPlan.created_at));
+    db_history = db.query(TripPlan).filter(TripPlan.user_id == user_id).order_by(desc(TripPlan.start_date));
     
     return paginate(db_history , Params(size = 10));
     

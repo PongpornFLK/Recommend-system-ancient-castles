@@ -17,17 +17,16 @@ add_pagination(app)
 
 origins = [
     "http://localhost:3000",      
-    "http://127.0.0.1:8000/auth/token",
-    "http://127.0.0.1:8000/users",
-    "http://127.0.0.1:8000/history",     
+    "http://127.0.0.1:3000",
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,       
+    allow_origins=origin,       
     allow_credentials=True,    
     allow_methods=["*"],         
-    allow_headers=["*"],         
+    allow_headers=["*"],    
+         
 )
 
 app.include_router(auth.router)

@@ -2,6 +2,7 @@ from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 from datetime import datetime
 
+
 #### TOKEN เพื่อ check 
 class Token(BaseModel):
     access_token : str
@@ -11,7 +12,7 @@ class Token(BaseModel):
 class UserBase(BaseModel):
     username: str
     email: EmailStr
-    tel: str
+    tel: Optional[str] = None
     roles: str = "user" or "admin"
 
 class UserCreate(UserBase): # สำหรับรับ field ทั้งหมดจาก UserBase + password เพื่อสร้าง

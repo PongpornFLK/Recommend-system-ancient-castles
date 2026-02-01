@@ -9,7 +9,6 @@
         "@heroui/button": "^2.2.29",
         "@heroui/input": "^2.4.30",
         "@heroui/navbar": "^2.2.27",
-        "@heroui/pagination": "^2.2.26",
         "@heroui/react": "^2.8.7",
         "@heroui/system": "^2.4.25",
         "@heroui/theme": "^2.4.25",

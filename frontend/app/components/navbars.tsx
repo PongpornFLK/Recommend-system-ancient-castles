@@ -99,7 +99,6 @@ export default function Navbars() {
           <p className="font-bold text-inherit text-tone-orange text-2xl">
             Ancient Castles
           </p>
-          
         </NavbarBrand>
       </NavbarContent>
 
@@ -144,14 +143,16 @@ export default function Navbars() {
                 </div>
                 <Divider className="my-3" orientation="horizontal" />
                 <div className="text-tiny grid grid-cols-1 gap-2 mt-2">
-                  <Button
-                    color="default"
-                    variant="light"
-                    startContent={<Settings size={16} />}
-                    className="justify-start pr-30"
-                  >
-                    Setting
-                  </Button>
+                  <Link href="/setuser">
+                    <Button
+                      color="default"
+                      variant="light"
+                      startContent={<Settings size={16} />}
+                      className="justify-start pr-30"
+                    >
+                      Setting
+                    </Button>
+                  </Link>
                   <Button
                     color="default"
                     variant="light"

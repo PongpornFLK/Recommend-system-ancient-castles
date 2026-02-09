@@ -1,6 +1,9 @@
+import string
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 from datetime import datetime
+
+from sqlalchemy import Boolean
 
 
 #### TOKEN เพื่อ check 
@@ -26,6 +29,17 @@ class UserUpdate(BaseModel):
 class UserResponse(UserBase): # สำหรับ Response -> ห้ามส่ง Password กลับ
     user_id: int
     class Config: # อ่านข้อมูลจาก SQLAlchemy
+        from_attributes = True
+        
+class ChangeNewPwdBase(BaseModel):
+    pass
+
+class ChangeNewPwdCreate(ChangeNewPwdBase):
+    old_pass : str
+    new_pass : str
+    
+class ChangeNewPwdResponse(ChangeNewPwdBase):
+    class Config:
         from_attributes = True
         
 

@@ -82,7 +82,7 @@ export default function Navbars() {
   return (
     <Navbar
       onMenuOpenChange={setIsMenuOpen}
-      className="shadow-xl bg-white"
+      className=""
       maxWidth="full"
     >
       <NavbarContent justify="start">

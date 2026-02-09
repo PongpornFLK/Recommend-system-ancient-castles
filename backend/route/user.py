@@ -3,6 +3,7 @@ from model.model import *
 from fastapi import Depends , HTTPException , FastAPI , APIRouter
 from sqlalchemy.orm import Session
 from db import get_db 
+from authen.secur import getCurrentUser
 from loguru import logger
 from authen.secur import *
 
@@ -65,3 +66,19 @@ async def deleteUser(user_id : int , user : Annotated[dict , Depends(getCurrentU
     db.commit()
         
     return {"message": "Delete Success"}
+
+@router.post("/changepwd")
+async def changePassword(password: ChangeNewPwdCreate,current_user: Annotated[dict, Depends(getCurrentUser)],db: Session = Depends(get_db)):  
+    user_id = current_user["user_id"]
+    db_user = db.query(User).filter(User.user_id == user_id).first()
+    
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="Not Found")
+    
+    if not verify_password(password.old_pass , db_user.password):
+        raise HTTPException(status_code=401, detail="Invalid Authentication")
+    
+    db_user.password =  pwd_context.hash(password.new_pass)
+    db.commit()
+    
+    return {"message" : "You change password success"}

@@ -9,7 +9,6 @@ import {
   useDisclosure,
   Select,
   SelectItem,
-  Divider
 } from "@heroui/react";
 import { SlidersHorizontal, CheckCheck } from "lucide-react";
 
@@ -68,10 +67,7 @@ export default function Filter() {
                       {(animal) => <SelectItem>{animal.label}</SelectItem>}
                     </Select>
                   </div>
-                  <div className="h-60">
-                    <Divider className="my-4" orientation="vertical"/>
-
-                  </div>
+                  
                   <div className="w-full">
                     <p className="text-2xl font-bold text-tone-orange mb-2">
                       Characteristics

@@ -13,9 +13,9 @@ import "swiper/css/scrollbar";
 
 export default function SlideImg() {
   const castles = [
-    { title: "ปราสาทตาควาย", img: "/assets/card/castle.png" },
-    { title: "ปราสาทพระวิหาร", img: "/assets/card/castle.png" },
-    { title: "ปราสาทสด๊กก็อกธม", img: "/assets/card/castle.png" },
+    { title: "ปราสาทตาควาย", img: "/assets/card/castle1.png" },
+    { title: "ปราสาทพระวิหาร", img: "/assets/card/castle1.png" },
+    { title: "ปราสาทสด๊กก็อกธม", img: "/assets/card/castle1.png" },
   ];
   return (
     <div>

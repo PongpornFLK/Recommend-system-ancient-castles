@@ -1,6 +1,6 @@
 "use client";
 
-import { Input } from "@heroui/react";
+import { Input, Autocomplete, AutocompleteItem } from "@heroui/react";
 import { Search } from "lucide-react";
 
 export default function Searching() {
@@ -12,6 +12,10 @@ export default function Searching() {
         startContent={<Search />}
         type="text"
       />
+      {/* <Autocomplete label="ค้นหาปราสาท" placeholder="พิมพ์ชื่อปราสาท...">
+        <AutocompleteItem key="1">ปราสาทตาควาย</AutocompleteItem>
+        <AutocompleteItem key="2">ปราสาทพระวิหาร</AutocompleteItem>
+      </Autocomplete> */}
     </div>
   );
 }

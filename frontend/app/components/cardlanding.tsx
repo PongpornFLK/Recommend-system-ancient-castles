@@ -84,8 +84,8 @@ export default function CardLanding() {
               <Image
                 removeWrapper
                 alt={item.title}
-                className="w-full object-cover h-[250px] sm:h-[200px] lg:h-[300px]"
-                radius="none"
+                className="w-full object-cover h-[250px] sm:h-[200px] lg:h-[300px] p-1"
+                radius="lg"
                 shadow="sm"
                 src={item.img}
                 width="100%"

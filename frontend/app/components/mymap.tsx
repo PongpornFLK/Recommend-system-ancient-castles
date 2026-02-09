@@ -1,12 +1,12 @@
 "use client";
 
+import React from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import { Icon, LatLngExpression } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "@/app/style/map.css";
-// import { addToast } from "@heroui/react";
-// import { X } from "lucide-react";
-
+import { addToast, Switch } from "@heroui/react";
+import { Mouse , X } from 'lucide-react';
 
 export default function MyMap() {
   const markerPlace: { position: LatLngExpression; popUp: string }[] = [
@@ -21,7 +21,6 @@ export default function MyMap() {
     iconAnchor: [12, 41],
   });
 
-
   // function success(pos: GeolocationPosition){
   //   const long = pos.coords.longitude;
   //   const lat = pos.coords.latitude;
@@ -35,7 +34,6 @@ export default function MyMap() {
   //   { position: [lat, long], radius: accuracy },
   //   ];
 
-    
   // }
 
   // function error(err : GeolocationPositionError){
@@ -65,19 +63,43 @@ export default function MyMap() {
 
   // }
 
+  const [isZoom, setIsZoom] = React.useState(true);
+
   return (
-    <div className="place-items-center ">
-      <MapContainer center={[48.8566, 2.3522]} zoom={13} scrollWheelZoom={false}>
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        />
-        {markerPlace.map((marker) => (
-          <Marker key={marker.popUp} position={marker.position} icon={markerIcon}>
-            <Popup>{marker.popUp}</Popup>
-          </Marker>
-        ))}
-      </MapContainer>
+    <div>
+      <Switch 
+        isSelected={!isZoom}
+        onValueChange={(value) => setIsZoom(!value)}
+        className="pl-7 font-bold my-5"
+        thumbIcon={<Mouse/>}
+      >
+        
+        Scroll Wheel Zoom
+      </Switch>
+      
+      <div className="place-items-center ">
+        
+        <MapContainer
+          key={`map-${!isZoom}`}
+          center={[48.8566, 2.3522]}
+          zoom={13}
+          scrollWheelZoom={!isZoom}
+        >
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          />
+          {markerPlace.map((marker) => (
+            <Marker
+              key={marker.popUp}
+              position={marker.position}
+              icon={markerIcon}
+            >
+              <Popup>{marker.popUp}</Popup>
+            </Marker>
+          ))}
+        </MapContainer>
+      </div>
     </div>
   );
 }

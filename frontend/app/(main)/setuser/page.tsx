@@ -20,6 +20,7 @@ import {
   Phone,
   SquarePen,
   X,
+  RotateCcwKey,
 } from "lucide-react";
 import axios from "axios";
 
@@ -31,7 +32,9 @@ export default function Setuser() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [tel, setTel] = useState("");
-  
+  const [oldpwd, setOldPwd] = useState("");
+  const [newpwd, setNewPwd] = useState("");
+  const [confirmnewpwd, setConfirmNewPwd] = useState("");
 
   interface UserData {
     user_id: string;
@@ -113,6 +116,56 @@ export default function Setuser() {
     }
   };
 
+  const handleChangePassword = async () => {
+    const token = localStorage.getItem("token");
+
+    if (newpwd != "" && confirmnewpwd != "" && oldpwd != "") {
+      try {
+        if (oldpwd != "" && newpwd == confirmnewpwd) {
+          const response = await axios.post(
+            `http://127.0.0.1:8000/users/changepwd`,
+            {
+              old_pass: oldpwd,
+              new_pass: newpwd,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          );
+
+          setOldPwd("");
+          setConfirmNewPwd("");
+          setNewPwd("");
+
+          addToast({
+            hideIcon: true,
+            title: "Reset password success",
+            classNames: {
+              closeButton:
+                "opacity-100 absolute right-4 top-1/2 -translate-y-1/2 font-bold",
+            },
+            closeIcon: <X />,
+            color: "success",
+          });
+        }
+      } catch (err) {
+        console.log("Not reserpassword", err);
+      }
+    } else if (oldpwd == "" || newpwd == "" || confirmnewpwd == "") {
+      addToast({
+        hideIcon: true,
+        title: "Please input full field",
+        classNames: {
+          closeButton:
+            "opacity-100 absolute right-4 top-1/2 -translate-y-1/2 font-bold",
+        },
+        closeIcon: <X />,
+        color: "danger",
+      });
+    }
+  };
 
   return (
     <section className="justify-items-center">
@@ -125,11 +178,11 @@ export default function Setuser() {
             aria-label="Options"
             placement="start"
             size="lg"
-            // variant="light"
+            variant="light"
             classNames={{
               cursor: "bg-tone-orange",
               tabContent: "group-data-[selected=true]:text-white",
-              // base: "bg-white rounded-xl",
+              base: "bg-white rounded-xl",
             }}
           >
             <Tab
@@ -143,11 +196,11 @@ export default function Setuser() {
             >
               <Card className="px-5 py-5">
                 <CardBody>
-                  <div className="flex flex-col w-2xl h-[448px]">
+                  <div className="flex flex-col w-2xl h-auto">
                     <div className="text-4xl text-center font-bold text-tone-oldgray">
                       Profile
                     </div>
-                    <div className="flex gap-3 justify-center">
+                    {/* <div className="flex gap-3 justify-center">
                       <Avatar
                         className="flex justify-center my-3"
                         size="lg"
@@ -157,9 +210,9 @@ export default function Setuser() {
                         }}
                         icon={<AvatarIcon />}
                       />
-                    </div>
+                    </div> */}
 
-                    <div className="flex items-center justify-center">
+                    <div className="flex items-center justify-center my-5">
                       {isEdit ? (
                         <>
                           <Form
@@ -257,7 +310,7 @@ export default function Setuser() {
                               handleSaveProfile();
                             }}
                             color="success"
-                            className="text-white"
+                            className="text-white w-[150px] font-bold"
                             type="submit"
                           >
                             Save
@@ -266,7 +319,7 @@ export default function Setuser() {
                             onPress={() => {
                               setIsEdit(false);
                             }}
-                            className="bg-tone-red text-white "
+                            className="bg-tone-red text-white w-[150px] font-bold"
                           >
                             Cancel
                           </Button>
@@ -278,7 +331,7 @@ export default function Setuser() {
                             onPress={() => {
                               setIsEdit(true);
                             }}
-                            className="bg-tone-green text-white"
+                            className="bg-tone-gray text-white w-[320px] font-bold"
                           >
                             Edit Profile
                           </Button>
@@ -300,12 +353,71 @@ export default function Setuser() {
             >
               <Card className="px-5 py-5">
                 <CardBody>
-                  <div className="flex flex-col w-2xl h-[448px]">
+                  <div className="flex flex-col w-2xl h-auto">
                     <div className="text-4xl text-center font-bold text-tone-oldgray">
                       Reset Password
                     </div>
 
-                    
+                    <div className="flex items-center justify-center my-5">
+                      <Form
+                        className="w-full max-w-xs"
+                        onSubmit={handleChangePassword}
+                      >
+                        <Input
+                          isRequired
+                          isInvalid={!oldpwd && isEdit}
+                          errorMessage="Please enter your Old password"
+                          className="font-bold"
+                          label="Old Password"
+                          labelPlacement="outside"
+                          placeholder="Type your old password"
+                          type="password"
+                          startContent={<LockKeyhole size={18} />}
+                          variant="bordered"
+                          value={oldpwd}
+                          onChange={(e) => setOldPwd(e.target.value)}
+                        />
+                        <Input
+                          isRequired
+                          isInvalid={!newpwd && isEdit}
+                          errorMessage="Please enter your new password"
+                          className="font-bold"
+                          label="New password"
+                          labelPlacement="outside"
+                          placeholder="Type your new password"
+                          type="password"
+                          startContent={<RotateCcwKey size={18} />}
+                          variant="bordered"
+                          value={newpwd}
+                          onChange={(e) => setNewPwd(e.target.value)}
+                        />
+                        <Input
+                          isRequired
+                          isInvalid={!confirmnewpwd && isEdit}
+                          errorMessage="Please confirm you new password"
+                          className="font-bold"
+                          label="Confirm new password"
+                          labelPlacement="outside"
+                          placeholder="Type confirm new password"
+                          type="password"
+                          startContent={<RotateCcwKey size={18} />}
+                          variant="bordered"
+                          value={confirmnewpwd}
+                          onChange={(e) => setConfirmNewPwd(e.target.value)}
+                        />
+                      </Form>
+                    </div>
+                    <div className="flex gap-4 justify-center">
+                      <Button
+                        className="bg-tone-gray text-white w-[320px] font-bold"
+                        onPress={() => {
+                          handleChangePassword();
+                        }}
+                        type="submit"
+                      >
+                        Change Password
+                      </Button>
+                    </div>
                   </div>
                 </CardBody>
               </Card>

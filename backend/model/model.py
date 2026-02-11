@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 # from pgvector.sqlalchemy import Vector
 from db import Base
+from sqlalchemy.sql import func
 
 
 ### ORM Class
@@ -68,9 +69,10 @@ class TripPlan(Base):
     event_id = Column(Integer, ForeignKey("events.event_id"), nullable=True) 
     plan_name = Column(String)
     event_description = Column(Text)
-    start_date = Column(DateTime)
-    end_date = Column(DateTime)
+    start_date = Column(DateTime(timezone=True), server_default=func.now())
+    end_date = Column(DateTime(timezone=True), server_default=func.now())
     duration = Column(Integer)
+
 
     user = relationship("User", back_populates="trip_plans")
     route = relationship("Route") # One-way trip

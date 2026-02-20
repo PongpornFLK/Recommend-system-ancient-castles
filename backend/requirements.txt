@@ -11,3 +11,6 @@ email-validator
 loguru
 bcrypt==3.2.0
 fastapi-pagination==0.15.7
+pymilvus
+sentence-transformers
+Pillow

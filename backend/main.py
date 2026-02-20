@@ -1,9 +1,13 @@
+from dotenv import load_dotenv
+load_dotenv()
 from fastapi import FastAPI
 from db import Base , engine
-from route import auth , user , history
+from route import auth, user, history, zilliz_search
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_pagination import add_pagination
-
+import os
+print("DATABASE_URL =", os.getenv("DATABASE_URL"))
+print("ZILLIZ_URI =", os.getenv("ZILLIZ_URI"))
 # Create Table และ Check err
 try:
     Base.metadata.create_all(bind=engine)
@@ -32,6 +36,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(user.router)
 app.include_router(history.router)
+app.include_router(zilliz_search.router)
 
 
 @app.get("/")

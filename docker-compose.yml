@@ -1,61 +1,49 @@
-version: "3.8"
-
-
 services:
-  
-  # app:
-  # # ใช้ตอน deploy
-  #   build:
-  #     context: ./frontend
-  #     dockerfile: Dockerfile      
-  #   ports:
-  #     - "80:3000"                 
-  #   environment:
-  #     - NODE_ENV=production
-    
-      
   db:
     image: postgres:15-alpine
     restart: always
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     ports:
       - "5432:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
     networks:
       - app-networks
-    environment:
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: fastapi_database
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U myuser -d fastapi_database"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
 
   backend:
-    build: ./backend       # สร้าง Image จาก Dockerfile ในโฟลเดอร์ backend
+    build: ./backend
     container_name: fastapi-backend
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      ZILLIZ_URI: ${ZILLIZ_URI}
+      ZILLIZ_TOKEN: ${ZILLIZ_TOKEN}
     ports:
-      - "8000:8000"        # Map Port 8000 ของเครื่องเรา เข้าหา 8000 ของ Container
-    volumes:
-      - ./backend:/app    
+      - "8000:8000"
     networks:
       - app-networks
     depends_on:
       db:
         condition: service_healthy
-    environment:
-      - DATABASE_URL=postgresql://myuser:password@db:5432/fastapi_database
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-    env_file:
-      - .env
-  
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    # ถ้าจะ dev แล้วอยาก hot reload ค่อยเปิด 2 บรรทัดนี้ทีหลัง
+    # volumes:
+    #   - ./backend:/app
 
 volumes:
-  pg_data:    
+  pg_data:
 
 networks:
   app-networks:
     driver: bridge
-

@@ -184,9 +184,9 @@ class Event(Base):
     castle_id = Column(Integer, ForeignKey("castles.castle_id"))
     event_name = Column(String)
     event_description = Column(Text)
-    event_start = Column(DateTime)
-    event_end = Column(DateTime)
-    event_time = Column(String)
+    event_date = Column(DateTime(timezone=True), server_default=func.now())
+    event_start = Column(String) 
+    event_end = Column(String)    
 
     castle = relationship("Castle", back_populates="events")
 

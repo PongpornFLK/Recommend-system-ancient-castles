@@ -203,9 +203,9 @@ class ImageResponse(ImageBase):
 class EventBase(BaseModel):
     event_name: str
     event_description: Optional[str] = None
-    event_start: datetime
-    event_end: datetime
-    event_time: Optional[str] = None
+    event_start: Optional[str] = None
+    event_end: Optional[str] = None
+    event_date: datetime
 
 class EventCreate(EventBase):
     castle_id: int
@@ -213,8 +213,25 @@ class EventCreate(EventBase):
 class EventResponse(EventBase):
     event_id: int
     castle_id: int
+    castle: Optional[CastleResponse] = None     
+    
+    @property
+    def event_date_local(self):
+        """Convert UTC datetime to local timezone (Asia/Bangkok)"""
+        from datetime import timedelta
+        # Add 7 hours for Bangkok timezone
+        return self.event_date + timedelta(hours=7)
+    
     class Config:
         from_attributes = True
+        
+class EventUpdate(EventBase) :
+    event_name : Optional[str] = None
+    event_description : Optional[str] = None
+    event_date: Optional[datetime] = None
+    event_start : Optional[str] = None
+    event_end : Optional[str] = None
+    castle: Optional[CastleResponse] = None 
 
 ##### Nearby Place 
 class NearbyPlaceBase(BaseModel):

@@ -82,7 +82,7 @@ export default function Login() {
           closeIcon: <X />,
           color: "success",
         });
-        router.push("/");
+        router.push("/managecastle");
       }
 
       setIsData(res.data);

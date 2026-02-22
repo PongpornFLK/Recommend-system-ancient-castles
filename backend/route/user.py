@@ -1,3 +1,4 @@
+from sqlalchemy import asc
 from schemas.schemas import *
 from model.model import *
 from fastapi import Depends , HTTPException , FastAPI , APIRouter
@@ -6,6 +7,8 @@ from db import get_db
 from authen.secur import getCurrentUser
 from loguru import logger
 from authen.secur import *
+from fastapi_pagination.ext.sqlalchemy import paginate 
+from fastapi_pagination import Page , Params
 
 router = APIRouter(
     prefix = '/users',
@@ -33,10 +36,14 @@ def readUser(user_id : int , db : Session = Depends(get_db)):
 	return db_user
 
 
-@router.get(""  , response_model = List[UserResponse] ) #### get all
-def readUserAll(db : Session = Depends(get_db)):
-	db_user = db.query(User).all()
-	return db_user
+@router.get("" ) #### get all
+def readUserAll(page : int = 1 , size: int=10 , db : Session = Depends(get_db) , current_user : User = Depends(getCurrentUser)) -> Page[UserResponse]:
+    if(current_user.get("roles") != "admin"):
+        raise HTTPException(status_code=403 , detail="You don't have permission")
+    
+    db_user = db.query(User).order_by(asc(User.user_id))
+    
+    return paginate(db_user , Params(page=page, size=size))
 
 
 @router.put("/{user_id}"  , response_model = UserResponse )

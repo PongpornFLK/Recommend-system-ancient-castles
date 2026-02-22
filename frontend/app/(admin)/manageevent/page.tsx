@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import {
   Button,
   Table,
@@ -37,7 +37,8 @@ import {
   Timer,
 } from "lucide-react";
 import AdminBar from "@/app/components/admin/adminbar";
-
+import ModalDelete from "@/app/components/admin/modal";
+import Searching from "@/app/components/admin/searching";
 
 export default function ManageEvent() {
   const [event, setEvent] = React.useState<EventData | null>(null);
@@ -47,16 +48,25 @@ export default function ManageEvent() {
   const [total, setTotal] = React.useState(0);
   const rowSize = 5;
   const pages = Math.ceil(total / rowSize);
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
+  const {isOpen: isDrawerOpen,onOpen: onDrawerOpen,onOpenChange: onDrawerOpenChange,} = useDisclosure();
+  const {isOpen: isModalOpen,  onOpen: onModalOpen,  onOpenChange: onModalOpenChange,} = useDisclosure()
+  
   const [eventName, setEventName] = useState("");
   const [castleName, setCastleName] = useState("");
   const [starTime, setStartTime] = useState<Time | null>(null);
   const [endTime, setEndTime] = useState<Time | null>(null);
   const [dateTime, setDateTime] = useState<Date>(new Date());
   const [description, setDescription] = useState("");
-  const [eventId, setEventId] = useState<string | null>(null);
-  const [castleId, setCastleId] = useState<string | null>(null);
+
+  const [eventId, setEventId] = useState<string>("");
+  const [castleId, setCastleId] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const filteredEvents = eventData.filter(
+    (event) =>
+      event.event_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      event.castle_name.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
 
   interface EventData {
     event_id: string;
@@ -257,7 +267,7 @@ export default function ManageEvent() {
               <Tooltip content="Edit">
                 <Button
                   onPress={() => {
-                    onOpen();
+                    onDrawerOpen();
                     setEventId(data.event_id);
                     setEventName(data.event_name);
                     setCastleName(data.castle_name);
@@ -287,7 +297,10 @@ export default function ManageEvent() {
               </Tooltip>
               <Tooltip content="Delete">
                 <Button
-                  onClick={() => deleteEvent(data.event_id)}
+                  onPress={() => {
+                    setEventId(data.event_id);
+                    onModalOpen();
+                  }}
                   isIconOnly
                   className="text-tone-red bg-white hover:bg-tone-red hover:text-white"
                   size="sm"
@@ -306,7 +319,7 @@ export default function ManageEvent() {
           return cellValue as React.ReactNode;
       }
     },
-    [onOpen, deleteEvent],
+    [onDrawerOpen, deleteEvent, onModalOpen],
   );
   return (
     <section>
@@ -316,10 +329,25 @@ export default function ManageEvent() {
       <div className="bg-white rounded-2xl mt-5">
         <div className="p-5">
           <div className="flex-1 gap-4 items-center">
-            <Input
-              placeholder="Search events..."
-              className="w-full"
-              startContent={<Search />}
+            <Searching
+              items={eventData.map((event) => ({
+                key: event.event_id,
+                title: event.event_name,
+              }))}
+              placeholder="Search events name..."
+              onInputChange={(value) => {
+                setSearchTerm(value);
+              }}
+              onSelectionChange={(key: React.Key | null) => {
+                if (key) {
+                  const selectedEvent = eventData.find(
+                    (event) => event.event_id === key,
+                  );
+                  if (selectedEvent) {
+                    setSearchTerm(selectedEvent.event_name);
+                  }
+                }
+              }}
             />
           </div>
           <div className="mt-5 font-bold">Events Table</div>
@@ -360,7 +388,7 @@ export default function ManageEvent() {
               </TableHeader>
               <TableBody
                 emptyContent={"Don't Have History..."}
-                items={eventData}
+                items={filteredEvents}
               >
                 {(item) => (
                   <TableRow key={item.event_id}>
@@ -379,7 +407,7 @@ export default function ManageEvent() {
           </div>
         </div>
 
-        <Drawer isOpen={isOpen} onOpenChange={onOpenChange}>
+        <Drawer isOpen={isDrawerOpen} onOpenChange={onDrawerOpenChange}>
           <DrawerContent>
             {(onClose) => (
               <>
@@ -495,6 +523,17 @@ export default function ManageEvent() {
             )}
           </DrawerContent>
         </Drawer>
+        <div>
+          <ModalDelete
+            isOpen={isModalOpen}
+            onOpenChange={onModalOpenChange}
+            onEvent={() => {
+              deleteEvent(eventId);
+            }}
+            item={eventId}
+            size="md"
+          />
+        </div>
       </div>
     </section>
   );

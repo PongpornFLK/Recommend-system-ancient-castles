@@ -17,6 +17,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import AdminBar from "@/app/components/admin/adminbar";
 import ModalDelete from "@/app/components/admin/modal";
+import Searching from "@/app/components/admin/searching";
 
 export default function ManageUser() {
   const [page, setPage] = React.useState(1);
@@ -27,6 +28,13 @@ export default function ManageUser() {
 
   const [userData, setUserData] = React.useState<UserData[]>([]);
   const [userId, setUserId] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState<string>("");
+
+  const filteredUsers = userData.filter(
+    (user) =>
+      user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
 
   interface UserData {
     user_id: string;
@@ -157,16 +165,31 @@ export default function ManageUser() {
       <div className="bg-white rounded-2xl mt-5">
         <div className="p-5">
           <div className="flex-1 gap-4 items-center">
-            <Input
-              placeholder="Search events..."
-              className="w-full"
-              startContent={<Search />}
+            <Searching
+              items={userData.map((user) => ({
+                key: user.user_id,
+                title: user.username,
+              }))}
+              placeholder="Search username..."
+              onInputChange={(value) => {
+                setSearchTerm(value);
+              }}
+              onSelectionChange={(key: React.Key | null) => {
+                if (key) {
+                  const selectedUser = userData.find(
+                    (user) => user.user_id === key,
+                  );
+                  if (selectedUser) {
+                    setSearchTerm(selectedUser.username);
+                  }
+                }
+              }}
             />
           </div>
-          <div className="mt-5 font-bold">Events Table</div>
+          <div className="mt-5 font-bold">Users Table</div>
           <div className="overflow-x-auto mt-5">
             <Table
-              aria-label="Events Data"
+              aria-label="Users Data"
               removeWrapper
               classNames={{
                 wrapper: "min-w-full",
@@ -201,7 +224,7 @@ export default function ManageUser() {
               </TableHeader>
               <TableBody
                 emptyContent={"Don't Have History..."}
-                items={userData}
+                items={filteredUsers}
               >
                 {(item) => (
                   <TableRow key={item.user_id}>
@@ -224,7 +247,6 @@ export default function ManageUser() {
             isOpen={isOpen}
             onOpenChange={onOpenChange}
             onEvent={() => {
-              
               deleteUser(userId);
             }}
             item={userId}

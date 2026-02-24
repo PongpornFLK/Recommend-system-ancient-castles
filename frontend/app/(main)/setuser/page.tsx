@@ -9,8 +9,6 @@ import {
   Input,
   Button,
   addToast,
-  Avatar,
-  AvatarIcon,
 } from "@heroui/react";
 import {
   UserCog,

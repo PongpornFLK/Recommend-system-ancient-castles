@@ -11,10 +11,15 @@ import {
   List,
   Route,
 } from "lucide-react";
-
+import React, { useState } from "react";
 import SelectPlace from "@/app/components/selectplace";
+import { useSearchParams } from "next/navigation";
 
 export default function Plan() {
+  const [boxSelect, setBoxSelect] = useState([
+    { id: 1, placeId: "", placeName: "" },
+  ]);
+
   return (
     <section>
       <div className="bg-white rounded-2xl mt-5 p-6 shadow-none">
@@ -25,10 +30,10 @@ export default function Plan() {
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <div className="flex items-center gap-2">
               <Chip
-                variant="flat"
+                variant="bordered"
                 color="warning"
                 startContent={<Calendar size={14} />}
-                size="lg"
+                size="md"
               >
                 Start Date
               </Chip>
@@ -37,10 +42,10 @@ export default function Plan() {
 
             <div className="flex items-center gap-2">
               <Chip
-                variant="flat"
+                variant="bordered"
                 color="warning"
                 startContent={<Navigation2 size={14} />}
-                size="lg"
+                size="md"
               >
                 Destination
               </Chip>
@@ -69,7 +74,10 @@ export default function Plan() {
               <div className="flex-1 ">
                 <h3 className="font-semibold">เพิ่มจุดแวะพัก :</h3>
                 <div className="mt-2">
-                  <SelectPlace />
+                  <SelectPlace
+                    boxSelect={boxSelect}
+                    setBoxSelect={setBoxSelect}
+                  />
                 </div>
               </div>
             </div>
@@ -103,9 +111,15 @@ export default function Plan() {
           <div className="mb-6">
             <h3 className="mb-3 font-bold">ลำดับการเดินทาง :</h3>
             <div className="space-y-2">
-              <div className="flex items-center gap-2">1 บ้านท่าหลวง</div>
-              <div className="flex items-center gap-2">2 จุดแวะพัก {">"} </div>
-              <div className="flex items-center gap-2">3 Destination</div>
+              <div className="flex items-center gap-2">บ้านท่าหลวง</div>
+              {boxSelect
+                .filter((box) => box.placeName && box.placeName !== "")
+                .map((box, index) => (
+                  <div key={box.id} className="flex gap-2">
+                    {">"} {index + 1}. {box.placeName}
+                  </div>
+              ))}
+              <div className="flex items-center gap-2">Destination</div>
             </div>
           </div>
 

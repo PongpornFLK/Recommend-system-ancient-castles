@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from db import Base , engine
-from route import auth , user , history , event
+from route import auth , user , history , event , nearplace
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_pagination import add_pagination
 from contextlib import asynccontextmanager
@@ -41,6 +41,7 @@ app.include_router(auth.router)
 app.include_router(user.router)
 app.include_router(history.router)
 app.include_router(event.router)
+app.include_router(nearplace.router)
 
 
 @app.get("/")

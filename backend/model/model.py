@@ -194,7 +194,7 @@ class Event(Base):
 class NearbyPlace(Base):
     __tablename__ = "nearby_places"
 
-    place_id = Column(Integer, primary_key=True, index=True)
+    nearplace_id = Column(Integer, primary_key=True, index=True)
     castle_id = Column(Integer, ForeignKey("castles.castle_id"))
     place_name = Column(String)
     nearby_detail = Column(Text)

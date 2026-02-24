@@ -242,7 +242,7 @@ class NearbyPlaceCreate(NearbyPlaceBase):
     castle_id: int
 
 class NearbyPlaceResponse(NearbyPlaceBase):
-    place_id: int
+    nearplace_id: int
     castle_id: int
     class Config:
         from_attributes = True

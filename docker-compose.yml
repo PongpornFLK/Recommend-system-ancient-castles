@@ -37,9 +37,6 @@ services:
       db:
         condition: service_healthy
     command: uvicorn main:app --host 0.0.0.0 --port 8000
-    # ถ้าจะ dev แล้วอยาก hot reload ค่อยเปิด 2 บรรทัดนี้ทีหลัง
-    # volumes:
-    #   - ./backend:/app
 
 volumes:
   pg_data:

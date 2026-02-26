@@ -8,12 +8,13 @@ from fastapi_pagination import add_pagination
 
 from db import Base, engine
 
-# ✅ import router แบบชัด ๆ (ไม่พึ่ง __init__.py)
+# import router
 from route.auth import router as auth_router
 from route.user import router as user_router
 from route.history import router as history_router
 from route.zilliz_search import router as zilliz_router
-from route.filter_search import router as filter_router  # ✅ เพิ่ม
+from route.filter_search import router as filter_router
+from route.castle_detail import router as castle_detail_router
 
 print("DATABASE_URL set =", bool(os.getenv("DATABASE_URL")))
 print("ZILLIZ_URI set   =", bool(os.getenv("ZILLIZ_URI")))
@@ -44,12 +45,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ✅ include router
+# ✅ include router หลังสร้าง app แล้ว
 app.include_router(auth_router)
 app.include_router(user_router)
 app.include_router(history_router)
 app.include_router(zilliz_router)
-app.include_router(filter_router)  # ✅ เพิ่ม
+app.include_router(filter_router)
+app.include_router(castle_detail_router)
 
 @app.get("/")
 def root():

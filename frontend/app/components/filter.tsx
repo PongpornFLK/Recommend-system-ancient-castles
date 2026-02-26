@@ -53,7 +53,7 @@ export default function Filter({ value, onApply, onClear }: Props) {
   const [architecture, setArchitecture] = useState<string | null>(value?.architecture ?? null);
   const [typeId, setTypeId] = useState<string | null>(value?.type_id ?? null);
 
-  // ✅ โหลด options จาก DB
+  //โหลด DB
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -75,9 +75,7 @@ export default function Filter({ value, onApply, onClear }: Props) {
     };
   }, []);
 
-  // ✅ ทำ cascade แบบง่าย: district/subdistrict ให้กรองจากค่าที่เลือก
-  // (หมายเหตุ: options ที่ backend ส่งมาเป็น list รวมทั้งหมด ยังไม่ผูกแบบ province->district)
-  // ถ้าคุณอยากให้ผูกแบบจริง ๆ ต้องทำ backend ส่งแบบ mapping
+  //cascade backend list 
   const provinces = useMemo(() => (opts?.provinces ?? []).map((x) => ({ key: x, label: x })), [opts]);
   const districts = useMemo(() => (opts?.districts ?? []).map((x) => ({ key: x, label: x })), [opts]);
   const subdistricts = useMemo(() => (opts?.subdistricts ?? []).map((x) => ({ key: x, label: x })), [opts]);

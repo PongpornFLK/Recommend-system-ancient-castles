@@ -35,7 +35,7 @@ export default function Landing() {
                     </div>
                   }
                 >
-                  {/* ✅ ให้ Search จัดการ Filter เอง (จะเหลือปุ่มเดียว) */}
+                  {/*Search Filter */}
                   <Search />
                 </Tab>
 

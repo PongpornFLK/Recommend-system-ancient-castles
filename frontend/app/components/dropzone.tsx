@@ -1,5 +1,9 @@
 "use client";
+
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { ArrowRight, Heart } from "lucide-react";
+import { getCastleGalleryByName } from "../lib/castleImages";
 
 type Castle = {
   castle_id: number;
@@ -12,10 +16,69 @@ type Castle = {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-function truncate(s: string, n = 320) {
-  const t = (s || "").trim();
+function truncate(s: string, n = 260) {
+  const t = (s || "").replace(/\r/g, "").trim();
   if (t.length <= n) return t;
   return t.slice(0, n).trimEnd() + "…";
+}
+
+function ResultCard({ c, idx }: { c: Castle; idx: number }) {
+  const [fav, setFav] = useState(false);
+  const g = getCastleGalleryByName(c.castle_name);
+  const cover = g.cover || "/assets/card/placeholder.jpg";
+
+  return (
+    <div className="bg-white border rounded-2xl shadow-sm overflow-hidden hover:shadow-md transition">
+      <div className="relative">
+        <img
+          src={cover}
+          alt={c.castle_name}
+          className="w-full h-56 object-cover bg-gray-100"
+          onError={(e) => {
+            (e.currentTarget as HTMLImageElement).src = "/assets/card/placeholder.jpg";
+          }}
+        />
+
+        <button
+          type="button"
+          onClick={() => setFav((v) => !v)}
+          className="absolute top-3 right-3 w-10 h-10 rounded-full bg-white/90 backdrop-blur border flex items-center justify-center hover:bg-white"
+          aria-label="favourite"
+          title="Favourite"
+        >
+          <Heart className={`w-5 h-5 ${fav ? "fill-red-500 text-red-500" : "text-gray-700"}`} />
+        </button>
+
+        <div className="absolute left-3 top-3 text-xs px-2 py-1 rounded-full bg-black/70 text-white">
+          #{idx + 1}
+        </div>
+      </div>
+
+      <div className="p-4">
+        <div className="text-lg font-semibold leading-6">
+          {c.castle_name}
+          {c.era ? (
+            <span className="ml-2 text-sm font-normal text-gray-500">
+              ({String(c.era).trim()})
+            </span>
+          ) : null}
+        </div>
+
+        <div className="mt-2 text-sm text-gray-600 leading-6 whitespace-pre-wrap">
+          {c.castle_description ? truncate(c.castle_description, 260) : "ไม่มีข้อมูล"}
+        </div>
+
+        <div className="mt-4 flex items-center justify-end">
+          <Link
+            href={`/castles/${c.castle_id}`}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-tone-orange text-white font-semibold hover:opacity-90"
+          >
+            View detail <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function Dropzone() {
@@ -26,7 +89,6 @@ export default function Dropzone() {
   const [loading, setLoading] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
 
-  // drag state (คอมใช้ได้ดี มือถือบางเบราว์เซอร์อาจจำกัด)
   const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
@@ -66,8 +128,6 @@ export default function Dropzone() {
 
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
-
-      // ✅ ไม่โชว์ hits ตามที่ขอ
       setCastles((data.castles || []) as Castle[]);
     } catch (e) {
       console.error(e);
@@ -78,7 +138,6 @@ export default function Dropzone() {
     }
   }
 
-  // ===== Drag & Drop =====
   function onDragOver(e: React.DragEvent) {
     e.preventDefault();
     setIsDragging(true);
@@ -105,7 +164,6 @@ export default function Dropzone() {
 
   return (
     <div className="space-y-4">
-      {/* ===== กล่องดรอป/เลือกไฟล์ ===== */}
       <div
         className={[
           "border rounded-2xl p-4 bg-white shadow-sm transition",
@@ -117,16 +175,14 @@ export default function Dropzone() {
       >
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="font-semibold">อัปโหลด/ดรอปรูปเพื่อค้นหา</div>
-            <div className="text-sm text-gray-500">
-              มือถือ: กดเลือกไฟล์/รูปจากแกลเลอรี • คอม: ลากรูปมาวางได้
-            </div>
+            <div className="font-semibold">อัปโหลดรูปเพื่อค้นหา</div>
+            <div className="text-sm text-gray-500">ลากมาวาง หรือเลือกไฟล์รูป</div>
           </div>
 
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              className="bg-black text-white px-4 py-2 rounded disabled:opacity-60"
+              className="bg-tone-orange text-white px-4 py-2 rounded-lg font-semibold disabled:opacity-60"
               onClick={onUploadSearch}
               disabled={loading || !file}
             >
@@ -135,7 +191,7 @@ export default function Dropzone() {
 
             <button
               type="button"
-              className="border px-4 py-2 rounded"
+              className="border px-4 py-2 rounded-lg"
               onClick={() => {
                 setFile(null);
                 resetResults();
@@ -158,21 +214,19 @@ export default function Dropzone() {
                 return;
               }
               setNewFile(f);
-              // เลือกไฟล์เดิมซ้ำได้
               e.currentTarget.value = "";
             }}
           />
         </div>
       </div>
 
-      {/* ===== Preview รูปที่เลือก ===== */}
       {previewUrl && (
-        <div className="border rounded-xl bg-white p-3 shadow-sm">
+        <div className="border rounded-2xl bg-white p-3 shadow-sm">
           <div className="text-sm font-semibold mb-2">รูปที่เลือก</div>
           <img
             src={previewUrl}
             alt="uploaded preview"
-            className="w-full max-w-xl rounded-lg object-contain bg-gray-50"
+            className="w-full max-w-xl rounded-xl object-contain bg-gray-50"
           />
           <div className="mt-2 text-xs text-gray-500 break-all">
             {file?.name} • {(((file?.size ?? 0) / 1024)).toFixed(1)} KB
@@ -180,34 +234,16 @@ export default function Dropzone() {
         </div>
       )}
 
-      {/* ===== Error ===== */}
       {errorText && <div className="text-sm text-red-600">{errorText}</div>}
 
-      {/* ===== แสดงผล: เฉพาะสถานที่ที่เกี่ยวข้อง ===== */}
       {castles.length > 0 && (
         <div className="space-y-3">
-          <div className="text-sm font-semibold">สถานที่ที่เกี่ยวข้อง</div>
-
-          {castles.map((c, idx) => (
-            <div key={c.castle_id} className="border rounded-xl p-4 bg-white shadow-sm">
-              <div className="text-lg font-semibold">
-                {idx + 1}. {c.castle_name}{" "}
-                {c.era ? (
-                  <span className="text-sm font-normal text-gray-500">
-                    ({String(c.era).trim()})
-                  </span>
-                ) : null}
-              </div>
-
-              {c.castle_description ? (
-                <div className="mt-2 text-sm text-gray-700 leading-6 whitespace-pre-wrap">
-                  {truncate(c.castle_description, 360)}
-                </div>
-              ) : (
-                <div className="mt-2 text-sm text-gray-500">ไม่มีคำอธิบายในฐานข้อมูล</div>
-              )}
-            </div>
-          ))}
+          <div className="text-sm font-semibold">Search results (found {castles.length})</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {castles.map((c, idx) => (
+              <ResultCard key={`${c.castle_id}-${idx}`} c={c} idx={idx} />
+            ))}
+          </div>
         </div>
       )}
 

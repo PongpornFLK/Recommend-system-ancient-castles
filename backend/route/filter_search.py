@@ -1,4 +1,3 @@
-# backend/route/filter_search.py
 from typing import Optional, List, Dict, Any
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
@@ -45,7 +44,6 @@ def get_filter_options(db: Session = Depends(get_db)):
         ORDER BY era ASC
     """)).all()]
 
-    # ✅ แก้ตรงนี้: architec_detail (ตาม log)
     architectures = [r[0] for r in db.execute(text("""
     SELECT DISTINCT architec_detail FROM architectures
     WHERE architec_detail IS NOT NULL AND architec_detail <> ''

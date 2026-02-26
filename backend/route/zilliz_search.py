@@ -1,4 +1,3 @@
-# backend/route/zilliz_search.py
 import os
 import re
 import io
@@ -24,16 +23,13 @@ load_dotenv()
 
 router = APIRouter(prefix="/zilliz", tags=["zilliz"])
 
-# =========================
+
 # Embedders (โหลดครั้งเดียว)
-# =========================
 doc_embedder = SentenceTransformer("sentence-transformers/paraphrase-multilingual-mpnet-base-v2")  # 768
 img_embedder = SentenceTransformer("sentence-transformers/clip-ViT-B-32")  # 512
 
 
-# =========================
 # Helpers
-# =========================
 def connect_zilliz():
     uri = os.getenv("ZILLIZ_URI")
     token = os.getenv("ZILLIZ_TOKEN")
@@ -102,9 +98,8 @@ def pick_vector_field(col: Collection) -> Tuple[str, int]:
     raise ValueError(f"Vector field not found in collection: {col.name}")
 
 
-# =========================
+
 # QA (Text)
-# =========================
 class QAReq(BaseModel):
     query: str
     k: int = 5
@@ -226,9 +221,8 @@ def qa(req: QAReq, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# =========================
+
 # Image Search (Image)
-# =========================
 @router.post("/images")
 def search_images(
     k: int = Query(5, ge=1, le=20),
@@ -245,7 +239,7 @@ def search_images(
         connect_zilliz()
         col = get_collection("image_vectors")
 
-        # ✅ เลือก vector field อัตโนมัติ (ของคุณจะได้ "image_vector")
+        # เลือก vector field อัตโนมัติ
         anns_field, _dim = pick_vector_field(col)
 
         content = file.file.read()
@@ -255,10 +249,10 @@ def search_images(
         img = Image.open(io.BytesIO(content)).convert("RGB")
         qvec = img_embedder.encode(img, normalize_embeddings=True).tolist()
 
-        # ✅ metric_type ต้องสอดคล้องกับตอนสร้าง index (ส่วนใหญ่ COSINE/Inner Product)
+        # metric_type
         res = col.search(
             data=[qvec],
-            anns_field=anns_field,  # ✅ "image_vector"
+            anns_field=anns_field,  #"image_vector"
             param={"metric_type": "COSINE", "params": {"nprobe": 10}},
             limit=k,
             output_fields=["img_id", "castle_id", "image_url", "place_id"],

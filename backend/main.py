@@ -3,8 +3,11 @@ load_dotenv()
 
 import os
 from fastapi import FastAPI
+from db import Base , engine
+from route import auth , user , history , event , nearplace
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_pagination import add_pagination
+from contextlib import asynccontextmanager
 
 from db import Base, engine
 
@@ -21,13 +24,23 @@ print("ZILLIZ_URI set   =", bool(os.getenv("ZILLIZ_URI")))
 print("ZILLIZ_TOKEN set =", bool(os.getenv("ZILLIZ_TOKEN")))
 print("GROQ_API_KEY set =", bool(os.getenv("GROQ_API_KEY")))
 
-try:
-    Base.metadata.create_all(bind=engine)
-    print("Create tables: SUCCESS")
-except Exception as e:
-    print(f"Create tables: FAILED: {e}")
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    try:
+        # Create Table และ Check err
+        Base.metadata.create_all(bind=engine)
+        print("Create Success")
+        yield
+    except Exception as e:
+        print(f"Error Err : {e} ")
+    finally:
+        print("Shutdown app")
+        engine.dispose()
+    
+app = FastAPI(lifespan=lifespan)
+
+
 add_pagination(app)
 
 origins = [
@@ -45,13 +58,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ✅ include router หลังสร้าง app แล้ว
-app.include_router(auth_router)
-app.include_router(user_router)
-app.include_router(history_router)
+# include router หลังสร้าง app แล้ว
+
 app.include_router(zilliz_router)
 app.include_router(filter_router)
 app.include_router(castle_detail_router)
+app.include_router(auth.router)
+app.include_router(user.router)
+app.include_router(history.router)
+app.include_router(event.router)
+app.include_router(nearplace.router)
+
 
 @app.get("/")
 def root():

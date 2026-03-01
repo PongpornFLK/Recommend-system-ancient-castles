@@ -6,6 +6,7 @@ from typing import Annotated , Optional
 from passlib.context import CryptContext
 from datetime import datetime, timedelta, timezone
 import jwt
+from jwt.exceptions import DecodeError, ExpiredSignatureError
 
 
 SECRET_KEY = "aLuFNmIOShSvec46sYiNsnAX+fk9Ak+Y3262rl+BB1AZyI8GbkwDuSyWBdk1"
@@ -40,7 +41,7 @@ def createToken(username : str , user_id : int , roles : str , expires_delta: Op
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+        expire = datetime.now(timezone.utc) + timedelta(days=7)
     encode.update({"exp": expire})
     isJWT = jwt.encode(encode, SECRET_KEY, algorithm=ALGORITHM)
     return isJWT
@@ -56,6 +57,6 @@ async def getCurrentUser(token : Annotated[str , Depends(oauth2_scheme)]):
             raise HTTPException(status_code=401 , detail="Not Validate")
         return {'username' : username , "user_id" : user_id , "roles" : roles}
     
-    except JWTError:
+    except ( DecodeError, ExpiredSignatureError):
         raise HTTPException(status_code=401 , detail="Not Validate ")
     

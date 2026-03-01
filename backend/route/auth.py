@@ -21,7 +21,7 @@ def loginAccessToken( user : Annotated[OAuth2PasswordRequestForm , Depends()] , 
         username = userAuth.username,  
         user_id = userAuth.user_id,
         roles = userAuth.roles,
-        expires_delta = timedelta(minutes=20)
+        expires_delta = timedelta(minutes=480) # อายุ token
     )
     
     return {"access_token" : token , "token_type" : "bearer"}

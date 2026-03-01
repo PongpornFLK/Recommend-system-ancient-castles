@@ -14,7 +14,13 @@ if not DATABASE_URL: # Localhost
 else: # Docker
     print(f"Connect Docker : {DATABASE_URL}")
 
-engine = _sql.create_engine(DATABASE_URL)
+engine = _sql.create_engine(
+    DATABASE_URL,
+    pool_size=10,
+    max_overflow=20, 
+    pool_timeout=30, 
+    pool_pre_ping=True, # check lost connection  
+    pool_recycle=3600,) # reset ทุก 1 ชั่วโมง
 
 SessionLocal = _orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

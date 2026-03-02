@@ -1,15 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import {
-  GoogleMap,
-  useJsApiLoader,
-  Marker,
-  DirectionsService,
-  DirectionsRenderer,
-} from "@react-google-maps/api";
+import { GoogleMap, useJsApiLoader, Marker } from "@react-google-maps/api";
 import useRoutedata from "@/app/service/viewroute/useRoutedata";
 import { Spinner } from "@heroui/react";
+import Info from "./info";
+import Direction from "./direction";
 
 export default function ViewMap() {
   const { routeData } = useRoutedata();
@@ -21,7 +17,6 @@ export default function ViewMap() {
     useState<google.maps.DirectionsResult | null>(null);
 
   console.log("routeData:", routeData);
-
 
   if (!isLoaded || !routeData?.current) {
     return (
@@ -51,37 +46,8 @@ export default function ViewMap() {
                 lng: routeData.current.lng,
               }}
             ></Marker>
-            {direction === null && routeData.destination && (
-              <DirectionsService
-                options={{
-                  origin: {
-                    lat: routeData.current.lat,
-                    lng: routeData.current.lng,
-                  },
-                  waypoints:
-                    routeData.nearbyplace && routeData.nearbyplace.length > 0
-                      ? routeData.nearbyplace.map((place) => ({
-                          location: {
-                            lat: place.latitude,
-                            lng: place.longitude,
-                          },
-                          stopover: true,
-                        }))
-                      : [],
-                  destination: {
-                    lat: routeData.destination?.location.latitude,
-                    lng: routeData.destination?.location.longitude,
-                  },
-                  travelMode: window.google.maps.TravelMode.DRIVING,
-                }}
-                callback={(result, status) => {
-                  if (status === "OK" && result) {
-                    setDirection(result);
-                  }
-                }}
-              ></DirectionsService>
-            )}
-            {direction && <DirectionsRenderer directions={direction} />}
+            <Direction direction={direction} setDirection={setDirection} />
+            {direction && <Info direction={direction} />}
           </GoogleMap>
         ) : (
           <div>p</div>

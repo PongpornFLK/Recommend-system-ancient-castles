@@ -3,15 +3,26 @@
 import Routeplan from "@/app/components/plan/routeplan";
 import Routesum from "@/app/components/plan/routesum";
 import useLocation from "@/app/service/map/useLocation";
+import useCreateroute from "@/app/service/plan/useCreateroute";
 import { Chip } from "@heroui/react";
 import { Calendar, Navigation2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function Plan() {
   const [boxSelect, setBoxSelect] = useState([
-    { id: 1, placeId: "", placeName: "" , latitude : 0 , longitude : 0},
+    { id: 1, placeId: "", placeName: "", latitude: 0, longitude: 0 },
   ]);
-  const { getNamePlace, loading , getGPS} = useLocation();
+  const { getNamePlace, loading, getGPS } = useLocation();
+  const { locationCastle } = useCreateroute();
+  const [date, setDate] = useState("");
+
+  useEffect(() => {
+    const fetchTime = () => {
+      const now = new Date().toLocaleString("th-TH");
+      setDate(now);
+    };
+    fetchTime();
+  }, []);
 
   return (
     <section>
@@ -31,7 +42,7 @@ export default function Plan() {
               >
                 Start Date
               </Chip>
-              <div className="text-sm sm:text-base">12/12/2024 08:00</div>
+              <div className="text-sm sm:text-base">{date}</div>
             </div>
 
             <div className="flex items-center gap-2">
@@ -43,7 +54,9 @@ export default function Plan() {
               >
                 Destination
               </Chip>
-              <div className="text-sm sm:text-base">วัดพระธาตุดอยสุเทพ</div>
+              <div className="text-sm sm:text-base">
+                {locationCastle?.castle_name}
+              </div>
             </div>
           </div>
         </div>
@@ -59,7 +72,11 @@ export default function Plan() {
         />
 
         {/* Right - Container */}
-        <Routesum boxSelect={boxSelect} currentPlace={getNamePlace} getGPS={getGPS}/>
+        <Routesum
+          boxSelect={boxSelect}
+          currentPlace={getNamePlace}
+          getGPS={getGPS}
+        />
       </div>
     </section>
   );

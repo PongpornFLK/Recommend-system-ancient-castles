@@ -117,7 +117,7 @@ export default function MapCurrent({namePlace} : MapProps) {
             </CardBody>
           </Card>
         ) : (
-          <div className="place-items-center">
+          <div className="text-center">
             <Spinner color="warning" label="Loading your location..." />
           </div>
         )}

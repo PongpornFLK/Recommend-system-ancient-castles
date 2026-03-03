@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { useState } from "react";
 
-const MapCurrent = dynamic(() => import("@/app/components/map/map_current"), {
+const MapCurrent = dynamic(() => import("@/app/components/map/mapCurrent"), {
   ssr: false,
 });
 

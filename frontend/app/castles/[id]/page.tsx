@@ -3,9 +3,13 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Heart, CalendarPlus, Route } from "lucide-react";
+import { 
+  ArrowLeft, Heart, CalendarPlus, Route, 
+  MapPin, Landmark, Info, History, Map as MapIcon 
+} from "lucide-react";
 import { getCastleGalleryByName } from "../../lib/castleImages";
 
+// --- Types ---
 type NearbyPlace = {
   place_name: string;
   nearby_detail?: string;
@@ -16,244 +20,223 @@ type CastleDetail = {
   castle_name: string;
   castle_description?: string;
   era?: string;
-
   province?: string;
   district?: string;
   subdistrict?: string;
-
   architecture?: string;
   type_detail?: string;
-
   nearby_places?: NearbyPlace[];
 };
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+// --- Helpers ---
 function cleanText(s: string) {
-  return (s || "")
-    .replace(/\r/g, "")
-    .replace(/[ \t]{2,}/g, " ")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
+  return (s || "").replace(/\r/g, "").replace(/[ \t]{2,}/g, " ").replace(/\n{3,}/g, "\n\n").trim();
+}
+
+function cn(...xs: Array<string | false | null | undefined>) {
+  return xs.filter(Boolean).join(" ");
+}
+
+// --- Sub-components ---
+function Chip({ icon, children, className }: { icon?: React.ReactNode; children: React.ReactNode; className?: string }) {
+  return (
+    <span className={cn("inline-flex items-center gap-1.5 rounded-full border bg-white/50 px-3 py-1 text-xs font-medium text-[#5D4037] backdrop-blur-sm", className)}>
+      {icon}
+      {children}
+    </span>
+  );
+}
+
+function ActionButton({ variant, active, icon, children, onClick }: { variant: "brown" | "blue" | "amber"; active?: boolean; icon: React.ReactNode; children: React.ReactNode; onClick?: () => void }) {
+  const themes = {
+    brown: "bg-[#5D4037] hover:bg-[#3E2723] shadow-[#5D4037]/20",
+    blue: "bg-blue-600 hover:bg-blue-700 shadow-blue-200",
+    amber: "bg-amber-500 hover:bg-amber-600 shadow-amber-200",
+  };
+
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "group flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white shadow-lg transition-all active:scale-95",
+        themes[variant],
+        active && "ring-4 ring-[#D2B48C]/30"
+      )}
+    >
+      <span className={cn("transition-transform group-hover:scale-110")}>{icon}</span>
+      {children}
+    </button>
+  );
 }
 
 export default function CastleDetailPage() {
-  const params = useParams<{ id?: string | string[] }>();
+  // แก้ไขจุดที่ 1: ปรับการรับ Params ให้ยืดหยุ่นขึ้นเพื่อแก้ Invalid ID
+  const params = useParams();
   const id = useMemo(() => {
-    const raw = params?.id;
-    if (Array.isArray(raw)) return raw[0] || "";
-    return raw || "";
+    if (!params) return "";
+    const val = params.id || params.castleId || "";
+    return Array.isArray(val) ? val[0] : val;
   }, [params]);
 
   const [fav, setFav] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState<string | null>(null);
   const [data, setData] = useState<CastleDetail | null>(null);
 
   useEffect(() => {
-    let alive = true;
+    // ป้องกันการยิง API ถ้ายังไม่มี ID
+    if (!id || id === "undefined") return;
 
+    let alive = true;
     (async () => {
       setLoading(true);
-      setErr(null);
-
       try {
-        if (!id || id === "undefined" || id === "null") {
-          throw new Error(`Invalid id: ${id}`);
-        }
-
-        const url = `${API_BASE}/castles/${encodeURIComponent(id)}`;
-        const res = await fetch(url, { cache: "no-store" });
-
-        if (!res.ok) throw new Error(await res.text());
-
-        const d = (await res.json()) as CastleDetail;
+        const res = await fetch(`${API_BASE}/castles/${encodeURIComponent(id)}`);
+        if (!res.ok) throw new Error("Failed to fetch");
+        const d = await res.json();
         if (alive) setData(d);
-      } catch (e: any) {
-        console.error(e);
-        if (alive) setErr("โหลดข้อมูลไม่สำเร็จ (เช็คว่า GET /castles/{id} ตอบ 200 ได้)");
+      } catch (e) {
+        console.error("Fetch error:", e);
       } finally {
         if (alive) setLoading(false);
       }
     })();
-
-    return () => {
-      alive = false;
-    };
+    return () => { alive = false; };
   }, [id]);
 
-  const gallery = useMemo(() => {
-    const name = data?.castle_name || "";
-    return getCastleGalleryByName(name);
-  }, [data?.castle_name]);
-
+  const gallery = useMemo(() => getCastleGalleryByName(data?.castle_name || ""), [data?.castle_name]);
   const hero = gallery.cover || "/assets/card/placeholder.jpg";
   const side = gallery.others?.length ? gallery.others : [hero, hero, hero];
 
+  const locationText = [data?.subdistrict, data?.district, data?.province].filter(Boolean).join(" • ") || "ไม่ระบุตำแหน่ง";
+
+  
+  if (loading || !id || id === "undefined") return (
+    <div className="mx-auto max-w-7xl p-8 space-y-6 animate-pulse">
+      <div className="h-10 w-32 bg-stone-200 rounded-lg" />
+      <div className="h-[500px] bg-stone-200 rounded-3xl" />
+    </div>
+  );
+
   return (
-    <div className="space-y-5">
-      {/* Top bar */}
+    <div className="mx-auto max-w-7xl pb-12 space-y-8 p-4 md:p-8">
+      
+      {/* Navigation*/}
       <div className="flex items-center justify-between">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-sm font-semibold text-gray-700 hover:text-black"
+        <Link 
+          href="/landing" 
+          className="group flex items-center gap-3 text-sm font-bold text-[#5D4037] transition-colors hover:text-[#3E2723]"
         >
-          <ArrowLeft className="w-4 h-4" />
-          Back
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#EADDCA] shadow-sm ring-1 ring-[#D2B48C]/50 transition-transform group-hover:-translate-x-1">
+            <ArrowLeft className="h-5 w-5 text-[#5D4037]" />
+          </div>
+          <span className="text-base font-bold">กลับ</span>
         </Link>
       </div>
 
-      {loading && (
-        <div className="bg-white border rounded-2xl p-6 shadow-sm text-sm text-gray-600">
-          กำลังโหลดข้อมูล...
-        </div>
-      )}
-
-      {!loading && err && (
-        <div className="bg-white border rounded-2xl p-6 shadow-sm">
-          <div className="text-red-600 font-semibold">{err}</div>
-          <div className="mt-2 text-sm text-gray-600">
-            ลองทดสอบด้วย: <code>curl -i http://localhost:8000/castles/{id || "{id}"}</code>
-          </div>
-        </div>
-      )}
-
-      {!loading && data && (
-        <>
-          {/* Header + Gallery */}
-          <div className="bg-white border rounded-2xl shadow-sm p-5">
-            <div className="text-2xl font-extrabold">{data.castle_name}</div>
-            <div className="text-sm text-gray-500 mt-1">
-              {data.era ? cleanText(data.era) : "—"}
-            </div>
-
-            <div className="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
-              {/* big */}
-              <div className="lg:col-span-2">
-                <img
-                  src={hero}
-                  alt={data.castle_name}
-                  className="w-full h-[320px] lg:h-[360px] object-cover rounded-xl border bg-gray-100"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).src =
-                      "/assets/card/placeholder.jpg";
-                  }}
-                />
-              </div>
-
-              {/* right column */}
-              <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
-                {side.slice(0, 3).map((src, i) => (
-                  <img
-                    key={i}
-                    src={src}
-                    alt={`img-${i}`}
-                    className="w-full h-[165px] lg:h-[112px] object-cover rounded-xl border bg-gray-100"
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src =
-                        "/assets/card/placeholder.jpg";
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Action buttons */}
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setFav((v) => !v)}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-white bg-red-500 hover:opacity-90"
-              >
-                <Heart className={`w-4 h-4 ${fav ? "fill-white" : ""}`} />
-                Favourite
-              </button>
-
-              <button
-                type="button"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-white bg-blue-500 hover:opacity-90"
-              >
-                <CalendarPlus className="w-4 h-4" />
-                Create Plan
-              </button>
-
-              <button
-                type="button"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-white bg-yellow-500 hover:opacity-90"
-              >
-                <Route className="w-4 h-4" />
-                View Route
-              </button>
-            </div>
-          </div>
-
-          {/* Details castle section */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {/* left big */}
-            <div className="lg:col-span-2 space-y-4">
-              <div className="bg-white border rounded-2xl shadow-sm p-5">
-                <div className="text-lg font-bold mb-2">ประวัติความเป็นมา</div>
-                <div className="text-sm text-gray-700 leading-7 whitespace-pre-wrap">
-                  {data.castle_description
-                    ? cleanText(data.castle_description)
-                    : "ไม่มีข้อมูล"}
-                </div>
-              </div>
-
-              <div className="bg-white border rounded-2xl shadow-sm p-5">
-                <div className="text-lg font-bold mb-2">
-                  งานสำคัญทางประวัติศาสตร์และศาสนา
-                </div>
-                <div className="text-sm text-gray-700 leading-7 whitespace-pre-wrap">
-                  {data.type_detail ? cleanText(data.type_detail) : "—"}
-                </div>
-              </div>
-            </div>
-
-            {/* right */}
+      {data && (
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+          
+          <div className="lg:col-span-8 space-y-8">
             <div className="space-y-4">
-              <div className="bg-white border rounded-2xl shadow-sm p-5">
-                <div className="text-lg font-bold mb-2">ลักษณะทางสถาปัตยกรรม</div>
-                <div className="text-sm text-gray-700 leading-7 whitespace-pre-wrap">
-                  {data.architecture ? cleanText(data.architecture) : "—"}
-                </div>
+              <h1 className="text-4xl font-black tracking-tight text-[#3E2723] lg:text-5xl">
+                {data.castle_name}
+              </h1>
+              <div className="flex flex-wrap items-center gap-3">
+                <Chip icon={<Landmark className="h-3.5 w-3.5" />} className="bg-[#F5F5DC] border-[#D2B48C]/30 text-[#8B4513]">
+                  {data.era ? cleanText(data.era) : "สมัยโบราณ"}
+                </Chip>
+                <Chip icon={<MapPin className="h-3.5 w-3.5" />} className="bg-emerald-50 text-emerald-700 border-emerald-100">
+                  {locationText}
+                </Chip>
               </div>
+            </div>
 
-              <div className="bg-white border rounded-2xl shadow-sm p-5">
-                <div className="text-lg font-bold mb-2">สถานที่ตั้งโดยย่อ</div>
-                <div className="text-sm text-gray-700 leading-7">
-                  <div className="text-gray-500">
-                    {data.subdistrict || "—"} • {data.district || "—"} •{" "}
-                    {data.province || "—"}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-4 sm:grid-rows-2 h-[450px]">
+              <div className="sm:col-span-3 sm:row-span-2 overflow-hidden rounded-3xl border-4 border-white shadow-xl">
+                <img src={hero} className="h-full w-full object-cover transition-transform duration-500 hover:scale-105" alt="Hero" />
+              </div>
+              {side.slice(0, 2).map((src, i) => (
+                <div key={i} className="hidden sm:block overflow-hidden rounded-2xl border-4 border-white shadow-lg">
+                  <img src={src} className="h-full w-full object-cover transition-transform duration-500 hover:scale-110" alt="Sub" />
+                </div>
+              ))}
+            </div>
+
+            <div className="space-y-8">
+              <section className="relative overflow-hidden rounded-3xl bg-[#F5F5DC] p-8 shadow-sm ring-1 ring-[#EADDCA]">
+                <div className="flex items-center gap-3 mb-4 text-[#5D4037]">
+                  <History className="h-6 w-6" />
+                  <h2 className="text-2xl font-bold">ประวัติความเป็นมา</h2>
+                </div>
+                <p className="text-lg leading-relaxed text-[#5D4037]/90 first-letter:text-4xl first-letter:font-bold first-letter:text-[#3E2723]">
+                  {data.castle_description ? cleanText(data.castle_description) : "ไม่มีข้อมูลประวัติศาสตร์ระบุไว้"}
+                </p>
+              </section>
+
+              <section className="rounded-3xl bg-white p-8 ring-1 ring-[#EADDCA] shadow-sm">
+                <div className="flex items-center gap-3 mb-4 text-[#3E2723]">
+                  <Info className="h-6 w-6 text-blue-500" />
+                  <h2 className="text-2xl font-bold">ความสำคัญและสถาปัตยกรรม</h2>
+                </div>
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <h3 className="font-bold text-[#5D4037]">ลักษณะโครงสร้าง</h3>
+                    <p className="text-stone-600 leading-relaxed">{data.architecture || "—"}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="font-bold text-[#5D4037]">คติความเชื่อ</h3>
+                    <p className="text-stone-600 leading-relaxed">{data.type_detail || "—"}</p>
                   </div>
                 </div>
-              </div>
-
-              <div className="bg-white border rounded-2xl shadow-sm p-5">
-                <div className="text-lg font-bold mb-2">สถานที่ใกล้เคียง</div>
-                {data.nearby_places && data.nearby_places.length > 0 ? (
-                  <ul className="text-sm text-gray-700 leading-7 list-disc pl-5 space-y-1">
-                    {data.nearby_places.map((p, i) => (
-                      <li key={i}>
-                        <span className="font-semibold">
-                          {cleanText(p.place_name)}
-                        </span>
-                        {p.nearby_detail ? (
-                          <span className="text-gray-500">
-                            {" "}
-                            — {cleanText(p.nearby_detail)}
-                          </span>
-                        ) : null}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <div className="text-sm text-gray-500">—</div>
-                )}
-              </div>
+              </section>
             </div>
           </div>
-        </>
+
+          <aside className="lg:col-span-4 space-y-6">
+            <div className="sticky top-8 space-y-6">
+              <div className="rounded-3xl bg-white p-6 shadow-xl shadow-stone-200/50 ring-1 ring-stone-100">
+                <h3 className="mb-4 text-center font-bold text-stone-400 uppercase tracking-widest text-xs text-[#8B4513]/50">วางแผนการเดินทาง</h3>
+                <div className="flex flex-col gap-3">
+                  <ActionButton 
+                    variant="brown" 
+                    active={fav} 
+                    icon={<Heart className={cn("h-5 w-5", fav && "fill-current")} />}
+                    onClick={() => setFav(!fav)}
+                  >
+                    {fav ? "บันทึกแล้ว" : "เพิ่มในรายการโปรด"}
+                  </ActionButton>
+                  <ActionButton variant="blue" icon={<CalendarPlus className="h-5 w-5" />}>
+                    สร้างแผนท่องเที่ยว
+                  </ActionButton>
+                  <ActionButton variant="amber" icon={<Route className="h-5 w-5" />}>
+                    ดูเส้นทางบนแผนที่
+                  </ActionButton>
+                </div>
+              </div>
+
+              <div className="rounded-3xl border border-dashed border-[#D2B48C] p-6 bg-[#F5F5DC]/30">
+                <div className="flex items-center gap-2 mb-4 font-bold text-[#5D4037]">
+                  <MapIcon className="h-5 w-5 text-emerald-600" />
+                  <h3>สถานที่ใกล้เคียง</h3>
+                </div>
+                <div className="space-y-3">
+                  {data.nearby_places?.length ? (
+                    data.nearby_places.map((p, i) => (
+                      <div key={i} className="group rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#EADDCA] transition-hover hover:bg-[#F5F5DC]">
+                        <div className="font-bold text-[#5D4037] group-hover:text-[#8B4513] transition-colors">{p.place_name}</div>
+                        {p.nearby_detail && <p className="mt-1 text-xs text-stone-500 leading-relaxed">{p.nearby_detail}</p>}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-4 text-sm text-stone-400 italic">ไม่มีข้อมูลสถานที่ใกล้เคียง</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
       )}
     </div>
   );

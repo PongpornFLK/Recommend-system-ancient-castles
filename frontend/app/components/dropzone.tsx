@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
-import { ArrowRight, Heart } from "lucide-react";
+import { 
+  ArrowRight, Heart, Upload, X, 
+  ImageIcon, Search, Loader2, Sparkles 
+} from "lucide-react";
 import { getCastleGalleryByName } from "../lib/castleImages";
 
 type Castle = {
@@ -16,10 +19,10 @@ type Castle = {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-function truncate(s: string, n = 260) {
+// --- Helpers ---
+function truncate(s: string, n = 160) {
   const t = (s || "").replace(/\r/g, "").trim();
-  if (t.length <= n) return t;
-  return t.slice(0, n).trimEnd() + "…";
+  return t.length <= n ? t : t.slice(0, n).trimEnd() + "...";
 }
 
 function ResultCard({ c, idx }: { c: Castle; idx: number }) {
@@ -28,52 +31,46 @@ function ResultCard({ c, idx }: { c: Castle; idx: number }) {
   const cover = g.cover || "/assets/card/placeholder.jpg";
 
   return (
-    <div className="bg-white border rounded-2xl shadow-sm overflow-hidden hover:shadow-md transition">
-      <div className="relative">
+    <div className="group relative bg-white border border-slate-200 rounded-3xl overflow-hidden hover:shadow-2xl hover:shadow-indigo-100 transition-all duration-300 hover:-translate-y-1">
+      <div className="relative h-52 overflow-hidden">
         <img
           src={cover}
           alt={c.castle_name}
-          className="w-full h-56 object-cover bg-gray-100"
-          onError={(e) => {
-            (e.currentTarget as HTMLImageElement).src = "/assets/card/placeholder.jpg";
-          }}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+        
+        {/* Badge Rank */}
+        <div className="absolute left-3 top-3 flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-white/90 backdrop-blur shadow-sm text-slate-900">
+          <Sparkles className="w-3 h-3 text-amber-500" />
+          MATCH #{idx + 1}
+        </div>
 
         <button
-          type="button"
-          onClick={() => setFav((v) => !v)}
-          className="absolute top-3 right-3 w-10 h-10 rounded-full bg-white/90 backdrop-blur border flex items-center justify-center hover:bg-white"
-          aria-label="favourite"
-          title="Favourite"
+          onClick={() => setFav(!fav)}
+          className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 backdrop-blur flex items-center justify-center hover:bg-rose-50 transition-colors shadow-sm"
         >
-          <Heart className={`w-5 h-5 ${fav ? "fill-red-500 text-red-500" : "text-gray-700"}`} />
+          <Heart className={`w-4 h-4 transition-colors ${fav ? "fill-rose-500 text-rose-500" : "text-slate-400"}`} />
         </button>
-
-        <div className="absolute left-3 top-3 text-xs px-2 py-1 rounded-full bg-black/70 text-white">
-          #{idx + 1}
-        </div>
       </div>
 
-      <div className="p-4">
-        <div className="text-lg font-semibold leading-6">
+      <div className="p-5">
+        <h3 className="text-lg font-bold text-slate-900 line-clamp-1">
           {c.castle_name}
-          {c.era ? (
-            <span className="ml-2 text-sm font-normal text-gray-500">
-              ({String(c.era).trim()})
-            </span>
-          ) : null}
-        </div>
+        </h3>
+        <p className="text-xs font-medium text-indigo-600 mb-2">
+          {c.era ? c.era.trim() : "ไม่ระบุสมัย"}
+        </p>
+        <p className="text-sm text-slate-500 leading-relaxed line-clamp-3 h-[60px]">
+          {c.castle_description ? truncate(c.castle_description) : "ไม่มีข้อมูลคำบรรยาย"}
+        </p>
 
-        <div className="mt-2 text-sm text-gray-600 leading-6 whitespace-pre-wrap">
-          {c.castle_description ? truncate(c.castle_description, 260) : "ไม่มีข้อมูล"}
-        </div>
-
-        <div className="mt-4 flex items-center justify-end">
+        <div className="mt-5 pt-4 border-t border-slate-50">
           <Link
             href={`/castles/${c.castle_id}`}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-tone-orange text-white font-semibold hover:opacity-90"
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-indigo-600 transition-colors"
           >
-            View detail <ArrowRight className="w-4 h-4" />
+            ดูรายละเอียด <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
       </div>
@@ -84,162 +81,118 @@ function ResultCard({ c, idx }: { c: Castle; idx: number }) {
 export default function Dropzone() {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-
   const [castles, setCastles] = useState<Castle[]>([]);
   const [loading, setLoading] = useState(false);
-  const [errorText, setErrorText] = useState<string | null>(null);
-
   const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!file) {
-      setPreviewUrl(null);
-      return;
-    }
+    if (!file) return;
     const url = URL.createObjectURL(file);
     setPreviewUrl(url);
     return () => URL.revokeObjectURL(url);
   }, [file]);
 
-  function resetResults() {
-    setCastles([]);
-    setErrorText(null);
-  }
+  const handleFileChange = (f: File | null) => {
+    if (f && f.type.startsWith("image/")) {
+      setFile(f);
+      setCastles([]);
+    } else if (f) {
+      alert("กรุณาเลือกไฟล์รูปภาพเท่านั้น");
+    }
+  };
 
-  function setNewFile(f: File | null) {
-    setFile(f);
-    resetResults();
-  }
-
-  async function onUploadSearch() {
+  const onUploadSearch = async () => {
     if (!file) return;
-
     setLoading(true);
-    setErrorText(null);
-
     try {
       const fd = new FormData();
       fd.append("file", file);
-
-      const res = await fetch(`${API_BASE}/zilliz/images?k=5`, {
-        method: "POST",
-        body: fd,
-      });
-
-      if (!res.ok) throw new Error(await res.text());
+      const res = await fetch(`${API_BASE}/zilliz/images?k=6`, { method: "POST", body: fd });
       const data = await res.json();
-      setCastles((data.castles || []) as Castle[]);
+      setCastles(data.castles || []);
     } catch (e) {
-      console.error(e);
-      setErrorText("ค้นหาด้วยรูปไม่สำเร็จ ดู console/log backend");
-      alert("ค้นหาด้วยรูปไม่สำเร็จ ดู console/log backend");
+      alert("เกิดข้อผิดพลาดในการค้นหา");
     } finally {
       setLoading(false);
     }
-  }
-
-  function onDragOver(e: React.DragEvent) {
-    e.preventDefault();
-    setIsDragging(true);
-  }
-
-  function onDragLeave(e: React.DragEvent) {
-    e.preventDefault();
-    setIsDragging(false);
-  }
-
-  function onDrop(e: React.DragEvent) {
-    e.preventDefault();
-    setIsDragging(false);
-
-    const f = e.dataTransfer.files?.[0];
-    if (!f) return;
-
-    if (!f.type.startsWith("image/")) {
-      alert("กรุณาเลือกไฟล์รูปภาพเท่านั้น");
-      return;
-    }
-    setNewFile(f);
-  }
+  };
 
   return (
-    <div className="space-y-4">
-      <div
-        className={[
-          "border rounded-2xl p-4 bg-white shadow-sm transition",
-          isDragging ? "border-black ring-2 ring-black/10" : "border-gray-200",
-        ].join(" ")}
-        onDragOver={onDragOver}
-        onDragLeave={onDragLeave}
-        onDrop={onDrop}
-      >
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <div className="font-semibold">อัปโหลดรูปเพื่อค้นหา</div>
-            <div className="text-sm text-gray-500">ลากมาวาง หรือเลือกไฟล์รูป</div>
+    <div className="max-w-6xl mx-auto space-y-10">
+      {/* Upload Section */}
+      <section className="bg-white rounded-[2rem] p-8 shadow-sm border border-slate-100">
+        <div className="max-w-2xl mx-auto text-center space-y-6">
+          <div className="space-y-2">
+            <h2 className="text-3xl font-black text-slate-900">ค้นหาด้วยรูปภาพ</h2>
+            <p className="text-slate-500">อัปโหลดรูปภาพโบราณสถานเพื่อค้นหาข้อมูลด้วย AI</p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          {!file ? (
+            <div
+              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={(e) => { e.preventDefault(); setIsDragging(false); handleFileChange(e.dataTransfer.files?.[0]); }}
+              onClick={() => fileInputRef.current?.click()}
+              className={`
+                relative cursor-pointer py-12 px-6 border-2 border-dashed rounded-3xl transition-all
+                ${isDragging ? "border-indigo-500 bg-indigo-50/50 scale-[0.99]" : "border-slate-200 hover:border-indigo-400 hover:bg-slate-50"}
+              `}
+            >
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={(e) => handleFileChange(e.target.files?.[0] || null)} 
+                className="hidden" 
+                accept="image/*"
+              />
+              <div className="flex flex-col items-center gap-4">
+                <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center">
+                  <Upload className="w-8 h-8" />
+                </div>
+                <div>
+                  <p className="text-lg font-bold text-slate-700">ลากไฟล์มาวางที่นี่</p>
+                  <p className="text-sm text-slate-400">หรือคลิกเพื่อเลือกไฟล์จากเครื่อง</p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="relative group max-w-sm mx-auto">
+              <div className="overflow-hidden rounded-3xl border-4 border-white shadow-2xl">
+                <img src={previewUrl!} alt="preview" className="w-full h-64 object-cover" />
+              </div>
+              <button 
+                onClick={() => { setFile(null); setCastles([]); }}
+                className="absolute -top-3 -right-3 w-8 h-8 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-rose-500 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          <div className="flex items-center justify-center gap-3">
             <button
-              type="button"
-              className="bg-tone-orange text-white px-4 py-2 rounded-lg font-semibold disabled:opacity-60"
               onClick={onUploadSearch}
-              disabled={loading || !file}
+              disabled={!file || loading}
+              className="px-8 py-3 bg-indigo-600 text-white rounded-2xl font-bold flex items-center gap-2 disabled:opacity-50 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 active:scale-95"
             >
-              {loading ? "กำลังค้นหา..." : "ค้นหาด้วยรูป"}
-            </button>
-
-            <button
-              type="button"
-              className="border px-4 py-2 rounded-lg"
-              onClick={() => {
-                setFile(null);
-                resetResults();
-              }}
-              disabled={!file && castles.length === 0}
-            >
-              ล้าง
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
+              {loading ? "กำลังวิเคราะห์..." : "เริ่มการค้นหา"}
             </button>
           </div>
         </div>
+      </section>
 
-        <div className="mt-3 flex flex-wrap gap-3 items-center">
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              const f = e.target.files?.[0] || null;
-              if (f && !f.type.startsWith("image/")) {
-                alert("กรุณาเลือกไฟล์รูปภาพเท่านั้น");
-                return;
-              }
-              setNewFile(f);
-              e.currentTarget.value = "";
-            }}
-          />
-        </div>
-      </div>
-
-      {previewUrl && (
-        <div className="border rounded-2xl bg-white p-3 shadow-sm">
-          <div className="text-sm font-semibold mb-2">รูปที่เลือก</div>
-          <img
-            src={previewUrl}
-            alt="uploaded preview"
-            className="w-full max-w-xl rounded-xl object-contain bg-gray-50"
-          />
-          <div className="mt-2 text-xs text-gray-500 break-all">
-            {file?.name} • {(((file?.size ?? 0) / 1024)).toFixed(1)} KB
-          </div>
-        </div>
-      )}
-
-      {errorText && <div className="text-sm text-red-600">{errorText}</div>}
-
+      {/* Results Section */}
       {castles.length > 0 && (
-        <div className="space-y-3">
-          <div className="text-sm font-semibold">Search results (found {castles.length})</div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="space-y-6">
+          <div className="flex items-center gap-4">
+            <h3 className="text-xl font-black text-slate-900">พบโบราณสถานที่ใกล้เคียง</h3>
+            <div className="h-px flex-1 bg-slate-100" />
+            <span className="text-sm font-bold text-slate-400 uppercase tracking-wider">{castles.length} Results</span>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {castles.map((c, idx) => (
               <ResultCard key={`${c.castle_id}-${idx}`} c={c} idx={idx} />
             ))}
@@ -247,8 +200,12 @@ export default function Dropzone() {
         </div>
       )}
 
+      {/* Empty State */}
       {!loading && file && castles.length === 0 && (
-        <div className="text-sm text-gray-500">ยังไม่มีผลลัพธ์</div>
+        <div className="text-center py-20 border-2 border-dashed border-slate-100 rounded-[2rem]">
+          <ImageIcon className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+          <p className="text-slate-400 font-medium">กดปุ่ม "เริ่มการค้นหา" เพื่อดูผลลัพธ์</p>
+        </div>
       )}
     </div>
   );

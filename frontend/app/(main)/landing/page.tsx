@@ -2,7 +2,6 @@
 
 import { Compass, ScanSearch, Image, FileText } from "lucide-react";
 import CardLanding from "@/app/components/cardlanding";
-import Filter from "@/app/components/filter";
 import SlideImg from "@/app/components/slideimg";
 import Search from "@/app/components/searching";
 import Dropzone from "@/app/components/dropzone";
@@ -11,12 +10,10 @@ import { Tabs, Tab } from "@heroui/react";
 export default function Landing() {
   return (
     <div>
-      {/* Section  : Silde img */}
       <section className="p-0 m-0">
         <SlideImg />
       </section>
 
-      {/* Section : Searching*/}
       <section className="my-5">
         <div className=" my-20">
           <div className="flex flew-row gap-3 my-10">
@@ -25,6 +22,7 @@ export default function Landing() {
               Castle Similarity Search
             </h1>
           </div>
+
           <div className="bg-white max-h max-w rounded-2xl">
             <div className="p-5">
               <Tabs>
@@ -37,19 +35,15 @@ export default function Landing() {
                     </div>
                   }
                 >
-                  <div className="flex flew-row gap-6">
-                    <div className="flex-1">
-                      <Search />
-                    </div>
-
-                    <Filter />
-                  </div>
+                  {/*Search Filter */}
+                  <Search />
                 </Tab>
+
                 <Tab
                   key="image"
                   title={
                     <div className="flex items-center space-x-2 ">
-                      <Image size={18}/>
+                      <Image size={18} />
                       <span>Search by Image</span>
                     </div>
                   }
@@ -62,7 +56,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Section : Recommended nearby places */}
       <section className="my-5">
         <div>
           <div className="flex flew-row gap-3">

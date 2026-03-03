@@ -29,9 +29,12 @@ Base = _declarative.declarative_base()
 # with engine.begin() as conn:conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
 
 # Dependency
+# backend/db.py
+
 def get_db():
     db = SessionLocal()
-    try: 
+    try:
         yield db
     finally:
         db.close()
+

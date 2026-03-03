@@ -1,5 +1,5 @@
 # เลือก Base Image
-FROM python:3.9-slim
+FROM python:3.11-slim
 
 # Setup dir ใน Img
 WORKDIR /app

@@ -3,7 +3,9 @@
 import useLocation from "@/app/service/map/useLocation";
 import useCalroute from "@/app/service/plan/useCalroute";
 import useCreateroute from "@/app/service/plan/useCreateroute";
+import useSave from "@/app/service/plan/useSave";
 import useViewroute from "@/app/service/plan/useViewroute";
+
 import { Button, Chip, Skeleton } from "@heroui/react";
 import { List, Route } from "lucide-react";
 import { useEffect } from "react";
@@ -33,6 +35,7 @@ export default function Routesum({
   const { viewRoute } = useViewroute();
   const { getNamePlace } = useLocation();
   const { calRoute, kilo, hours, minute, loading } = useCalroute();
+  const { saveRoute } = useSave();
 
   useEffect(() => {
     if (getGPS && locationCastle) {
@@ -103,8 +106,9 @@ export default function Routesum({
         <Button
           startContent={<List size={16} />}
           className="flex-1 bg-tone-lightgreen text-white font-bold"
+          onClick={()=>{saveRoute()}}
         >
-          View Details
+          Save
         </Button>
         <Button
           startContent={<Route size={16} />}

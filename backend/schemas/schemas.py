@@ -94,6 +94,7 @@ class TripPlanBase(BaseModel):
     start_date: datetime
     end_date: datetime
     duration: int
+    status: Optional[str] = "pending"
 
 class TripPlanCreate(TripPlanBase):
     user_id: int
@@ -237,6 +238,8 @@ class EventUpdate(EventBase) :
 class NearbyPlaceBase(BaseModel):
     place_name: str
     nearby_detail: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
 class NearbyPlaceCreate(NearbyPlaceBase):
     castle_id: int

@@ -72,6 +72,7 @@ class TripPlan(Base):
     start_date = Column(DateTime(timezone=True), server_default=func.now())
     end_date = Column(DateTime(timezone=True), server_default=func.now())
     duration = Column(Integer)
+    status = Column(String, default="pending")  # Add status field
 
 
     user = relationship("User", back_populates="trip_plans")
@@ -198,6 +199,8 @@ class NearbyPlace(Base):
     castle_id = Column(Integer, ForeignKey("castles.castle_id"))
     place_name = Column(String)
     nearby_detail = Column(Text)
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
 
     castle = relationship("Castle", back_populates="nearby_places")
 

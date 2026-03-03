@@ -7,7 +7,7 @@ export default function useLocation() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchCurrentUser = async (pos: GeolocationPosition) => {
+    const fetchCurrentPlace = async (pos: GeolocationPosition) => {
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
       const api = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
@@ -40,7 +40,7 @@ export default function useLocation() {
       setNamePlace("กรุณาเปิดการเข้าถึงตำแหน่ง (GPS)");
       setLoading(false);
     }
-    navigator.geolocation.getCurrentPosition(fetchCurrentUser, error);
+    navigator.geolocation.getCurrentPosition(fetchCurrentPlace, error);
   }, []);
 
   return { getNamePlace, loading ,getGPS};

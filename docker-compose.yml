@@ -1,4 +1,24 @@
 services:
+  
+  app:
+  # ใช้ตอน deploy
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}      
+    ports:
+      - "3000:3000"                 
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - db
+    networks:
+      - app-networks
+    
+      
   db:
     image: postgres:15-alpine
     restart: always

@@ -1,15 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-
 from db import get_db
 
 router = APIRouter(prefix="/castles", tags=["castles"])
 
-
 @router.get("/{castle_id}")
 def get_castle_detail(castle_id: int, db: Session = Depends(get_db)):
-    # 1) castles + type_detail
+    # 1) ดึงข้อมูลพื้นฐาน castles + type_detail
     row = db.execute(
         text(
             """
@@ -31,7 +29,7 @@ def get_castle_detail(castle_id: int, db: Session = Depends(get_db)):
     if not row:
         raise HTTPException(status_code=404, detail="Castle not found")
 
-    # 2) location
+    # 2) ดึงข้อมูลตำแหน่งที่ตั้ง (Location)
     loc = db.execute(
         text(
             """
@@ -49,7 +47,7 @@ def get_castle_detail(castle_id: int, db: Session = Depends(get_db)):
     district = (loc[1] if loc else "") or ""
     subdistrict = (loc[2] if loc else "") or ""
 
-    # 3) architectures (หลายค่า) => รวมเป็นข้อความเดียวให้หน้า detail แสดงง่าย
+    # 3) architectures => รวมเป็นข้อความเดียว
     arch_rows = db.execute(
         text(
             """
@@ -66,14 +64,14 @@ def get_castle_detail(castle_id: int, db: Session = Depends(get_db)):
     arch_list = [r[0] for r in arch_rows] if arch_rows else []
     architecture = "\n".join(arch_list)
 
-    # 4) nearby places (ตามรูปที่คุณส่งจาก pgAdmin: public.nearby_places)
+    # 4) nearby places => แก้ไข ORDER BY เพราะไม่มีคอลัมน์ place_id
     nearby_rows = db.execute(
         text(
             """
             SELECT place_name, nearby_detail
             FROM nearby_places
             WHERE castle_id = :id
-            ORDER BY place_id ASC
+            ORDER BY place_name ASC
             """
         ),
         {"id": castle_id},

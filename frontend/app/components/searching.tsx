@@ -4,7 +4,11 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { ArrowRight, Heart } from "lucide-react";
+import { 
+  ArrowRight, Heart, Search, Sparkles, 
+  Filter as FilterIcon, MessageSquare, MapPin, 
+  RefreshCcw, Info
+} from "lucide-react";
 
 import Filter, { type FilterValues } from "./filter";
 import { getCastleGalleryByName } from "../lib/castleImages";
@@ -20,31 +24,22 @@ type Castle = {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+// --- Helpers ---
 function cleanText(s: string) {
-  return (s || "")
-    .replace(/\r/g, "")
-    .replace(/[ \t]{2,}/g, " ")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
+  return (s || "").replace(/\r/g, "").replace(/[ \t]{2,}/g, " ").replace(/\n{3,}/g, "\n\n").trim();
 }
 
-function truncate(s: string, n = 260) {
+function truncate(s: string, n = 160) {
   const t = cleanText(s);
-  if (t.length <= n) return t;
-  return t.slice(0, n).trimEnd() + "…";
+  return t.length <= n ? t : t.slice(0, n).trimEnd() + "…";
 }
 
-// กันรายการซ้ำ/กัน id ซ้ำทำให้การ์ดทับกัน
 function dedupeCastles(list: Castle[]) {
   const seen = new Set<string>();
-  const out: Castle[] = [];
-  for (const c of list || []) {
-    const key = `${c.castle_id ?? "null"}|${(c.castle_name || "").trim()}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    out.push(c);
-  }
-  return out;
+  return (list || []).filter(c => {
+    const key = `${c.castle_id}|${c.castle_name}`;
+    return seen.has(key) ? false : seen.add(key);
+  });
 }
 
 function ResultCard({ c, idx }: { c: Castle; idx: number }) {
@@ -53,58 +48,36 @@ function ResultCard({ c, idx }: { c: Castle; idx: number }) {
   const cover = g.cover || "/assets/card/placeholder.jpg";
 
   return (
-    <div className="bg-white border rounded-2xl shadow-sm overflow-hidden hover:shadow-md transition">
-      <div className="relative">
+    <div className="group bg-white border border-slate-200 rounded-3xl overflow-hidden hover:shadow-xl hover:shadow-slate-200 transition-all duration-300">
+      <div className="relative h-48">
         <img
           src={cover}
           alt={c.castle_name}
-          className="w-full h-56 object-cover bg-gray-100"
-          onError={(e) => {
-            (e.currentTarget as HTMLImageElement).src = "/assets/card/placeholder.jpg";
-          }}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
-
         <button
-          type="button"
-          onClick={() => setFav((v) => !v)}
-          className="absolute top-3 right-3 w-10 h-10 rounded-full bg-white/90 backdrop-blur border flex items-center justify-center hover:bg-white"
-          aria-label="favourite"
-          title="Favourite"
+          onClick={() => setFav(!fav)}
+          className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 backdrop-blur flex items-center justify-center hover:bg-white transition-colors shadow-sm"
         >
-          <Heart
-            className={`w-5 h-5 ${
-              fav ? "fill-red-500 text-red-500" : "text-gray-700"
-            }`}
-          />
+          <Heart className={`w-4 h-4 ${fav ? "fill-rose-500 text-rose-500" : "text-slate-400"}`} />
         </button>
-
-        <div className="absolute left-3 top-3 text-xs px-2 py-1 rounded-full bg-black/70 text-white">
-          #{idx + 1}
+        <div className="absolute left-3 bottom-3 px-2 py-1 rounded-lg bg-black/60 backdrop-blur-md text-[10px] font-bold text-white tracking-widest uppercase">
+          Rank #{idx + 1}
         </div>
       </div>
 
-      <div className="p-4">
-        <div className="text-lg font-semibold leading-6">
-          {c.castle_name}
-          {c.era ? (
-            <span className="ml-2 text-sm font-normal text-gray-500">
-              ({String(c.era).trim()})
-            </span>
-          ) : null}
-        </div>
-
-        <div className="mt-2 text-sm text-gray-600 leading-6 whitespace-pre-wrap">
-          {c.castle_description
-            ? truncate(c.castle_description, 260)
-            : "ไม่มีคำอธิบายในฐานข้อมูล"}
-        </div>
-
-        <div className="mt-4 flex items-center justify-end">
+      <div className="p-5">
+        <h3 className="font-bold text-slate-900 leading-tight line-clamp-1">{c.castle_name}</h3>
+        <p className="text-xs text-indigo-600 font-medium mt-1">{c.era || "ไม่ระบุสมัย"}</p>
+        <p className="mt-3 text-sm text-slate-500 line-clamp-2 leading-relaxed">
+          {c.castle_description ? truncate(c.castle_description) : "ไม่มีคำอธิบายข้อมูล"}
+        </p>
+        <div className="mt-5">
           <Link
             href={`/castles/${c.castle_id}`}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-tone-orange text-white font-semibold hover:opacity-90"
+            className="flex items-center justify-center gap-2 w-full py-2 rounded-xl border border-slate-200 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors"
           >
-            View detail <ArrowRight className="w-4 h-4" />
+            รายละเอียด <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
       </div>
@@ -114,152 +87,153 @@ function ResultCard({ c, idx }: { c: Castle; idx: number }) {
 
 export default function Searching() {
   const [q, setQ] = useState("");
-
-  // QA results
   const [answer, setAnswer] = useState<string>("");
   const [qaCastles, setQaCastles] = useState<Castle[]>([]);
-
-  // Filter results
   const [filterValue, setFilterValue] = useState<FilterValues>({});
   const [filterCastles, setFilterCastles] = useState<Castle[]>([]);
   const [activeMode, setActiveMode] = useState<"qa" | "filter">("qa");
-
   const [loading, setLoading] = useState(false);
 
-  async function onSearchQA() {
+  const onSearchQA = async () => {
     const query = q.trim();
     if (!query) return;
-
     setLoading(true);
     try {
       const res = await fetch(`${API_BASE}/zilliz/qa`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query, k: 5, castle_id: null }),
+        body: JSON.stringify({ query, k: 5 }),
       });
-
-      if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
-
       setAnswer(cleanText(data.answer || ""));
-      setQaCastles(dedupeCastles((data.castles || []) as Castle[]));
+      setQaCastles(dedupeCastles(data.castles || []));
       setActiveMode("qa");
     } catch (e) {
-      console.error(e);
-      alert("ค้นหาไม่สำเร็จ ดู console/log backend");
+      alert("ค้นหาไม่สำเร็จ");
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  async function onApplyFilter(v: FilterValues) {
+  const onApplyFilter = async (v: FilterValues) => {
     setFilterValue(v);
     setLoading(true);
-
     try {
-      const payload = {
-        province: v.province ?? null,
-        district: v.district ?? null,
-        subdistrict: v.subdistrict ?? null,
-        era: v.era ?? null,
-        architecture: v.architecture ?? null,
-        type_id: v.type_id ? Number(v.type_id) : null,
-      };
-
       const res = await fetch(`${API_BASE}/filters/search`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(v),
       });
-
-      if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
-
-      setFilterCastles(dedupeCastles((data.castles || []) as Castle[]));
+      setFilterCastles(dedupeCastles(data.castles || []));
       setActiveMode("filter");
       setAnswer("");
     } catch (e) {
-      console.error(e);
-      alert("กรองข้อมูลไม่สำเร็จ ดู console/log backend");
+      alert("กรองข้อมูลไม่สำเร็จ");
     } finally {
       setLoading(false);
     }
-  }
-
-  function onClearFilter() {
-    setFilterValue({});
-    setFilterCastles([]);
-    setActiveMode("qa");
-  }
+  };
 
   const castlesToShow = useMemo(() => {
-    const list = activeMode === "filter" ? filterCastles : qaCastles;
-    return dedupeCastles(list);
+    return activeMode === "filter" ? filterCastles : qaCastles;
   }, [activeMode, filterCastles, qaCastles]);
 
   return (
-    <div className="space-y-6">
-      {/* Search bar + Filter */}
-      <div className="bg-white border rounded-2xl shadow-sm p-4">
-        <div className="flex flex-wrap gap-2 items-center">
-          <div className="flex-1 min-w-[260px]">
-            <div className="text-sm font-semibold mb-2">Search similar castle</div>
+    <div className="max-w-6xl mx-auto space-y-8">
+      {/* Search Section */}
+      <section className="bg-white rounded-[2.5rem] p-6 shadow-xl shadow-slate-200/50 border border-slate-100">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1 group">
+            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+              <Sparkles className="h-5 w-5 text-indigo-500 transition-colors group-focus-within:text-indigo-600" />
+            </div>
             <input
-              className="border rounded-lg px-4 py-2 w-full"
-              placeholder="Type details of the location..."
+              className="w-full pl-12 pr-4 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 transition-all text-slate-700 placeholder:text-slate-400"
+              placeholder="ค้นหาหรือถามคำถาม"
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") onSearchQA();
-              }}
+              onKeyDown={(e) => e.key === "Enter" && onSearchQA()}
             />
           </div>
-
-          <button
-            className="bg-tone-orange text-white px-5 py-2 rounded-lg font-semibold disabled:opacity-60"
-            onClick={onSearchQA}
-            disabled={loading}
-          >
-            {loading ? "กำลังค้นหา..." : "ค้นหา"}
-          </button>
-
-          <Filter value={filterValue} onApply={onApplyFilter} onClear={onClearFilter} />
-        </div>
-      </div>
-
-      {/* คำตอบ */}
-      {activeMode === "qa" && answer && (
-        <div className="border rounded-2xl p-5 bg-white shadow-sm">
-          <div className="text-base font-semibold">คำตอบ</div>
-          <div className="mt-3 text-sm leading-7">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{answer}</ReactMarkdown>
+          
+          <div className="flex gap-2">
+            <button
+              onClick={onSearchQA}
+              disabled={loading || !q}
+              // ปรับเป็นสีน้ำตาลเข้ม (Deep Brown)
+              className="flex-1 md:flex-none px-8 py-4 bg-[#5D4037] hover:bg-[#3E2723] text-white rounded-2xl font-bold flex items-center justify-center gap-2 disabled:opacity-50 transition-all active:scale-95 shadow-lg shadow-brown-900/20"
+            >
+              {loading && activeMode === 'qa' ? (
+                <RefreshCcw className="h-4 w-4 animate-spin" />
+              ) : (
+                <Search className="h-4 w-4" />
+              )}
+              ค้นหา
+            </button>
+            <Filter value={filterValue} onApply={onApplyFilter} onClear={() => { setFilterValue({}); setFilterCastles([]); setActiveMode("qa"); }} />
           </div>
         </div>
-      )}
+      </section>
 
-      {/* Results */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="text-sm font-semibold">
-            Search results{" "}
-            <span className="text-gray-500 font-normal">
-              {castlesToShow.length > 0 ? `(Search found ${castlesToShow.length} location)` : ""}
-              {activeMode === "filter" ? " • from Filter" : ""}
-            </span>
+      {/* AI Answer Display */}
+        {activeMode === "qa" && answer && (
+          <div className="relative overflow-hidden rounded-[2rem] bg-[#F5F5DC] text-slate-800 shadow-lg shadow-stone-200/50 border border-[#EADDCA]">
+            {/* ไอคอน MessageSquare ปรับ opacity ให้เข้ากับสีพื้นหลังใหม่ */}
+            <div className="absolute top-0 right-0 p-8 opacity-5">
+              <MessageSquare className="w-32 h-32 text-[#8B4513]" />
+            </div>
+            
+            <div className="relative p-8">
+              <div className="flex items-center gap-2 mb-4 text-[#8B4513]">
+                <Sparkles className="h-4 w-4" />
+                <span className="text-xs font-bold uppercase tracking-wider opacity-70">AI Intelligent Response</span>
+              </div>
+              
+              {/* ปรับสีตัวอักษรข้างในให้เป็นสีน้ำตาลเข้มเพื่อให้พยากรณ์อ่านง่ายบนพื้นหลังอ่อน */}
+              <div className="prose prose-slate max-w-none text-[#5D4037] leading-relaxed font-medium">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{answer}</ReactMarkdown>
+              </div>
+            </div>
+          </div>
+        )}
+      {/* Results Grid */}
+      <div className="space-y-6">
+        <div className="flex items-center justify-between px-2">
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-lg ${activeMode === 'filter' ? 'bg-amber-100 text-amber-600' : 'bg-indigo-100 text-indigo-600'}`}>
+              {activeMode === 'filter' ? <FilterIcon className="w-4 h-4" /> : <MapPin className="w-4 h-4" />}
+            </div>
+            <div>
+              <h2 className="text-lg font-black text-slate-900 leading-none">
+                {activeMode === "filter" ? "ผลการกรองข้อมูล" : "สถานที่ที่เกี่ยวข้อง"}
+              </h2>
+              <p className="text-xs text-slate-400 mt-1 font-medium tracking-tight">
+                พบทั้งหมด {castlesToShow.length} สถานที่
+              </p>
+            </div>
           </div>
         </div>
 
-        {castlesToShow.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-80 bg-slate-100 animate-pulse rounded-[2rem]" />
+            ))}
+          </div>
+        ) : castlesToShow.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {castlesToShow.map((c, idx) => (
               <ResultCard key={`${c.castle_id}-${idx}`} c={c} idx={idx} />
             ))}
           </div>
         ) : (
-          !loading &&
-          activeMode === "filter" && (
-            <div className="border rounded-2xl p-4 text-sm bg-white">ไม่พบสถานที่</div>
-          )
+          <div className="py-20 text-center bg-white rounded-[2rem] border-2 border-dashed border-slate-100">
+            <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Info className="text-slate-300 w-8 h-8" />
+            </div>
+            <p className="text-slate-400 font-medium italic">ไม่พบข้อมูลที่ตรงกับการค้นหาของคุณ</p>
+          </div>
         )}
       </div>
     </div>

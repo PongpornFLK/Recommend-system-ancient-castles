@@ -1,24 +1,5 @@
 services:
-  
-  app:
-  # ใช้ตอน deploy
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        - NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}      
-    ports:
-      - "3000:3000"                 
-    environment:
-      - NODE_ENV=production
-      - NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
-      - NEXT_PUBLIC_API_URL=http://localhost:8000
-    depends_on:
-      - db
-    networks:
-      - app-networks
-    
-      
+  # --- 1. Database Service ---
   db:
     image: postgres:15-alpine
     restart: always
@@ -40,15 +21,19 @@ services:
       timeout: 5s
       retries: 10
 
+  # --- 2. Backend Service (FastAPI) ---
   backend:
     build: ./backend
     container_name: fastapi-backend
+    restart: always
     env_file:
       - .env
     environment:
-      DATABASE_URL: ${DATABASE_URL}
+      # ใช้ชื่อ service 'db' ในการเชื่อมต่อภายใน Docker Network
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
       ZILLIZ_URI: ${ZILLIZ_URI}
       ZILLIZ_TOKEN: ${ZILLIZ_TOKEN}
+      GROQ_API_KEY: ${GROQ_API_KEY}
     ports:
       - "8000:8000"
     networks:
@@ -56,7 +41,28 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    # สั่งรัน uvicorn ให้รับ connection จากภายนอก container (--host 0.0.0.0)
     command: uvicorn main:app --host 0.0.0.0 --port 8000
+
+  # --- 3. Frontend Service (Next.js) ---
+  app:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # สำคัญมาก: ต้องส่งค่าเหล่านี้ไปตอน Build เพื่อให้ Browser เรียกใช้ได้
+        - NEXT_PUBLIC_API_URL=http://localhost:8000
+        - NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
+    depends_on:
+      - backend
+    networks:
+      - app-networks
 
 volumes:
   pg_data:

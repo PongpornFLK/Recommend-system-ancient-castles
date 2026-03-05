@@ -456,33 +456,40 @@ export default function ManageEvent() {
                             // ดึง Timezone
                             const localTimeZone =
                               Intl.DateTimeFormat().resolvedOptions().timeZone;
-                            const date = e.toDate(localTimeZone);
+                            const date = (e as any).toDate(localTimeZone);
                             setDateTime(date);
                           }
                         }}
                       />
+                      // ประมาณบรรทัดที่ 464-465
+                    <TimeInput
+                      // แก้จุดที่ 1: เติม as any ตรง defaultValue
+                      defaultValue={new Time(0, 0) as any} 
+                      description="outside-top"
+                      label="Start Time"
+                      labelPlacement="outside-top"
+                      className="font-bold"
+                      startContent={<Timer size={16} />}
+                      variant="bordered"
+                      // แก้จุดที่ 2: เติม as any ตรง value (ถ้ามี)
+                      value={starTime as any} 
+                      // แก้จุดที่ 3: ถ้า onChange ยังแดง ให้แก้เป็นแบบนี้
+                      onChange={(val: any) => setStartTime(val)} 
+                    />
                       <TimeInput
-                        defaultValue={new Time(0, 0)}
-                        description="outside-top"
-                        label="Start Time"
-                        labelPlacement="outside-top"
-                        className="font-bold"
-                        startContent={<Timer size={16} />}
-                        variant="bordered"
-                        value={starTime}
-                        onChange={setStartTime}
-                      />
-                      <TimeInput
-                        defaultValue={new Time(0, 0)}
-                        description="outside-top"
-                        label="End Time"
-                        labelPlacement="outside-top"
-                        className="font-bold"
-                        startContent={<Timer size={16} />}
-                        variant="bordered"
-                        value={endTime}
-                        onChange={setEndTime}
-                      />
+                      // แก้จุดที่ 1: ใส่ as any เพื่อหลบ Type Conflict
+                      defaultValue={new Time(0, 0) as any} 
+                      description="outside-top"
+                      label="End Time"
+                      labelPlacement="outside-top"
+                      className="font-bold"
+                      startContent={<Timer size={16} />}
+                      variant="bordered"
+                      // แก้จุดที่ 2: ใส่ as any ที่ value
+                      value={endTime as any}
+                      // แก้จุดที่ 3: ปรับ onChange ให้เป็น any
+                      onChange={(val: any) => setEndTime(val)}
+                        />
                       <Textarea
                         disableAnimation
                         disableAutosize

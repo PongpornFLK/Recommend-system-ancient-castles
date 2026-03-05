@@ -24,15 +24,19 @@ export default function Register() {
 
     if (password == confirmpwd) {
       try {
-        const res = await axios.post("http://127.0.0.1:8000/users", {
+        // ใช้ NEXT_PUBLIC_API_URL และระบุ headers
+        const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/users`, {
           username : username,
           email : email,
           tel : tel,
           roles : "user",
           password : password,
+        }, {
+          headers: { "Content-Type": "application/json" }
         });
 
-        console.log("Register success", res.status, "\nData:", res.data);
+        console.log("Register success", res.status);
+        
         setIsData(res.data);
 
         addToast({

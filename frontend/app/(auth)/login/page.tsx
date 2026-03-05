@@ -41,12 +41,12 @@ export default function Login() {
     formData.append("password", password);
 
     try {
+      // ใช้ NEXT_PUBLIC_API_URL แทน 127.0.0.1
       const res = await axios.post(
-        "http://127.0.0.1:8000/auth/token",
-        formData,
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/token`,
+        formData
       );
-      // console.log("Login success", res.status , "\nData:" , res.data);
-
+      
       const token = res.data.access_token;
       const decode = jwtDecode<customToken>(token);
 

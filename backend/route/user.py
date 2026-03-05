@@ -16,46 +16,58 @@ router = APIRouter(
 )
 
 ### Role : User ( Register )###
-@router.post("" , response_model = UserResponse)
-def createUser(user: UserCreate , db: Session = Depends(get_db)):
+# ... (import ส่วนเดิม) ...
 
-    db_user = User(**user.model_dump(exclude={"password"}) , password = pwd_context.hash(user.password))
+@router.post("", response_model=UserResponse)
+def createUser(user: UserCreate, db: Session = Depends(get_db)):
+    # 1. เพิ่มการตรวจสอบ Username ซ้ำ
+    existing_user = db.query(User).filter(User.username == user.username).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Username already registered")
     
-    db.add(db_user)
+    # 2. เพิ่มการตรวจสอบ Email ซ้ำ
+    existing_email = db.query(User).filter(User.email == user.email).first()
+    if existing_email:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    # บันทึกพร้อม Hash รหัสผ่าน (แก้ไขปัญหา Error 500 ตอน Login)
+    db_user = User(
+        **user.model_dump(exclude={"password"}), 
+        password = pwd_context.hash(user.password)
+    )
+    
+    try:
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+        logger.info(f"User created - ID: {db_user.user_id}")
+        return db_user
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Register database error: {e}")
+        raise HTTPException(status_code=500, detail="Database error during registration")
+
+@router.put("/{user_id}", response_model=UserResponse)
+async def updateUser(
+    user_id: int, 
+    user: UserUpdate, 
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(getCurrentUser) # 3. เพิ่ม Security Check
+):
+    # ป้องกันไม่ให้ User คนอื่นมาแอบแก้ข้อมูลคนอื่น
+    if current_user["user_id"] != user_id and current_user["roles"] != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized to update this user")
+
+    db_user = db.query(User).filter(User.user_id == user_id).first()
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User Not Found")
+    
+    for key, value in user.model_dump(exclude_unset=True).items():
+        setattr(db_user, key, value)
+    
     db.commit()
     db.refresh(db_user)
-    logger.info(f"success- id : {db_user.user_id} pass: {db_user.password}")
     return db_user
-
-
-@router.get("/{user_id}"  , response_model = UserResponse ) #### get บางตัว
-def readUser(user_id : int , db : Session = Depends(get_db)):
-	db_user = db.query(User).filter(User.user_id == user_id).first()
-	if db_user is None:
-		raise HTTPException(status_code=404, detail="User not found")
-	return db_user
-
-
-@router.get("" ) #### get all
-def readUserAll(page : int = 1 , size: int=10 , db : Session = Depends(get_db) , current_user : User = Depends(getCurrentUser)) -> Page[UserResponse]:
-    if(current_user.get("roles") != "admin"):
-        raise HTTPException(status_code=403 , detail="You don't have permission")
-    
-    db_user = db.query(User).order_by(asc(User.user_id))
-    
-    return paginate(db_user , Params(page=page, size=size))
-
-
-@router.put("/{user_id}"  , response_model = UserResponse )
-async def updateUser(user_id : int ,user: UserUpdate ,db : Session=Depends(get_db)):
-	db_user = db.query(User).filter(User.user_id == user_id).first()
-	if db_user is None :
-		raise HTTPException(status_code=404 , detail = "Not Found")
-	for key , value in user.model_dump(exclude_unset=True).items():
-		setattr(db_user , key , value)
-	db.commit()
-	db.refresh(db_user)
-	return db_user
 
 
 @router.delete("/{user_id}")

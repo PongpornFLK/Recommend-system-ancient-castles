@@ -28,6 +28,7 @@ def createEvent(event : EventCreate , db : Session=Depends(get_db) , current_use
     
     return db_event
 
+# get ฝั่ง Admin
 @router.get("/admin")
 def readEventAll(page: int = 1, size: int = 5,db : Session = Depends(get_db) , current_user : User = Depends(getCurrentUser)) -> Page[EventResponse]:
     
@@ -36,6 +37,20 @@ def readEventAll(page: int = 1, size: int = 5,db : Session = Depends(get_db) , c
     
     db_event = db.query(Event).order_by(asc(Event.event_id))
     return paginate(db_event , Params(page=page, size=size))
+
+# get EventDescript หน้า Myplan
+@router.get("/event/description/{castle_id}")
+def readEventDescript( castle_id : int , db: Session = Depends(get_db) , current_user : User = Depends(getCurrentUser)):
+    if(current_user.get("roles") != "user"):
+        raise HTTPException(status_code=403,detail="You don't have permission")
+    
+    db_event = db.query(Event).filter(Event.castle_id == castle_id).first()
+    
+    if db_event is None:
+        raise HTTPException(status_code=404,detail="Not Found")
+    
+    return db_event
+
 
 @router.delete("/{event_id}")
 async def deleteEvent(event_id:int , current_user : User = Depends(getCurrentUser) , db : Session=Depends(get_db)):

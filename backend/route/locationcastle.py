@@ -23,7 +23,7 @@ def haversine(lon1, lat1, lon2, lat2):
 
 # ดึง castle_id แล้วดูว่าตรงกับ location_id ไหน
 @router.get("/{castle_id}", response_model=CastleResponse)
-def readLocation(
+async def readLocation(
     castle_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(getCurrentUser),
@@ -60,7 +60,7 @@ def readLocation(
 
 # get lat long
 @router.get("/castle/nearby/user={lat}&{lng}")
-def readCastleNearMe(
+async def readCastleNearMe(
     lat: float,
     lng: float,
     current_user: User = Depends(getCurrentUser),

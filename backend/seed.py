@@ -34,11 +34,15 @@ def create_mock_castles(count=20):
 
 def create_mock_locations(count=15):
     locations = []
+    # Bangkok area coordinates (approximately)
+    bangkok_lat_range = (13.5, 13.9)  # Bangkok latitude range
+    bangkok_lng_range = (100.4, 100.9)  # Bangkok longitude range
+    
     for i in range(count):
         location = Location(
-            latitude=float(fake.latitude()),
-            longitude=float(fake.longitude()),
-            province=fake.province(),
+            latitude=round(random.uniform(bangkok_lat_range[0], bangkok_lat_range[1]), 6),
+            longitude=round(random.uniform(bangkok_lng_range[0], bangkok_lng_range[1]), 6),
+            province="กรุงเทพมหานคร",
             sub_district=fake.city(),
             district=fake.street_name()
         )
@@ -59,19 +63,6 @@ def create_mock_location_castles(castles, locations):
         location_castles.append(location_castle)
     
     return location_castles
-
-def create_mock_interests(count=50):
-    interests = []
-    interest_types = ["History", "Architecture", "Photography", "Nature", "Culture", "Adventure"]
-    
-    for i in range(count):
-        interest = Interest(
-            interest_name=random.choice(interest_types),
-            user_id=random.randint(1, 10),  # Assuming 10 users
-            castle_id=random.randint(1, 20)  # Assuming 20 castles
-        )
-        interests.append(interest)
-    return interests
 
 def create_mock_castle_types():
     types = [
@@ -131,17 +122,22 @@ def create_mock_events(count=25):
 def create_mock_nearby_places(count=35):
     places = []
     place_types = ["Restaurant", "Hotel", "Museum", "Park", "Shopping Center", "Temple"]
+    # Bangkok area coordinates (approximately)
+    bangkok_lat_range = (13.5, 13.9)  # Bangkok latitude range
+    bangkok_lng_range = (100.4, 100.9)  # Bangkok longitude range
     
     for i in range(count):
         place = NearbyPlace(
             castle_id=random.randint(1, 20),  # Assuming 20 castles
             place_name=f"{random.choice(place_types)} {fake.company()}",
-            nearby_detail=fake.text(max_nb_chars=100)
+            nearby_detail=fake.text(max_nb_chars=100),
+            latitude=round(random.uniform(bangkok_lat_range[0], bangkok_lat_range[1]), 6),
+            longitude=round(random.uniform(bangkok_lng_range[0], bangkok_lng_range[1]), 6)
         )
         places.append(place)
     return places
 
-def create_mock_search_histories(count=60):
+def create_mock_search_histories(count, users_list):
     histories = []
     search_queries = [
         "ancient castle", "medieval fortress", "historic palace", 
@@ -151,20 +147,20 @@ def create_mock_search_histories(count=60):
     
     for i in range(count):
         history = SearchHistory(
-            user_id=random.randint(1, 10),  # Assuming 10 users
+            user_id=random.choice(users_list).user_id,  # Use actual user objects
             query_text=random.choice(search_queries),
             search_time=fake.date_time_this_year()
         )
         histories.append(history)
     return histories
 
-def create_mock_visit_histories(count=45):
+def create_mock_visit_histories(count, users_list, castles_list):
     histories = []
     
     for i in range(count):
         history = VisitHistory(
-            user_id=random.randint(1, 10),  # Assuming 10 users
-            castle_id=random.randint(1, 20),  # Assuming 20 castles
+            user_id=random.choice(users_list).user_id,  # Use actual user objects
+            castle_id=random.choice(castles_list).castle_id,  # Use actual castle objects
             visit_date=fake.date_this_year()
         )
         histories.append(history)
@@ -175,144 +171,102 @@ def seed_data():
     LocalSessionLocal = _orm.sessionmaker(autocommit=False, autoflush=False, bind=local_engine)
     db = LocalSessionLocal()
     
-    print("Start Seeding Data...")
-    
-    # Create mock data
-    users = []
-    created_users = []
-    
-
-    # 1.1 สร้าง Admin (Fixed User) - เอาไว้เทส Login
-    admin_user = db.query(User).filter(User.username == "admin").first()
-    if not admin_user:
-        admin = User(
-            username="admin",
-            password=get_password_hash("admin123"),
-            email="admin@example.com",
-            # role="admin" # เปิดบรรทัดนี้ถ้าใน Model User มี field role
-        )
-        db.add(admin)
-        created_users.append(admin)
-    
-    # 1.2 สร้าง User ทั่วไป 10 คน
-    for _ in range(10):
-        profile = fake.simple_profile()
-        user = User(
-            username=profile['username'],
-            password=get_password_hash("1234"), # รหัสเดียวกันหมดจะได้เทสง่าย
-            email=profile['mail'],
-            # role="user"
-        )
-        db.add(user)
-        created_users.append(user)
-    
-    # Commit รอบแรกเพื่อเอา user_id
-    db.commit()
-    
-    # Refresh object เพื่อให้ได้ ID ล่าสุดจาก DB
-    for user in created_users:
-        db.refresh(user)
-
-    # ---------------------------------------
-    # 2. สร้าง Trip Plan ให้ User แต่ละคน
-    # ---------------------------------------
-    print("   Creating Trip Plans...")
-    
-    trip_names = ["เที่ยวเชียงใหม่", "ทริปภูเก็ต", "ไหว้พระอยุธยา", "เดินป่าเขาใหญ่", "พักผ่อนพัทยา"]
-    
-    for user in created_users:
-        # สุ่มว่า User คนนี้จะมีกี่ทริป (1 ถึง 3 ทริป)
-        num_trips = random.randint(1, 3)
+    try:
+        print("Start Seeding Data...")
         
-        for _ in range(num_trips):
-            # สุ่มวันเดินทาง (ภายในปีนี้)
-            start_date = fake.date_this_year()
-            duration = random.randint(1, 5) # 1-5 วัน
-            end_date = start_date + timedelta(days=duration)
-            
-            # แปลงเป็น datetime object เพราะ DB เก็บเป็น DateTime
-            start_dt = datetime.combine(start_date, datetime.min.time())
-            end_dt = datetime.combine(end_date, datetime.min.time())
-
-            trip = TripPlan(
-                user_id=user.user_id,          # ผูกกับ User ตรงนี้
-                plan_name=f"{random.choice(trip_names)} - {fake.first_name()}",
-                event_description=fake.text(max_nb_chars=100),
-                start_date=start_dt,
-                end_date=end_dt,
-                duration=duration,
-                # route_id=... (ใส่เพิ่มถ้ามี mock route)
-                # event_id=... (ใส่เพิ่มถ้ามี mock event)
+        # 1. สร้าง Users
+        created_users = []
+        admin_user = db.query(User).filter(User.username == "admin").first()
+        if not admin_user:
+            admin = User(
+                username="admin",
+                password=get_password_hash("admin123"),
+                email="admin@example.com",
             )
-            db.add(trip)
+            db.add(admin)
+            created_users.append(admin)
+        
+        for _ in range(10):
+            profile = fake.simple_profile()
+            user = User(
+                username=profile['username'],
+                password=get_password_hash("1234"),
+                email=profile['mail'],
+            )
+            db.add(user)
+            created_users.append(user)
+        
+        db.commit() # Commit เพื่อให้ได้ user_id
+        
+        for user in created_users:
+            db.refresh(user)
 
-    # ---------------------------------------
-    # 3. สร้าง Mock Data ทั้งหมด
-    # ---------------------------------------
-    print("   Creating Mock Data...")
-    
-    # Create castle types first (needed by castles)
-    castle_types = create_mock_castle_types()
-    db.add_all(castle_types)
-    db.commit()
-    
-    # Create castles, locations, and other data
-    castles = create_mock_castles(count=20)
-    locations = create_mock_locations(count=15)
-    
-    # Add castles and locations first to get their IDs
-    db.add_all(castles)
-    db.add_all(locations)
-    db.commit()
-    
-    # Refresh objects to get their IDs
-    for castle in castles:
-        db.refresh(castle)
-    for location in locations:
-        db.refresh(location)
-    
-    # Now create location-castle relationships with valid IDs
-    location_castles = create_mock_location_castles(castles, locations)
-    interests = create_mock_interests(count=50)
-    architectures = create_mock_architectures(count=30)
-    images = create_mock_images(count=40)
-    events = create_mock_events(count=25)
-    nearby_places = create_mock_nearby_places(count=35)
-    search_histories = create_mock_search_histories(count=60)
-    visit_histories = create_mock_visit_histories(count=45)
-    
-    # Add all mock data to database
-    db.add_all(location_castles)
-    db.add_all(interests)
-    db.add_all(architectures)
-    db.add_all(images)
-    db.add_all(events)
-    db.add_all(nearby_places)
-    db.commit()  # Commit before adding search_histories and visit_histories
-    db.add_all(search_histories)
-    db.add_all(visit_histories)
-    db.commit()  # Commit again after adding all data
-    
-    # ---------------------------------------
-    # 4. บันทึกทั้งหมดลง Database
-    # ---------------------------------------
-    db.close()
-    
-    print(f"Seeding Complete!")
-    print(f"  - Users: {len(created_users)} (including admin)")
-    print(f"  - Locations: {len(locations)}")
-    print(f"  - Location-Castle Relationships: {len(location_castles)}")
-    print(f"  - Interests: {len(interests)}")
-    print(f"  - Architectures: {len(architectures)}")
-    print(f"  - Images: {len(images)}")
-    print(f"  - Events: {len(events)}")
-    print(f"  - Nearby Places: {len(nearby_places)}")
-    print(f"  - Search Histories: {len(search_histories)}")
-    print(f"  - Visit Histories: {len(visit_histories)}")
+        # 2. สร้าง Trip Plans
+        print("   Creating Trip Plans...")
+        trip_names = ["เที่ยวเชียงใหม่", "ทริปภูเก็ต", "ไหว้พระอยุธยา", "เดินป่าเขาใหญ่", "พักผ่อนพัทยา"]
+        trip_plans = []
+        for user in created_users:
+            for _ in range(random.randint(1, 3)):
+                start_date = fake.date_this_year()
+                duration = random.randint(1, 5)
+                start_dt = datetime.combine(start_date, datetime.min.time())
+                end_dt = start_dt + timedelta(days=duration)
 
+                trip = TripPlan(
+                    user_id=user.user_id,
+                    plan_name=f"{random.choice(trip_names)} - {fake.first_name()}",
+                    event_description=fake.text(max_nb_chars=100),
+                    start_date=start_dt,
+                    end_date=end_dt,
+                    duration=duration,
+                )
+                db.add(trip)
+                trip_plans.append(trip)
+
+        # 3. สร้าง Mock Data อื่นๆ
+        print("   Creating Mock Data...")
+        # (ส่วนนี้ใช้โค้ดเดิมของคุณได้เลย แต่ครอบด้วย try...except)
+        castle_types = create_mock_castle_types()
+        db.add_all(castle_types)
+        db.commit()
+        
+        castles = create_mock_castles(count=20)
+        locations = create_mock_locations(count=15)
+        db.add_all(castles)
+        db.add_all(locations)
+        db.commit()
+        
+        for castle in castles: db.refresh(castle)
+        for location in locations: db.refresh(location)
+        
+        # เพิ่มข้อมูลส่วนที่เหลือ
+        db.add_all(create_mock_location_castles(castles, locations))
+        db.add_all(create_mock_architectures(count=30))
+        db.add_all(create_mock_images(count=40))
+        db.add_all(create_mock_events(count=25))
+        db.add_all(create_mock_nearby_places(count=35))
+        db.commit()
+
+        db.add_all(create_mock_search_histories(count=60, users_list=created_users))
+        db.add_all(create_mock_visit_histories(count=45, users_list=created_users, castles_list=castles))
+        db.commit()
+
+        print("Seeding Complete Successfully!")
+
+    except Exception as e:
+        print(f"❌ Error occurred: {e}")
+        db.rollback() # ถอยกลับถ้ามีปัญหา ข้อมูลจะได้ไม่เน่า
+    finally:
+        db.close() # ปิดการเชื่อมต่อเสมอ
+        
 if __name__ == "__main__":
-    # สร้าง Table ก่อน (เผื่อยังไม่มี)
+    print("Dropping old tables...")
+    # 🔴 1. สั่งลบตารางและข้อมูลเก่าทิ้งทั้งหมด (Reset)
+    Base.metadata.drop_all(bind=local_engine)
+    
+    print("Creating new tables...")
+    # 🟢 2. สร้างตารางใหม่แบบสะอาดเอี่ยม
     Base.metadata.create_all(bind=local_engine)
     
-    # รันฟังก์ชัน Seed
+    # 3. รันฟังก์ชัน Seed เพื่อใส่ข้อมูลใหม่
     seed_data()

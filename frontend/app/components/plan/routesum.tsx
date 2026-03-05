@@ -3,8 +3,9 @@
 import useLocation from "@/app/service/map/useLocation";
 import useCalroute from "@/app/service/plan/useCalroute";
 import useCreateroute from "@/app/service/plan/useCreateroute";
-import useSave from "@/app/service/plan/useSave";
+import useEventdescript from "@/app/service/plan/useEventdescript";
 import useViewroute from "@/app/service/plan/useViewroute";
+import saveTrip from "@/app/service/tripplan/saveTrip";
 
 import { Button, Chip, Skeleton } from "@heroui/react";
 import { List, Route } from "lucide-react";
@@ -24,18 +25,21 @@ interface RouteSumProps {
     lat: number;
     lng: number;
   };
+  planName: string;
 }
 
 export default function Routesum({
   boxSelect,
   currentPlace,
   getGPS,
+  planName,
 }: RouteSumProps) {
   const { locationCastle } = useCreateroute();
-  const { viewRoute } = useViewroute();
   const { getNamePlace } = useLocation();
+  const { eventDescript, eventId } = useEventdescript();
+  const { viewRoute } = useViewroute();
   const { calRoute, kilo, hours, minute, loading } = useCalroute();
-  const { saveRoute } = useSave();
+  const { saveRoute } = saveTrip();
 
   useEffect(() => {
     if (getGPS && locationCastle) {
@@ -106,7 +110,36 @@ export default function Routesum({
         <Button
           startContent={<List size={16} />}
           className="flex-1 bg-tone-lightgreen text-white font-bold"
-          onClick={()=>{saveRoute()}}
+          onClick={() => {
+            const startDate = new Date();
+            const minutes = hours * 60 + (minute || 0);
+            const endDate = new Date(startDate.getTime() + minutes * 60000);
+
+            const tripData = {
+              plan_name: planName,
+              event_id : eventId,
+              event_description: eventDescript || "none",
+              start_date: new Date().toISOString() || "none",
+              end_date: new Date().toISOString() || "none",
+              duration: minutes,
+              status: "travelling" as const,
+              destination_id : locationCastle?.castle_id || 0 ,
+              destination_name: locationCastle?.castle_name || "none",
+              destination_lat: locationCastle?.location.latitude || 0,
+              destination_lng: locationCastle?.location.longitude || 0,
+            };
+            const itinerary = boxSelect
+              .filter((box) => box.placeName && box.placeName !== "")
+              .map((box) => ({
+                castle_id: Number(box.placeId) || 0,
+                event_id: eventId || 1, // ใช้ event_id จาก Hook
+                start_time: startDate.toDateString(),
+                end_time: endDate.toISOString(),
+                place_name : box.placeName
+              }));
+
+            saveRoute(tripData, itinerary);
+          }}
         >
           Save
         </Button>

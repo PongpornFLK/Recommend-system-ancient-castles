@@ -36,7 +36,7 @@ export default function useCreateroute() {
             },
           },
         );
-        // console.log("LocationCastle : ",response.data);
+        console.log("LocationCastle : ",response.data);
 
         setLocationCastle(response.data);
       } catch (err) {

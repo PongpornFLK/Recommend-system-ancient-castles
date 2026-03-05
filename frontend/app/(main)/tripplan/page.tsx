@@ -1,9 +1,12 @@
-import React from 'react'
+import TripAccord from "@/app/components/trip/accordion";
 
-export default function page() {
+export default function TripPlanPage() {
   return (
     <div>
-      Create Route
+      <div className="text-center text-3xl font-bold my-8">Trip Plan</div>
+      <div>
+        <TripAccord/>
+      </div>
     </div>
-  )
+  );
 }

@@ -161,7 +161,6 @@ export default function Searching() {
             <button
               onClick={onSearchQA}
               disabled={loading || !q}
-              // ปรับเป็นสีน้ำตาลเข้ม (Deep Brown)
               className="flex-1 md:flex-none px-8 py-4 bg-[#5D4037] hover:bg-[#3E2723] text-white rounded-2xl font-bold flex items-center justify-center gap-2 disabled:opacity-50 transition-all active:scale-95 shadow-lg shadow-brown-900/20"
             >
               {loading && activeMode === 'qa' ? (
@@ -176,27 +175,32 @@ export default function Searching() {
         </div>
       </section>
 
-      {/* AI Answer Display */}
+      {/* AI Answer Display - ปรับปรุงตัวอักษรให้ใหญ่ขึ้น (ประมาณ 18px+) */}
         {activeMode === "qa" && answer && (
-          <div className="relative overflow-hidden rounded-[2rem] bg-[#F5F5DC] text-slate-800 shadow-lg shadow-stone-200/50 border border-[#EADDCA]">
-            {/* ไอคอน MessageSquare ปรับ opacity ให้เข้ากับสีพื้นหลังใหม่ */}
+          <div className="relative overflow-hidden rounded-[2.5rem] bg-[#FDFDF0] text-slate-800 shadow-xl shadow-stone-200/40 border border-[#EADDCA]">
             <div className="absolute top-0 right-0 p-8 opacity-5">
               <MessageSquare className="w-32 h-32 text-[#8B4513]" />
             </div>
             
-            <div className="relative p-8">
-              <div className="flex items-center gap-2 mb-4 text-[#8B4513]">
-                <Sparkles className="h-4 w-4" />
-                <span className="text-xs font-bold uppercase tracking-wider opacity-70">AI Intelligent Response</span>
+            <div className="relative p-8 md:p-12">
+              <div className="flex items-center gap-3 mb-6 text-[#8B4513]">
+                <Sparkles className="h-6 w-6" />
+                <span className="text-sm font-black uppercase tracking-[0.2em] opacity-80 text-stone-500">Your answer</span>
               </div>
               
-              {/* ปรับสีตัวอักษรข้างในให้เป็นสีน้ำตาลเข้มเพื่อให้พยากรณ์อ่านง่ายบนพื้นหลังอ่อน */}
-              <div className="prose prose-slate max-w-none text-[#5D4037] leading-relaxed font-medium">
+              {/* ปรับแต่งส่วน ReactMarkdown ให้ใหญ่ขึ้นชัดเจน */}
+              {/* prose-xl ปรับฟอนต์พื้นฐานเป็น 1.25rem (~20px) พร้อมระยะห่างที่สวยงาม */}
+              <div className="prose prose-stone prose-xl max-w-none 
+                            text-[#4E342E] leading-relaxed font-medium
+                            prose-headings:text-[#3E2723] prose-headings:font-black
+                            prose-p:text-lg prose-p:leading-loose
+                            prose-li:text-lg prose-li:leading-relaxed">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{answer}</ReactMarkdown>
               </div>
             </div>
           </div>
         )}
+
       {/* Results Grid */}
       <div className="space-y-6">
         <div className="flex items-center justify-between px-2">

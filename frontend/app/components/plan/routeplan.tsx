@@ -5,6 +5,7 @@ import SelectPlace from "@/app/components/plan/selectplace";
 import React from "react";
 import { Spinner } from "@heroui/react"; 
 import useCreateroute from "@/app/service/plan/useCreateroute";
+import FromPlan from "./formplan";
 
 interface RouteSelect {
   boxSelect: {
@@ -20,14 +21,17 @@ interface RouteSelect {
   >;
   currentPlace : string,
   isLoading: boolean;
+  planName : string;
+  setPlanName : (name : string) => void
 }
 
-export default function Routeplan({ boxSelect, setBoxSelect,currentPlace ,isLoading}: RouteSelect) {
+export default function Routeplan({ boxSelect, setBoxSelect,currentPlace ,isLoading,planName,setPlanName}: RouteSelect) {
   const { locationCastle } = useCreateroute();
 
   return (
     <div className="bg-white rounded-2xl mt-5 p-6 w-full lg:w-3/5 lg:h-fit">
       <div className="space-y-4">
+        <FromPlan placeName={planName} setPlaceName={setPlanName}/>
         <div className="flex items-start gap-3">
           <Flag size={24} className="text-tone-blue" />
           <div className="flex-1">

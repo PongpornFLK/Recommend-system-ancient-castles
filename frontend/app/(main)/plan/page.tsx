@@ -1,5 +1,6 @@
 "use client";
 
+import FromPlan from "@/app/components/plan/formplan";
 import Routeplan from "@/app/components/plan/routeplan";
 import Routesum from "@/app/components/plan/routesum";
 import useLocation from "@/app/service/map/useLocation";
@@ -15,6 +16,7 @@ export default function Plan() {
   const { getNamePlace, loading, getGPS } = useLocation();
   const { locationCastle } = useCreateroute();
   const [date, setDate] = useState("");
+  const [planName , setPlanName] = useState("");
 
   useEffect(() => {
     const fetchTime = () => {
@@ -69,6 +71,8 @@ export default function Plan() {
           setBoxSelect={setBoxSelect}
           currentPlace={getNamePlace}
           isLoading={loading}
+          planName={planName}
+          setPlanName={setPlanName}
         />
 
         {/* Right - Container */}
@@ -76,6 +80,7 @@ export default function Plan() {
           boxSelect={boxSelect}
           currentPlace={getNamePlace}
           getGPS={getGPS}
+          planName={planName}
         />
       </div>
     </section>

@@ -10,6 +10,7 @@ router = APIRouter(
     tags = ['nearplace']
 )
 
+# สถานที่ใกล้เคียงกับปราสาทนั้น ตอน create_route
 @router.get("")
 def readPlaceCastle(castle_id : int , db : Session=Depends(get_db) , current_user : User=Depends(getCurrentUser)) :
     if(current_user.get("roles") != "user"):

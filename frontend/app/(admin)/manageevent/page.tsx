@@ -49,9 +49,9 @@ export default function ManageEvent() {
   const rowSize = 5;
   const pages = Math.ceil(total / rowSize);
 
-  const {isOpen: isDrawerOpen,onOpen: onDrawerOpen,onOpenChange: onDrawerOpenChange,} = useDisclosure();
-  const {isOpen: isModalOpen,  onOpen: onModalOpen,  onOpenChange: onModalOpenChange,} = useDisclosure()
-  
+  const { isOpen: isDrawerOpen, onOpen: onDrawerOpen, onOpenChange: onDrawerOpenChange } = useDisclosure();
+  const { isOpen: isModalOpen, onOpen: onModalOpen, onOpenChange: onModalOpenChange } = useDisclosure();
+
   const [eventName, setEventName] = useState("");
   const [castleName, setCastleName] = useState("");
   const [starTime, setStartTime] = useState<Time | null>(null);
@@ -62,6 +62,7 @@ export default function ManageEvent() {
   const [eventId, setEventId] = useState<string>("");
   const [castleId, setCastleId] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
+
   const filteredEvents = eventData.filter(
     (event) =>
       event.event_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -76,7 +77,7 @@ export default function ManageEvent() {
     event_start: string;
     event_end: string;
     event_date: string;
-    castle_id: string; // Add castle_id at top level
+    castle_id: string;
     castle?: {
       castle_id: string;
       castle_name: string;
@@ -97,7 +98,6 @@ export default function ManageEvent() {
   const fetchEvent = React.useCallback(async () => {
     const token = localStorage.getItem("token");
 
-    // console.log("Page :", page);
     try {
       const response = await axios.get(`http://127.0.0.1:8000/event/admin`, {
         headers: {
@@ -110,10 +110,6 @@ export default function ManageEvent() {
       });
 
       setTotal(response.data.total);
-      // console.log(
-      //   "Response structure:",
-      //   JSON.stringify(response.data, null, 2),
-      // );
 
       const eventData = response.data.items.map((item: EventData) => ({
         event_id: item.event_id?.toString(),
@@ -131,8 +127,6 @@ export default function ManageEvent() {
       setFormData(response.data);
 
       console.log(eventData);
-      // console.log("start", eventData[0]?.event_start);
-      // console.log("end", eventData[0]?.event_end);
     } catch (err) {
       console.error("Get event data err", err);
     }
@@ -156,10 +150,8 @@ export default function ManageEvent() {
     async (event_id: string) => {
       const token = localStorage.getItem("token");
 
-      // console.log("event id : ", event_id);
-
       try {
-        const response = await axios.delete(
+        await axios.delete(
           `http://127.0.0.1:8000/event/${event_id}`,
           {
             headers: {
@@ -168,7 +160,6 @@ export default function ManageEvent() {
           },
         );
 
-        // console.log("Delete Event : ", response.data);
         fetchEvent();
       } catch (err) {
         console.error("Delete Not success : ", err);
@@ -181,7 +172,6 @@ export default function ManageEvent() {
     const token = localStorage.getItem("token");
 
     try {
-      console.log("castleId", castleId);
       const response = await axios.put(
         `http://127.0.0.1:8000/event/${eventId}`,
         {
@@ -202,12 +192,9 @@ export default function ManageEvent() {
         },
       );
 
-      console.log("response", response.data);
-
       setEventName(response.data.event_name);
       setCastleName(response.data.castle?.castle_name);
 
-      // *****
       if (response.data.event_start) {
         const [startHour, startMinute] = response.data.event_start.split(":");
         setStartTime(new Time(parseInt(startHour), parseInt(startMinute)));
@@ -220,16 +207,13 @@ export default function ManageEvent() {
       setDescription(response.data.event_description);
       setCastleId(response.data.castle?.castle_id);
 
-      console.log("Update Event : ", response.data);
-
       fetchEvent();
 
       addToast({
         hideIcon: true,
         title: "Update Success",
         classNames: {
-          closeButton:
-            "opacity-100 absolute right-4 top-1/2 -translate-y-1/2 font-bold",
+          closeButton: "opacity-100 absolute right-4 top-1/2 -translate-y-1/2 font-bold",
         },
         closeIcon: <X />,
         color: "success",
@@ -241,9 +225,6 @@ export default function ManageEvent() {
 
   const renderCell = React.useCallback(
     (data: EventData, columnKey: keyof EventData | "action") => {
-      const cellValue = data[columnKey as keyof EventData];
-
-      // console.log("Render Cell :", columnKey, data);
       switch (columnKey) {
         case "event_id":
           return data.event_id;
@@ -275,18 +256,10 @@ export default function ManageEvent() {
                     setDateTime(new Date(data.event_date));
                     setCastleId(data.castle_id);
 
-                    const [startHour, startMinute] =
-                      data.event_start.split(":");
+                    const [startHour, startMinute] = data.event_start.split(":");
                     const [endHour, endMinute] = data.event_end.split(":");
-                    setStartTime(
-                      new Time(parseInt(startHour), parseInt(startMinute)),
-                    );
-                    setEndTime(
-                      new Time(parseInt(endHour), parseInt(endMinute)),
-                    );
-
-                    // console.log("Raw start time:", startHour);
-                    // console.log("Raw end time:", endHour);
+                    setStartTime(new Time(parseInt(startHour), parseInt(startMinute)));
+                    setEndTime(new Time(parseInt(endHour), parseInt(endMinute)));
                   }}
                   isIconOnly
                   className="text-tone-oldgray bg-white hover:text-tone-oldgray hover:bg-tone-cream"
@@ -312,15 +285,15 @@ export default function ManageEvent() {
           );
         default:
           const cellValue = data[columnKey as keyof EventData];
-
           if (typeof cellValue === "object" && cellValue !== null) {
             return "";
           }
           return cellValue as React.ReactNode;
       }
     },
-    [onDrawerOpen, deleteEvent, onModalOpen],
+    [onDrawerOpen, onModalOpen],
   );
+
   return (
     <section>
       <div>
@@ -340,9 +313,7 @@ export default function ManageEvent() {
               }}
               onSelectionChange={(key: React.Key | null) => {
                 if (key) {
-                  const selectedEvent = eventData.find(
-                    (event) => event.event_id === key,
-                  );
+                  const selectedEvent = eventData.find((event) => event.event_id === key);
                   if (selectedEvent) {
                     setSearchTerm(selectedEvent.event_name);
                   }
@@ -386,18 +357,12 @@ export default function ManageEvent() {
                   </TableColumn>
                 )}
               </TableHeader>
-              <TableBody
-                emptyContent={"Don't Have History..."}
-                items={filteredEvents}
-              >
+              <TableBody emptyContent={"Don't Have History..."} items={filteredEvents}>
                 {(item) => (
                   <TableRow key={item.event_id}>
                     {(columnKey) => (
                       <TableCell>
-                        {renderCell(
-                          item,
-                          columnKey as keyof EventData | "action",
-                        )}
+                        {renderCell(item, columnKey as keyof EventData | "action")}
                       </TableCell>
                     )}
                   </TableRow>
@@ -418,7 +383,7 @@ export default function ManageEvent() {
                   </div>
                 </DrawerHeader>
                 <DrawerBody>
-                  <div className="">
+                  <div>
                     <Form onSubmit={updateEvent}>
                       <Input
                         className="font-bold pb-5"
@@ -446,50 +411,37 @@ export default function ManageEvent() {
                         variant="bordered"
                         labelPlacement="outside-top"
                         selectorButtonPlacement="start"
-                        value={
-                          dateTime
-                            ? parseDate(dateTime.toISOString().split("T")[0])
-                            : undefined
-                        }
+                        value={dateTime ? parseDate(dateTime.toISOString().split("T")[0]) : undefined}
                         onChange={(e) => {
                           if (e) {
-                            // ดึง Timezone
-                            const localTimeZone =
-                              Intl.DateTimeFormat().resolvedOptions().timeZone;
+                            const localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
                             const date = (e as any).toDate(localTimeZone);
                             setDateTime(date);
                           }
                         }}
                       />
-                      // ประมาณบรรทัดที่ 464-465
-                    <TimeInput
-                      // แก้จุดที่ 1: เติม as any ตรง defaultValue
-                      defaultValue={new Time(0, 0) as any} 
-                      description="outside-top"
-                      label="Start Time"
-                      labelPlacement="outside-top"
-                      className="font-bold"
-                      startContent={<Timer size={16} />}
-                      variant="bordered"
-                      // แก้จุดที่ 2: เติม as any ตรง value (ถ้ามี)
-                      value={starTime as any} 
-                      // แก้จุดที่ 3: ถ้า onChange ยังแดง ให้แก้เป็นแบบนี้
-                      onChange={(val: any) => setStartTime(val)} 
-                    />
                       <TimeInput
-                      // แก้จุดที่ 1: ใส่ as any เพื่อหลบ Type Conflict
-                      defaultValue={new Time(0, 0) as any} 
-                      description="outside-top"
-                      label="End Time"
-                      labelPlacement="outside-top"
-                      className="font-bold"
-                      startContent={<Timer size={16} />}
-                      variant="bordered"
-                      // แก้จุดที่ 2: ใส่ as any ที่ value
-                      value={endTime as any}
-                      // แก้จุดที่ 3: ปรับ onChange ให้เป็น any
-                      onChange={(val: any) => setEndTime(val)}
-                        />
+                        defaultValue={new Time(0, 0) as any}
+                        description="outside-top"
+                        label="Start Time"
+                        labelPlacement="outside-top"
+                        className="font-bold"
+                        startContent={<Timer size={16} />}
+                        variant="bordered"
+                        value={starTime as any}
+                        onChange={(val: any) => setStartTime(val)}
+                      />
+                      <TimeInput
+                        defaultValue={new Time(0, 0) as any}
+                        description="outside-top"
+                        label="End Time"
+                        labelPlacement="outside-top"
+                        className="font-bold"
+                        startContent={<Timer size={16} />}
+                        variant="bordered"
+                        value={endTime as any}
+                        onChange={(val: any) => setEndTime(val)}
+                      />
                       <Textarea
                         disableAnimation
                         disableAutosize
@@ -530,17 +482,13 @@ export default function ManageEvent() {
             )}
           </DrawerContent>
         </Drawer>
-        <div>
-          <ModalDelete
-            isOpen={isModalOpen}
-            onOpenChange={onModalOpenChange}
-            onEvent={() => {
-              deleteEvent(eventId);
-            }}
-            item={eventId}
-            size="md"
-          />
-        </div>
+        <ModalDelete
+          isOpen={isModalOpen}
+          onOpenChange={onModalOpenChange}
+          onEvent={() => deleteEvent(eventId)}
+          item={eventId}
+          size="md"
+        />
       </div>
     </section>
   );

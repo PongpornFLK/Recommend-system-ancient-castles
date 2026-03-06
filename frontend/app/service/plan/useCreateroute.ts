@@ -1,6 +1,7 @@
 "use client";
 
 import axios from "axios";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 // import { useSearchParams } from "next/navigation";
 
@@ -18,10 +19,10 @@ export default function useCreateroute() {
   const [locationCastle, setLocationCastle] = useState<LocationCastle | null>(
     null,
   );
-  // const searchParams = useSearchParams();
-  // const castle_id = searchParams.get("castle_id");
+  const searchParams = useSearchParams();
+  const castle_id = searchParams.get("castle_id");
 
-  const castle_id = 10;
+  // const castle_id = 10;
 
   useEffect(() => {
     const fetchLocationCastle = async () => {
@@ -36,7 +37,7 @@ export default function useCreateroute() {
             },
           },
         );
-        // console.log("LocationCastle : ",response.data);
+        console.log("LocationCastle : ",response.data);
 
         setLocationCastle(response.data);
       } catch (err) {

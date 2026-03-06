@@ -3,10 +3,14 @@
 import useLocation from "@/app/service/map/useLocation";
 import useCalroute from "@/app/service/plan/useCalroute";
 import useCreateroute from "@/app/service/plan/useCreateroute";
+import useEventdescript from "@/app/service/plan/useEventdescript";
 import useViewroute from "@/app/service/plan/useViewroute";
+import saveTrip from "@/app/service/tripplan/useSavetrip";
+import { ZonedDateTime } from "@internationalized/date";
 import { Button, Chip, Skeleton } from "@heroui/react";
 import { List, Route } from "lucide-react";
 import { useEffect } from "react";
+import ButtonSave from "./buttonsave";
 
 interface RouteSumProps {
   // เป็น Array []
@@ -22,17 +26,23 @@ interface RouteSumProps {
     lat: number;
     lng: number;
   };
+  planName: string;
+  date?: ZonedDateTime | null;
 }
 
 export default function Routesum({
   boxSelect,
   currentPlace,
   getGPS,
+  planName,
+  date,
 }: RouteSumProps) {
   const { locationCastle } = useCreateroute();
-  const { viewRoute } = useViewroute();
   const { getNamePlace } = useLocation();
+  const { eventDescript, eventId } = useEventdescript();
+  const { viewRoute } = useViewroute();
   const { calRoute, kilo, hours, minute, loading } = useCalroute();
+  const { saveRoute } = saveTrip();
 
   useEffect(() => {
     if (getGPS && locationCastle) {
@@ -43,6 +53,42 @@ export default function Routesum({
       calRoute(getGPS, checkNearPlace, locationCastle);
     }
   }, [calRoute, getGPS, boxSelect, locationCastle]);
+
+  const handleSaveTrip = () => {
+    let startDate = new Date();
+    if (date) {
+      startDate = date.toDate();
+    }
+
+    const minutes = hours * 60 + minute;
+    const endDate = new Date(startDate.getTime() + minutes * 60000);
+
+    const tripData = {
+      plan_name: planName,
+      event_id: eventId,
+      event_description: eventDescript || "none",
+      start_date: startDate.toISOString(),
+      end_date: endDate.toISOString(),
+      duration: minutes,
+      status: "travelling" as const,
+      destination_id: locationCastle?.castle_id || 0,
+      destination_name: locationCastle?.castle_name || "none",
+      destination_lat: locationCastle?.location.latitude || 0,
+      destination_lng: locationCastle?.location.longitude || 0,
+    };
+
+    const itinerary = boxSelect
+      .filter((box) => box.placeName && box.placeName !== "")
+      .map((box) => ({
+        castle_id: Number(box.placeId) || 0,
+        event_id: eventId || 1,
+        start_time: startDate.toISOString(),
+        end_time: endDate.toISOString(),
+        place_name: box.placeName,
+      }));
+
+    saveRoute(tripData, itinerary);
+  };
 
   return (
     <div className="bg-white rounded-2xl mt-5 p-6 w-full lg:w-2/5 lg:h-fit">
@@ -100,17 +146,12 @@ export default function Routesum({
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">
-        <Button
-          startContent={<List size={16} />}
-          className="flex-1 bg-tone-lightgreen text-white font-bold"
-        >
-          View Details
-        </Button>
+        <ButtonSave planName={planName} onSave={handleSaveTrip} />
         <Button
           startContent={<Route size={16} />}
           className="flex-1 bg-tone-yellow text-white font-bold"
           onClick={() => {
-            // Filter only valid waypoints
+            // Filter เช็ค waypoints
             const validWaypoints = boxSelect.filter(
               (box) =>
                 box.placeName &&

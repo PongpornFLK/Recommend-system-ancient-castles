@@ -72,7 +72,10 @@ class TripPlan(Base):
     start_date = Column(DateTime(timezone=True), server_default=func.now())
     end_date = Column(DateTime(timezone=True), server_default=func.now())
     duration = Column(Integer)
-
+    status = Column(String, default="travelling")  # Add status field
+    destination_name = Column(String, nullable=True)  # Add destination name
+    destination_lat = Column(Float, nullable=True)  # Add destination lat
+    destination_lng = Column(Float, nullable=True)  # Add destination lng
 
     user = relationship("User", back_populates="trip_plans")
     route = relationship("Route") # One-way trip
@@ -198,6 +201,8 @@ class NearbyPlace(Base):
     castle_id = Column(Integer, ForeignKey("castles.castle_id"))
     place_name = Column(String)
     nearby_detail = Column(Text)
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
 
     castle = relationship("Castle", back_populates="nearby_places")
 
@@ -218,7 +223,7 @@ class RouteCastle(Base):
     # Composite Primary Key
     route_id = Column(Integer, ForeignKey("routes.route_id"), primary_key=True)
     castle_id = Column(Integer, ForeignKey("castles.castle_id"), primary_key=True)
-    # sequence_order = Column(Integer, nullable=True) # store order castle in route
+    sequence_order = Column(Integer, nullable=True) # store order castle in route
 
     route = relationship("Route", back_populates="castles")
     castle = relationship("Castle")

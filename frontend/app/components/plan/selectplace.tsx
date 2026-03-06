@@ -12,9 +12,9 @@ interface SelectPlaceProps {
 }
 
 export default function SelectPlace({ boxSelect, setBoxSelect }: SelectPlaceProps) {
-  // const searchParams = useSearchParams();
-  // const castle_id = searchParams.get("castle_id");
-  const castle_id = 10;
+  const searchParams = useSearchParams();
+  const castle_id = searchParams.get("castle_id");
+  // const castle_id = 10;
   const [nearPlace, setNearPlace] = useState<NearPlaceData[]>([]);
 
   interface NearPlaceData {
@@ -46,7 +46,7 @@ export default function SelectPlace({ boxSelect, setBoxSelect }: SelectPlaceProp
       }
     };
     fetchNearPlace();
-  }, []);
+  }, [castle_id]);
 
   const addBox = () => {
     const findMax =

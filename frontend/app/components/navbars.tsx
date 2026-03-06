@@ -34,6 +34,7 @@ export default function Navbars() {
 
   const menuItems = [
     "Home",
+    "My Plan",
     "History",
     "Map",
     "About",
@@ -47,8 +48,8 @@ export default function Navbars() {
       const token = localStorage.getItem("token");
       const userId = localStorage.getItem("user_id");
 
-      console.log("Token:", token);
-      console.log("User_id:", userId);
+      // console.log("Token:", token);
+      // console.log("User_id:", userId);
 
       try {
         const response = await axios.get(
@@ -109,18 +110,23 @@ export default function Navbars() {
           </Link>
         </NavbarItem>
         <NavbarItem>
-          <Link aria-current="page" href="/history" className="text-tone-gray">
+          <Link color="foreground" href="/tripplan" className="text-tone-gray">
             {menuItems[1]}
           </Link>
         </NavbarItem>
         <NavbarItem>
-          <Link color="foreground" href="/map" className="text-tone-gray">
+          <Link aria-current="page" href="/history" className="text-tone-gray">
             {menuItems[2]}
           </Link>
         </NavbarItem>
         <NavbarItem>
-          <Link color="foreground" href="/about" className="text-tone-gray">
+          <Link color="foreground" href="/map" className="text-tone-gray">
             {menuItems[3]}
+          </Link>
+        </NavbarItem>
+        <NavbarItem>
+          <Link color="foreground" href="/about" className="text-tone-gray">
+            {menuItems[4]}
           </Link>
         </NavbarItem>
         <NavbarItem>

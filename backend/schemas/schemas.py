@@ -87,6 +87,30 @@ class InterestResponse(InterestBase):
     class Config:
         from_attributes = True
 
+##### Trip Itinerary (ย้ายขึ้นมาตรงนี้)
+class TripItineraryBase(BaseModel):
+    start_time: datetime
+    end_time: datetime
+
+class TripItineraryFrontend(TripItineraryBase):
+    castle_id: int
+    event_id: Optional[int] = None
+    place_name: Optional[str] = None
+
+class TripItineraryCreate(TripItineraryBase):
+    plan_id: int
+    castle_id: int
+    event_id: Optional[int] = None
+    place_name: Optional[str] = None
+    
+class TripItineraryResponse(TripItineraryBase):
+    itinerary_id: int
+    plan_id: int
+    castle_id: int
+    event_id: Optional[int] = None
+    class Config:
+        from_attributes = True
+
 ##### Trip Plan 
 class TripPlanBase(BaseModel):
     plan_name: str
@@ -94,11 +118,15 @@ class TripPlanBase(BaseModel):
     start_date: datetime
     end_date: datetime
     duration: int
+    status: Optional[str] = "travelling"
+    destination_name: Optional[str] = None
+    destination_lat: Optional[float] = None
+    destination_lng: Optional[float] = None
 
 class TripPlanCreate(TripPlanBase):
-    user_id: int
-    route_id: Optional[int] = None
+    destination_id : int
     event_id: Optional[int] = None
+    itinerary_data: Optional[List[TripItineraryFrontend]] = []
 
 class TripPlanResponse(TripPlanBase):
     plan_id: int
@@ -108,23 +136,6 @@ class TripPlanResponse(TripPlanBase):
     class Config:
         from_attributes = True
 
-##### Trip Itinerary 
-class TripItineraryBase(BaseModel):
-    start_time: datetime
-    end_time: datetime
-
-class TripItineraryCreate(TripItineraryBase):
-    plan_id: int
-    castle_id: int
-    event_id: Optional[int] = None
-
-class TripItineraryResponse(TripItineraryBase):
-    itinerary_id: int
-    plan_id: int
-    castle_id: int
-    event_id: Optional[int] = None
-    class Config:
-        from_attributes = True
 
 ##### Castle Type 
 class CastleTypeBase(BaseModel):
@@ -237,6 +248,8 @@ class EventUpdate(EventBase) :
 class NearbyPlaceBase(BaseModel):
     place_name: str
     nearby_detail: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
 class NearbyPlaceCreate(NearbyPlaceBase):
     castle_id: int

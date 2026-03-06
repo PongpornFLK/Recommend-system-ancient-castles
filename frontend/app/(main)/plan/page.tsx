@@ -4,7 +4,6 @@ import dynamic from "next/dynamic";
 import Routeplan from "@/app/components/plan/routeplan";
 import Routesum from "@/app/components/plan/routesum";
 import useLocation from "@/app/service/map/useLocation";
-import { DatePicker } from "@heroui/react";
 import { useState, Suspense }from "react";
 import { now, getLocalTimeZone , ZonedDateTime } from "@internationalized/date";
 
@@ -20,7 +19,6 @@ export default function Plan() {
   () => import("@heroui/react").then((mod) => mod.DatePicker),
   { 
     ssr: false, 
-    // ใส่ตัวโหลดหลอกตา (Skeleton) ระหว่างรอเบราว์เซอร์เรียก DatePicker
     loading: () => <div className="h-10 w-full min-w-[200px] bg-gray-100 animate-pulse rounded-lg" /> 
   }
 );

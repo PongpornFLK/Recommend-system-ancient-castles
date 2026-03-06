@@ -11,7 +11,7 @@ router = APIRouter(
 )
 
 
-# ตอน save ปกติ
+# ตอน save ปกติ และ create Route , create_RouteCastle
 @router.post("/create")
 def create_trip_plan(
     plan_data: TripPlanCreate,
@@ -92,7 +92,7 @@ def create_trip_plan(
             )
             db.add(itinerary)
         
-    db.commit() # บันทึกจุดแวะพักทั้งหมดลงฐานข้อมูล
+    db.commit()
     
     return {
         "trip_id": trip_plan.plan_id,
@@ -184,7 +184,7 @@ def cancel_trip_plan(
     if trip_plan.user_id != current_user.get("user_id"):
         raise HTTPException(status_code=403, detail="You don't have permission to access this trip")
     
-    # เปลี่ยนสถานะเป็น cancel
+    # เปลี่ยนเป็น cancel
     trip_plan.status = "cancel"
     db.commit()
     

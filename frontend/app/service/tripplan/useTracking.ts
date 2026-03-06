@@ -12,7 +12,7 @@ export default function useTracking(
 
   // คำนวณระยะทาง Haversine Formula
   const getDistanceInKm = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-    const R = 6371; // รัศมีโลก
+    const R = 6371;
     const dLat = (lat2 - lat1) * (Math.PI / 180);
     const dLon = (lon2 - lon1) * (Math.PI / 180);
     const a =
@@ -53,10 +53,12 @@ export default function useTracking(
       (error) => {
         console.error("Error watching location:", error);
       },
+
+      // ความแม่นยำ , realtime
       { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
     );
 
-    // เมื่อออกจากหน้าจอหรือ Component ถูกทำลาย ให้หยุดติดตาม GPS
+    // ไม่ทำงานต่อเมื่อออกจาก Tripplan
     return () => navigator.geolocation.clearWatch(watchId);
     
   }, [tripId, destLat, destLng, isArrived]);

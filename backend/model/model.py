@@ -72,7 +72,7 @@ class TripPlan(Base):
     start_date = Column(DateTime(timezone=True), server_default=func.now())
     end_date = Column(DateTime(timezone=True), server_default=func.now())
     duration = Column(Integer)
-    status = Column(String, default="pending")  # Add status field
+    status = Column(String, default="travelling")  # Add status field
     destination_name = Column(String, nullable=True)  # Add destination name
     destination_lat = Column(Float, nullable=True)  # Add destination lat
     destination_lng = Column(Float, nullable=True)  # Add destination lng

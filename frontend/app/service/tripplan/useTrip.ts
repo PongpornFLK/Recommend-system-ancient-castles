@@ -2,6 +2,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 
 interface TripData {
+    plan_id : number,
     plan_name: string,
     event_description: string, 
     start_date: string,
@@ -9,6 +10,9 @@ interface TripData {
     duration: number,
     status: string ,  
     destination_name:  string,
+    destination_lat : number,
+    destination_lng : number,
+    
 }
 
 export default function useTrip() {

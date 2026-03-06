@@ -1,36 +1,34 @@
 from sqlalchemy import asc
 from schemas.schemas import *
 from model.model import *
-from fastapi import Depends , HTTPException , FastAPI , APIRouter
+from fastapi import Depends, HTTPException, APIRouter
 from sqlalchemy.orm import Session
 from db import get_db 
-from authen.secur import getCurrentUser
+from authen.secur import getCurrentUser, pwd_context, verify_password
 from loguru import logger
-from authen.secur import *
 from fastapi_pagination.ext.sqlalchemy import paginate 
-from fastapi_pagination import Page , Params
+from fastapi_pagination import Page, Params
+from typing import Annotated
 
 router = APIRouter(
     prefix = '/users',
     tags = ['users']
 )
 
-### Role : User ( Register )###
-# ... (import ส่วนเดิม) ...
-
+### 1. Register: สร้าง User ใหม่ (เช็ค Username/Email ซ้ำ + Hash Password)
 @router.post("", response_model=UserResponse)
 def createUser(user: UserCreate, db: Session = Depends(get_db)):
-    # 1. เพิ่มการตรวจสอบ Username ซ้ำ
+    # ตรวจสอบ Username ซ้ำ
     existing_user = db.query(User).filter(User.username == user.username).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Username already registered")
     
-    # 2. เพิ่มการตรวจสอบ Email ซ้ำ
+    # ตรวจสอบ Email ซ้ำ
     existing_email = db.query(User).filter(User.email == user.email).first()
     if existing_email:
         raise HTTPException(status_code=400, detail="Email already registered")
 
-    # บันทึกพร้อม Hash รหัสผ่าน (แก้ไขปัญหา Error 500 ตอน Login)
+    # บันทึกพร้อม Hash รหัสผ่าน (ป้องกัน Error 500 ตอน Login)
     db_user = User(
         **user.model_dump(exclude={"password"}), 
         password = pwd_context.hash(user.password)
@@ -47,14 +45,37 @@ def createUser(user: UserCreate, db: Session = Depends(get_db)):
         logger.error(f"Register database error: {e}")
         raise HTTPException(status_code=500, detail="Database error during registration")
 
+### 2. Get All Users (สำหรับ Admin เท่านั้น)
+@router.get("", response_model=Page[UserResponse])
+def readUserAll(
+    page: int = 1, 
+    size: int = 10, 
+    db: Session = Depends(get_db), 
+    current_user: Annotated[dict, Depends(getCurrentUser)] = None
+):
+    if current_user.get("roles") != "admin":
+        raise HTTPException(status_code=403, detail="You don't have permission")
+    
+    query = db.query(User).order_by(asc(User.user_id))
+    return paginate(query, Params(page=page, size=size))
+
+### 3. Get Single User (ดึงข้อมูลรายบุคคล)
+@router.get("/{user_id}", response_model=UserResponse)
+def readUser(user_id: int, db: Session = Depends(get_db)):
+    db_user = db.query(User).filter(User.user_id == user_id).first()
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return db_user
+
+### 4. Update User (เช็คสิทธิ์เจ้าของบัญชี หรือ Admin)
 @router.put("/{user_id}", response_model=UserResponse)
 async def updateUser(
     user_id: int, 
     user: UserUpdate, 
     db: Session = Depends(get_db),
-    current_user: dict = Depends(getCurrentUser) # 3. เพิ่ม Security Check
+    current_user: Annotated[dict, Depends(getCurrentUser)] = None
 ):
-    # ป้องกันไม่ให้ User คนอื่นมาแอบแก้ข้อมูลคนอื่น
+    # ป้องกันการแก้ไขข้อมูลข้ามบัญชี
     if current_user["user_id"] != user_id and current_user["roles"] != "admin":
         raise HTTPException(status_code=403, detail="Not authorized to update this user")
 
@@ -69,35 +90,40 @@ async def updateUser(
     db.refresh(db_user)
     return db_user
 
-
+### 5. Delete User (Admin Only)
 @router.delete("/{user_id}")
-async def deleteUser(user_id : int , user : Annotated[dict , Depends(getCurrentUser)], db: Session = Depends(get_db)):
-    
+async def deleteUser(
+    user_id: int, 
+    user: Annotated[dict, Depends(getCurrentUser)], 
+    db: Session = Depends(get_db)
+):
     if user["roles"] != "admin":
-        raise HTTPException(status_code=404 , detail = "Only Admin can Delete!!")
+        raise HTTPException(status_code=404, detail="Only Admin can Delete!!")
     
     db_user = db.query(User).filter(User.user_id == user_id).first()
-    
     if db_user is None:
         raise HTTPException(status_code=404, detail="Not Found")
     
     db.delete(db_user)
     db.commit()
-        
     return {"message": "Delete Success"}
 
+### 6. Change Password
 @router.post("/changepwd")
-async def changePassword(password: ChangeNewPwdCreate,current_user: Annotated[dict, Depends(getCurrentUser)],db: Session = Depends(get_db)):  
+async def changePassword(
+    password: ChangeNewPwdCreate,
+    current_user: Annotated[dict, Depends(getCurrentUser)],
+    db: Session = Depends(get_db)
+):  
     user_id = current_user["user_id"]
     db_user = db.query(User).filter(User.user_id == user_id).first()
     
     if db_user is None:
         raise HTTPException(status_code=404, detail="Not Found")
     
-    if not verify_password(password.old_pass , db_user.password):
+    if not verify_password(password.old_pass, db_user.password):
         raise HTTPException(status_code=401, detail="Invalid Authentication")
     
-    db_user.password =  pwd_context.hash(password.new_pass)
+    db_user.password = pwd_context.hash(password.new_pass)
     db.commit()
-    
-    return {"message" : "You change password success"}
+    return {"message": "You change password success"}

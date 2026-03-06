@@ -118,7 +118,7 @@ class TripPlanBase(BaseModel):
     start_date: datetime
     end_date: datetime
     duration: int
-    status: Optional[str] = "pending"
+    status: Optional[str] = "travelling"
     destination_name: Optional[str] = None
     destination_lat: Optional[float] = None
     destination_lng: Optional[float] = None

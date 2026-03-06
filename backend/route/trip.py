@@ -51,7 +51,7 @@ def create_trip_plan(
             route_castle_waypoint = RouteCastle(
                 route_id=new_route.route_id,
                 castle_id=item.castle_id,
-                sequence_order=index + 1
+                sequence_order=last_order
             )
             db.add(route_castle_waypoint)
             
@@ -64,7 +64,7 @@ def create_trip_plan(
     
     # สร้างตาราง Trip plan
     trip_plan = TripPlan(
-        user_id=current_user.user_id,
+        user_id=current_user.get("user_id"),
         plan_name=plan_data.plan_name,
         event_description=plan_data.event_description,
         start_date=plan_data.start_date,
@@ -117,7 +117,7 @@ def confirm_trip_plan(
     if not trip_plan:
         raise HTTPException(status_code=404, detail="Trip plan not found")
     
-    if trip_plan.user_id != current_user.user_id:
+    if trip_plan.user_id != current_user.get("user_id"):
         raise HTTPException(status_code=403, detail="You don't have permission to access this trip")
     
     # Update status
@@ -157,7 +157,7 @@ def get_trip_details(
     if not trip:
         raise HTTPException(status_code=404, detail="Trip plan not found")
     
-    if trip.user_id != current_user.user_id:
+    if trip.user_id != current_user.get("user_id"):
         raise HTTPException(status_code=403, detail="You don't have permission to access this trip")
     
     # Get itinerary items
@@ -166,4 +166,50 @@ def get_trip_details(
     return {
         "trip": trip,
         "itineraries": itineraries
+    }
+    
+@router.post("/{trip_id}/cancel")
+def cancel_trip_plan(
+    trip_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(getCurrentUser)
+):
+    if(current_user.get("roles") != "user"):
+        raise HTTPException(status_code=403,detail="You don't have permission")
+    
+    trip_plan = db.query(TripPlan).filter(TripPlan.plan_id == trip_id).first()
+    if not trip_plan:
+        raise HTTPException(status_code=404, detail="Trip plan not found")
+    
+    if trip_plan.user_id != current_user.get("user_id"):
+        raise HTTPException(status_code=403, detail="You don't have permission to access this trip")
+    
+    # เปลี่ยนสถานะเป็น cancel
+    trip_plan.status = "cancel"
+    db.commit()
+    
+    return {"status": "cancel", "message": "Trip plan cancelled successfully"}
+
+
+# cancle แล้วถึง ลบ trip ได้
+@router.delete("/{trip_id}")
+def delete_trip_plan(
+    trip_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(getCurrentUser)
+):
+    trip = db.query(TripPlan).filter(TripPlan.plan_id == trip_id).first()
+    
+    if not trip:
+        raise HTTPException(status_code=404, detail="Trip plan not found")
+    
+    if trip.user_id != current_user.get("user_id"):
+        raise HTTPException(status_code=403, detail="You don't have permission to delete this trip")
+    
+    db.delete(trip)
+    db.commit()
+    
+    return {
+        "status": "success", 
+        "message": "Trip plan deleted successfully"
     }

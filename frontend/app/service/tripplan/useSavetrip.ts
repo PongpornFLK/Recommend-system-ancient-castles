@@ -8,20 +8,17 @@ export default function useSaveTrip() {
   const saveRoute = async (
     tripData: {
       plan_name: string;
-      event_id: number;
+      event_id: number | null;
       event_description: string;
       start_date: string;
       end_date: string;
       duration: number;
       status: "travelling";
-      destination_id: number;
-      destination_name: string;
-      destination_lat: number;
-      destination_lng: number;
+      castle_id: number;
     },
     itinerary: {
       castle_id: number;
-      event_id: number;
+      event_id: number | null;
       start_time: string;
       end_time: string;
       place_name: string;
@@ -42,7 +39,7 @@ export default function useSaveTrip() {
       console.log("Save", response.data);
       router.push("/tripplan");
     } catch (err) {
-      console.log(err);
+      console.log("Can't Save", err);
     }
   };
   return { saveRoute };

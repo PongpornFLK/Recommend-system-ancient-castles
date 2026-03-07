@@ -65,6 +65,7 @@ class TripPlan(Base):
     plan_id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.user_id"))
     route_id = Column(Integer, ForeignKey("routes.route_id"), nullable=True) # Optional route
+    castle_id = Column(Integer,ForeignKey("castles.castle_id"))
     
     event_id = Column(Integer, ForeignKey("events.event_id"), nullable=True) 
     plan_name = Column(String)
@@ -73,11 +74,9 @@ class TripPlan(Base):
     end_date = Column(DateTime(timezone=True), server_default=func.now())
     duration = Column(Integer)
     status = Column(String, default="travelling")  # Add status field
-    destination_name = Column(String, nullable=True)  # Add destination name
-    destination_lat = Column(Float, nullable=True)  # Add destination lat
-    destination_lng = Column(Float, nullable=True)  # Add destination lng
 
     user = relationship("User", back_populates="trip_plans")
+    castle = relationship("Castle")
     route = relationship("Route") # One-way trip
     itineraries = relationship("TripItinerary", back_populates="plan")
 

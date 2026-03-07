@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams , useRouter} from "next/navigation";
 import { 
   ArrowLeft, Heart, CalendarPlus, Route, 
   MapPin, Landmark, Info, History, Map as MapIcon,
@@ -71,6 +71,7 @@ function ActionButton({ variant, active, icon, children, onClick }: { variant: "
 }
 
 export default function CastleDetailPage() {
+  const router =useRouter();
   const params = useParams();
   
   const id = useMemo(() => {
@@ -97,7 +98,7 @@ export default function CastleDetailPage() {
         headers: { 'Content-Type': 'application/json' },
         // ป้องกัน Cache เพื่อให้เห็นผลลัพธ์จริงจาก DB
         next: { revalidate: 0 } 
-      } as any);
+      } as RequestInit);
 
       if (!res.ok) {
         throw new Error(`Server error: ${res.status} ${res.statusText}`);
@@ -105,8 +106,8 @@ export default function CastleDetailPage() {
 
       const d = await res.json();
       setData(d);
-    } catch (e: any) {
-      console.error("Fetch failure:", e);
+    } catch (err) {
+      console.error("Fetch failure:", err);
       setError({ 
         message: "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ Backend ได้ กรุณาตรวจสอบว่า API รันอยู่",
         url: targetUrl
@@ -236,8 +237,8 @@ export default function CastleDetailPage() {
                 <ActionButton variant="brown" active={fav} icon={<Heart className={cn("h-5 w-5", fav && "fill-current")} />} onClick={() => setFav(!fav)}>
                   {fav ? "บันทึกแล้ว" : "เพิ่มในรายการโปรด"}
                 </ActionButton>
-                <ActionButton variant="blue" icon={<CalendarPlus className="h-5 w-5" />}>สร้างแผนท่องเที่ยว</ActionButton>
-                <ActionButton variant="amber" icon={<Route className="h-5 w-5" />}>ดูเส้นทางบนแผนที่</ActionButton>
+                <ActionButton variant="blue" icon={<CalendarPlus className="h-5 w-5" />} onClick={() => router.push(`/plan?castle_id=${data.castle_id}`)}>Create Quick Plan</ActionButton>
+                <ActionButton variant="amber" icon={<Route className="h-5 w-5" />} onClick={() => router.push(`/tripplan`)}>Trip Plan</ActionButton>
               </div>
             </div>
 

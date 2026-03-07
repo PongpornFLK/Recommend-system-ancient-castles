@@ -1,4 +1,5 @@
 "use client";
+import React from "react";
 import {
   Modal,
   ModalContent,
@@ -10,7 +11,7 @@ import {
 
 interface ModalWarningProp {
   isOpen: boolean;
-  onOpenChange: () => void;
+  onOpenChange: (isOpen: boolean) => void;
   onEvent: () => void;
   item: string;
   size: "md" | "lg" | "xl" | "2xl";

@@ -22,11 +22,10 @@ import {
   addToast,
   DatePicker,
 } from "@heroui/react";
-import { parseDate, Time } from "@internationalized/date";
-import React, { useEffect, useState } from "react";
+import { parseDate, Time, CalendarDate } from "@internationalized/date";
+import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import {
-  Search,
   Settings,
   Map,
   Type,
@@ -40,10 +39,33 @@ import AdminBar from "@/app/components/admin/adminbar";
 import ModalDelete from "@/app/components/admin/modal";
 import Searching from "@/app/components/admin/searching";
 
+// --- Interfaces ---
+interface Castle {
+  castle_id: string;
+  castle_name: string;
+}
+
+interface EventData {
+  event_id: string;
+  event_name: string;
+  castle_name: string;
+  event_description: string;
+  event_start: string;
+  event_end: string;
+  event_date: string;
+  castle_id: string;
+  castle?: Castle;
+}
+
+interface ApiResponse {
+  total: number;
+  items: EventData[];
+}
+
 export default function ManageEvent() {
-  const [event, setEvent] = React.useState<EventData | null>(null);
+  const [event, setEvent] = React.useState<ApiResponse | null>(null);
   const [eventData, setEventData] = React.useState<EventData[]>([]);
-  const [formData, setFormData] = useState([]);
+  const [formData, setFormData] = useState<ApiResponse | null>(null);
   const [page, setPage] = React.useState(1);
   const [total, setTotal] = React.useState(0);
   const rowSize = 5;
@@ -69,22 +91,7 @@ export default function ManageEvent() {
       event.castle_name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
-  interface EventData {
-    event_id: string;
-    event_name: string;
-    castle_name: string;
-    event_description: string;
-    event_start: string;
-    event_end: string;
-    event_date: string;
-    castle_id: string;
-    castle?: {
-      castle_id: string;
-      castle_name: string;
-    };
-  }
-
-  const headCol = [
+  const headCol: { name: string; uid: keyof EventData | "action" }[] = [
     { name: "Event ID", uid: "event_id" },
     { name: "Event Name", uid: "event_name" },
     { name: "Castle Name", uid: "castle_name" },
@@ -95,11 +102,11 @@ export default function ManageEvent() {
     { name: "Action", uid: "action" },
   ];
 
-  const fetchEvent = React.useCallback(async () => {
+  const fetchEvent = useCallback(async () => {
     const token = localStorage.getItem("token");
 
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/event/admin`, {
+      const response = await axios.get<ApiResponse>(`http://127.0.0.1:8000/event/admin`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -111,22 +118,20 @@ export default function ManageEvent() {
 
       setTotal(response.data.total);
 
-      const eventData = response.data.items.map((item: EventData) => ({
+      const mappedData = response.data.items.map((item: EventData) => ({
         event_id: item.event_id?.toString(),
         event_name: item.event_name || "",
         castle_name: item.castle?.castle_name || "",
-        castle_id: item.castle?.castle_id.toString(),
+        castle_id: item.castle?.castle_id.toString() || "",
         event_description: item.event_description || "",
         event_date: item.event_date,
         event_start: item.event_start,
         event_end: item.event_end,
       }));
 
-      setEventData(eventData);
+      setEventData(mappedData);
       setEvent(response.data);
       setFormData(response.data);
-
-      console.log(eventData);
     } catch (err) {
       console.error("Get event data err", err);
     }
@@ -146,7 +151,7 @@ export default function ManageEvent() {
     };
   }, [page, rowSize, fetchEvent]);
 
-  const deleteEvent = React.useCallback(
+  const deleteEvent = useCallback(
     async (event_id: string) => {
       const token = localStorage.getItem("token");
 
@@ -223,7 +228,7 @@ export default function ManageEvent() {
     }
   };
 
-  const renderCell = React.useCallback(
+  const renderCell = useCallback(
     (data: EventData, columnKey: keyof EventData | "action") => {
       switch (columnKey) {
         case "event_id":
@@ -389,7 +394,7 @@ export default function ManageEvent() {
                         className="font-bold pb-5"
                         label="Event Name"
                         labelPlacement="outside-top"
-                        placeholder={event?.event_name}
+                        placeholder={event?.items[0]?.event_name}
                         startContent={<TextAlignJustify size={18} />}
                         variant="bordered"
                         value={eventName}
@@ -399,7 +404,7 @@ export default function ManageEvent() {
                         className="font-bold pb-5"
                         label="Castle"
                         labelPlacement="outside-top"
-                        placeholder={event?.castle_name}
+                        placeholder={event?.items[0]?.castle?.castle_name}
                         startContent={<Map size={16} />}
                         variant="bordered"
                         value={castleName}
@@ -412,35 +417,35 @@ export default function ManageEvent() {
                         labelPlacement="outside-top"
                         selectorButtonPlacement="start"
                         value={dateTime ? parseDate(dateTime.toISOString().split("T")[0]) : undefined}
-                        onChange={(e) => {
+                        onChange={(e: CalendarDate | null) => {
                           if (e) {
                             const localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                            const date = (e as any).toDate(localTimeZone);
+                            const date = e.toDate(localTimeZone);
                             setDateTime(date);
                           }
                         }}
                       />
                       <TimeInput
-                        defaultValue={new Time(0, 0) as any}
+                        defaultValue={new Time(0, 0)}
                         description="outside-top"
                         label="Start Time"
                         labelPlacement="outside-top"
                         className="font-bold"
                         startContent={<Timer size={16} />}
                         variant="bordered"
-                        value={starTime as any}
-                        onChange={(val: any) => setStartTime(val)}
+                        value={starTime}
+                        onChange={(val: Time | null) => setStartTime(val)}
                       />
                       <TimeInput
-                        defaultValue={new Time(0, 0) as any}
+                        defaultValue={new Time(0, 0)}
                         description="outside-top"
                         label="End Time"
                         labelPlacement="outside-top"
                         className="font-bold"
                         startContent={<Timer size={16} />}
                         variant="bordered"
-                        value={endTime as any}
-                        onChange={(val: any) => setEndTime(val)}
+                        value={endTime}
+                        onChange={(val: Time | null) => setEndTime(val)}
                       />
                       <Textarea
                         disableAnimation
@@ -455,7 +460,7 @@ export default function ManageEvent() {
                         labelPlacement="outside-top"
                         className="max-w-xs font-bold"
                         label="Description"
-                        placeholder={event?.event_description}
+                        placeholder={event?.items[0]?.event_description}
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                       />

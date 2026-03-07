@@ -22,7 +22,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        - NEXT_PUBLIC_API_URL=http://localhost:8000
+        - NEXT_PUBLIC_API_URL=https://recommend-system-ancient-castles.onrender.com
         - NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=AIzaSyDs-WzwwttdnD5E1SIKrYGLpdxyWINi2ps
     env_file:
       - ./frontend/.env.local

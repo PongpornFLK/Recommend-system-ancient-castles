@@ -7,9 +7,6 @@ from passlib.context import CryptContext
 # Import จากไฟล์โปรเจกต์ของคุณ
 from db import SessionLocal, engine, Base
 
-# ใช้ localhost connection สำหรับรัน seed จากเครื่อง local
-from sqlalchemy import create_engine
-local_engine = create_engine("postgresql://myuser:password@localhost:5432/fastapi_database")
 from schemas.schemas import *
 from model.model import *
 
@@ -167,8 +164,8 @@ def create_mock_visit_histories(count, users_list, castles_list):
     return histories
 
 def seed_data():
-    # ใช้ localhost session สำหรับรัน seed จากเครื่อง local
-    LocalSessionLocal = _orm.sessionmaker(autocommit=False, autoflush=False, bind=local_engine)
+    # ใช้ session สำหรับรัน seed
+    LocalSessionLocal = _orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)
     db = LocalSessionLocal()
     
     try:
@@ -262,11 +259,11 @@ def seed_data():
 if __name__ == "__main__":
     print("Dropping old tables...")
     # 🔴 1. สั่งลบตารางและข้อมูลเก่าทิ้งทั้งหมด (Reset)
-    Base.metadata.drop_all(bind=local_engine)
+    Base.metadata.drop_all(bind=engine)
     
     print("Creating new tables...")
     # 🟢 2. สร้างตารางใหม่แบบสะอาดเอี่ยม
-    Base.metadata.create_all(bind=local_engine)
+    Base.metadata.create_all(bind=engine)
     
     # 3. รันฟังก์ชัน Seed เพื่อใส่ข้อมูลใหม่
     seed_data()

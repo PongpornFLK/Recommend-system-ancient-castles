@@ -9,8 +9,10 @@ import jwt
 from jwt.exceptions import DecodeError, ExpiredSignatureError
 
 
-SECRET_KEY = "aLuFNmIOShSvec46sYiNsnAX+fk9Ak+Y3262rl+BB1AZyI8GbkwDuSyWBdk1"
-ALGORITHM = "HS256"
+import os
+
+SECRET_KEY = os.getenv("SECRET_KEY", "aLuFNmIOShSvec46sYiNsnAX+fk9Ak+Y3262rl+BB1AZyI8GbkwDuSyWBdk1")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
 
 pwd_context = CryptContext(schemes=["bcrypt"] , deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")

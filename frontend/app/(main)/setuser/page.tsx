@@ -21,6 +21,7 @@ import {
   RotateCcwKey,
 } from "lucide-react";
 import axios from "axios";
+import { API_URL } from "@/app/config";
 
 export default function Setuser() {
   const [user, setUser] = React.useState<UserData | null>(null);
@@ -49,7 +50,7 @@ export default function Setuser() {
 
       try {
         const response = await axios.get(
-          `http://127.0.0.1:8000/users/${userId}`,
+          `${API_URL}/users/${userId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -80,7 +81,7 @@ export default function Setuser() {
 
     try {
       const response = await axios.put(
-        `http://127.0.0.1:8000/users/${userId}`,
+        `${API_URL}/users/${userId}`,
         {
           username: username,
           email: email,
@@ -121,7 +122,7 @@ export default function Setuser() {
       try {
         if (oldpwd != "" && newpwd == confirmnewpwd) {
           const response = await axios.post(
-            `http://127.0.0.1:8000/users/changepwd`,
+            `${API_URL}/users/changepwd`,
             {
               old_pass: oldpwd,
               new_pass: newpwd,

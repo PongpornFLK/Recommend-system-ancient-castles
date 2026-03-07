@@ -41,14 +41,16 @@ app = FastAPI(lifespan=lifespan)
 
 add_pagination(app)
 
+frontend_url = os.getenv("FRONTEND_URL")
 origins = [
     "http://localhost:3000",
     "http://localhost:3001",
     "http://127.0.0.1:3000",
     "http://127.0.0.1:3001",
-    "http://127.0.0.1:8000",
-    "http://127.0.0.1:8000",
 ]
+
+if frontend_url:
+    origins.append(frontend_url)
 
 app.add_middleware(
     CORSMiddleware,

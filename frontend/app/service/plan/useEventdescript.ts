@@ -1,4 +1,5 @@
 import axios from "axios";
+import { API_URL } from "@/app/config";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -7,8 +8,8 @@ export default function useEventdescript() {
   const castle_id = searchParams.get("castle_id")
 
   // const castle_id = 10;
-  const [eventDescript , setEventDescript] = useState("");
-  const [ eventId , setEventId] = useState(0);
+  const [eventDescript, setEventDescript] = useState("");
+  const [eventId, setEventId] = useState(0);
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -18,14 +19,14 @@ export default function useEventdescript() {
 
       try {
         const respone = await axios.get(
-          `http://127.0.0.1:8000/event/event/description/${castle_id}`,{
-            headers : {
-              Authorization : `Bearer ${token}`
-            }
+          `${API_URL}/event/event/description/${castle_id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`
           }
-      
+        }
+
         );
-        console.log("fetchEvent" ,respone.data)
+        console.log("fetchEvent", respone.data)
         setEventDescript(respone.data.event_description)
         setEventId(respone.data.event_id)
       } catch (err) {
@@ -37,5 +38,5 @@ export default function useEventdescript() {
 
   // [castle_id]
 
-  return {eventDescript , eventId};
+  return { eventDescript, eventId };
 }

@@ -159,14 +159,16 @@ export default function Navbars() {
                       Setting
                     </Button>
                   </Link>
-                  <Button
-                    color="default"
-                    variant="light"
-                    startContent={<Heart size={16} />}
-                    className="justify-start pr-30"
-                  >
-                    Favorite
-                  </Button>
+                 <Link href="/favorite" className="w-full">
+                      <Button
+                        color="default"
+                        variant="light"
+                        startContent={<Heart size={16} />}
+                        className="justify-start pr-30 w-full"
+                      >
+                        Favorite
+                      </Button>
+                    </Link>
                   <Button
                     // color="danger"
                     startContent={<LogOut size={16} />}

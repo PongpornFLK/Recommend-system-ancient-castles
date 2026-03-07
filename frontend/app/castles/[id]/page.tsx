@@ -9,6 +9,7 @@ import {
   AlertCircle, RefreshCw
 } from "lucide-react";
 import { getCastleGalleryByName } from "../../lib/castleImages";
+import axios from "axios";
 
 // --- Types ---
 type NearbyPlace = {
@@ -29,7 +30,6 @@ type CastleDetail = {
   nearby_places?: NearbyPlace[];
 };
 
-// ตรวจสอบค่า API_BASE: ถ้าลืมตั้งใน .env ให้ถอยกลับไปใช้ localhost:8000
 const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "http://localhost:8000";
 
 function cleanText(s: string) {
@@ -79,9 +79,13 @@ export default function CastleDetailPage() {
   }, [params]);
 
   const [fav, setFav] = useState(false);
+  const [interestId, setInterestId] = useState<number | null>(null); // เก็บ ID สำหรับใช้ลบ
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<{ message: string; url: string } | null>(null);
   const [data, setData] = useState<CastleDetail | null>(null);
+
+  {/* ดึง user_id จาก localStorage เพื่อใช้จัดการรายการโปรด */}
+  const userId = typeof window !== "undefined" ? localStorage.getItem("user_id") : null;
 
   const fetchData = async () => {
     if (!id || id === "undefined" || id === "[id]") return;
@@ -91,11 +95,9 @@ export default function CastleDetailPage() {
     const targetUrl = `${API_BASE}/castles/${id}`;
 
     try {
-      console.log("Attempting to fetch from:", targetUrl);
       const res = await fetch(targetUrl, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
-        // ป้องกัน Cache เพื่อให้เห็นผลลัพธ์จริงจาก DB
         next: { revalidate: 0 } 
       } as any);
 
@@ -105,10 +107,25 @@ export default function CastleDetailPage() {
 
       const d = await res.json();
       setData(d);
+
+      {/* ตรวจสอบสถานะการกดถูกใจและดึง ID จากฐานข้อมูล */}
+      if (userId) {
+        try {
+          const favCheck = await axios.get(`${API_BASE}/interests/check`, {
+            params: { user_id: userId, castle_id: d.castle_id }
+          });
+          setFav(favCheck.data.is_favorite);
+          if (favCheck.data.interest_id) {
+            setInterestId(favCheck.data.interest_id);
+          }
+        } catch (fErr) {
+          console.error("Favorite check error:", fErr);
+        }
+      }
+
     } catch (e: any) {
-      console.error("Fetch failure:", e);
       setError({ 
-        message: "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ Backend ได้ กรุณาตรวจสอบว่า API รันอยู่",
+        message: "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ Backend ได้",
         url: targetUrl
       });
     } finally {
@@ -119,6 +136,42 @@ export default function CastleDetailPage() {
   useEffect(() => {
     fetchData();
   }, [id]);
+
+  {/* ฟังก์ชันจัดการการเพิ่มและลบ รายการโปรดแบบ Toggle */}
+  const toggleFavorite = async () => {
+    if (!userId) {
+      alert("กรุณาเข้าสู่ระบบก่อนทำรายการ");
+      return;
+    }
+
+    try {
+      if (!fav) {
+        {/* กรณี: ยังไม่เป็นรายการโปรด -> ให้เพิ่ม (POST) */}
+        const res = await axios.post(`${API_BASE}/interests`, {
+          user_id: parseInt(userId),
+          castle_id: data?.castle_id,
+          interest_name: data?.castle_name
+        });
+        
+        if (res.data.interest_id) {
+          setInterestId(res.data.interest_id);
+        }
+        setFav(true);
+      } else {
+        {/* กรณี: เป็นรายการโปรดอยู่แล้ว -> ให้ลบออก (DELETE) */}
+        if (interestId) {
+          await axios.delete(`${API_BASE}/interests/${interestId}`);
+          setFav(false);
+          setInterestId(null);
+        } else {
+          // ถ้าไม่มี ID ให้ลองดึงข้อมูลใหม่อีกครั้ง
+          fetchData();
+        }
+      }
+    } catch (err) {
+      console.error("Toggle favorite failed:", err);
+    }
+  };
 
   const gallery = useMemo(() => getCastleGalleryByName(data?.castle_name || ""), [data?.castle_name]);
   const hero = gallery.cover || "/assets/card/placeholder.jpg";
@@ -233,7 +286,13 @@ export default function CastleDetailPage() {
             <div className="rounded-3xl bg-white p-6 shadow-xl shadow-stone-200/50 ring-1 ring-stone-100">
               <h3 className="mb-4 text-center font-bold text-stone-400 uppercase tracking-widest text-xs text-[#8B4513]/50">วางแผนการเดินทาง</h3>
               <div className="flex flex-col gap-3">
-                <ActionButton variant="brown" active={fav} icon={<Heart className={cn("h-5 w-5", fav && "fill-current")} />} onClick={() => setFav(!fav)}>
+                {/* ปุ่ม Favorite ที่รองรับทั้งการเพิ่มและลบรายการ */}
+                <ActionButton 
+                  variant="brown" 
+                  active={fav} 
+                  icon={<Heart className={cn("h-5 w-5", fav && "fill-current text-rose-500")} />} 
+                  onClick={toggleFavorite}
+                >
                   {fav ? "บันทึกแล้ว" : "เพิ่มในรายการโปรด"}
                 </ActionButton>
                 <ActionButton variant="blue" icon={<CalendarPlus className="h-5 w-5" />}>สร้างแผนท่องเที่ยว</ActionButton>

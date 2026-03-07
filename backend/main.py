@@ -8,6 +8,7 @@ from route import auth , user , history , event , nearplace , trip , locationcas
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_pagination import add_pagination
 from contextlib import asynccontextmanager
+from route import interest
 
 from db import Base, engine
 
@@ -46,6 +47,7 @@ origins = [
     "http://127.0.0.1:3000",
     "http://127.0.0.1:3001",
     "http://127.0.0.1:8000",
+    "http://127.0.0.1:8000",
 ]
 
 app.add_middleware(
@@ -68,6 +70,7 @@ app.include_router(event.router)
 app.include_router(nearplace.router)
 app.include_router(trip.router)
 app.include_router(locationcastle.router)
+app.include_router(interest.router)
 
 
 @app.get("/")

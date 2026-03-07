@@ -5,7 +5,7 @@ import { Card, CardFooter, Button, Image, Skeleton } from "@heroui/react";
 import { HeartOff, Eye, Heart } from "lucide-react";
 import Link from "next/link";
 import Navbars from "../components/navbars";
-// นำเข้าฟังก์ชันดึงรูปภาพ/page.tsx]
+
 import { getCastleGalleryByName } from "../lib/castleImages";
 
 export default function FavoritePage() {
@@ -72,7 +72,7 @@ export default function FavoritePage() {
         ) : favList.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
             {favList.map((item: any) => {
-              // --- ส่วนที่เพิ่ม: ดึงรูปภาพจริงตามชื่อปราสาท ---/page.tsx]
+
               const gallery = getCastleGalleryByName(item.castle_name);
               const displayImage = gallery.cover || "/assets/card/placeholder.jpg";
 
@@ -86,7 +86,7 @@ export default function FavoritePage() {
                     removeWrapper
                     alt={item.castle_name}
                     className="z-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    src={displayImage} // ใช้รูปจริงที่ดึงมา
+                    src={displayImage}
                   />
                   
                   <CardFooter className="absolute bg-white/70 bottom-4 left-4 right-4 h-20 rounded-[2rem] border-1 border-white/50 z-10 justify-between backdrop-blur-md py-4 px-6">

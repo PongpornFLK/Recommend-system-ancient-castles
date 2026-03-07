@@ -3,6 +3,7 @@ import { usePathname } from "next/navigation";
 import { UserRound, Settings, Heart, LogOut } from "lucide-react";
 import React, { useEffect } from "react";
 import axios from "axios";
+import { API_URL } from "@/app/config";
 import { useRouter } from "next/navigation";
 
 export default function AdminBar() {
@@ -36,7 +37,7 @@ export default function AdminBar() {
 
       try {
         const response = await axios.get(
-          `http://127.0.0.1:8000/users/${userId}`,
+          `${API_URL}/users/${userId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

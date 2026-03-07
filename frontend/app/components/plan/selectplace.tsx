@@ -1,14 +1,15 @@
 "use client";
-import { Select, SelectItem, Button} from "@heroui/react";
+import { Select, SelectItem, Button } from "@heroui/react";
 import axios from "axios";
+import { API_URL } from "@/app/config";
 import { CirclePlus, X } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import React from "react";
 import { useEffect, useState } from "react";
 
 interface SelectPlaceProps {
-  boxSelect: { id: number; placeId: string; placeName: string , latitude : number,longitude : number }[];
-  setBoxSelect: React.Dispatch<React.SetStateAction<{ id: number; placeId: string; placeName: string , latitude : number,longitude : number}[]>>;
+  boxSelect: { id: number; placeId: string; placeName: string, latitude: number, longitude: number }[];
+  setBoxSelect: React.Dispatch<React.SetStateAction<{ id: number; placeId: string; placeName: string, latitude: number, longitude: number }[]>>;
 }
 
 export default function SelectPlace({ boxSelect, setBoxSelect }: SelectPlaceProps) {
@@ -21,8 +22,8 @@ export default function SelectPlace({ boxSelect, setBoxSelect }: SelectPlaceProp
     nearplace_id: string;
     castle_id: string;
     place_name: string;
-    latitude : number;
-    longitude : number;
+    latitude: number;
+    longitude: number;
   }
 
   useEffect(() => {
@@ -31,7 +32,7 @@ export default function SelectPlace({ boxSelect, setBoxSelect }: SelectPlaceProp
 
       try {
         const response = await axios.get(
-          `http://127.0.0.1:8000/nearplace?castle_id=${castle_id}`,
+          `${API_URL}/nearplace?castle_id=${castle_id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -51,7 +52,7 @@ export default function SelectPlace({ boxSelect, setBoxSelect }: SelectPlaceProp
   const addBox = () => {
     const findMax =
       boxSelect.length > 0 ? Math.max(...boxSelect.map((item) => item.id)) : 0;
-    setBoxSelect([...boxSelect, { id: findMax + 1, placeId: "", placeName: "" , latitude : 0,longitude : 0}]);
+    setBoxSelect([...boxSelect, { id: findMax + 1, placeId: "", placeName: "", latitude: 0, longitude: 0 }]);
     // console.log(findMax)
   };
 
@@ -63,10 +64,10 @@ export default function SelectPlace({ boxSelect, setBoxSelect }: SelectPlaceProp
   // Disable Item
   const disItem = boxSelect.map((item) => item.placeId).filter((check) => check !== ""); // map & check ""
 
-  const updateDis = (id: number, selectId: string, selectName: string , la : number , long : number) => {
+  const updateDis = (id: number, selectId: string, selectName: string, la: number, long: number) => {
     const updateBox = boxSelect.map((item) => {
       if (item.id == id) {
-        return { ...item, placeId: selectId, placeName: selectName , latitude : la,longitude : long};
+        return { ...item, placeId: selectId, placeName: selectName, latitude: la, longitude: long };
       }
       return item;
     });
@@ -86,13 +87,13 @@ export default function SelectPlace({ boxSelect, setBoxSelect }: SelectPlaceProp
               placeholder="Select place"
               aria-label="Select an place"
               onSelectionChange={(key) => {
-                const selectId = String(key.currentKey);                
+                const selectId = String(key.currentKey);
                 const matchedPlace = nearPlace.find((p) => String(p.nearplace_id) === selectId);
                 const selectName = matchedPlace ? matchedPlace.place_name : "";
                 const selectla = matchedPlace ? matchedPlace.latitude : 0;
                 const selectlong = matchedPlace ? matchedPlace.longitude : 0;
-                
-                updateDis(item.id, selectId, selectName,selectla,selectlong);
+
+                updateDis(item.id, selectId, selectName, selectla, selectlong);
               }}
               disabledKeys={disItem}
               selectedKeys={item.placeId ? [item.placeId] : []}

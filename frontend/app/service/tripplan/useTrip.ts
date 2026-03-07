@@ -1,4 +1,5 @@
 import axios from "axios";
+import { API_URL } from "@/app/config";
 import { useEffect, useState } from "react";
 
 interface TripData {
@@ -25,7 +26,7 @@ export default function useTrip() {
       setIsLoaded(true);
       setError(false);
       try {
-        const response = await axios.get(`http://127.0.0.1:8000/trip/user`, {
+        const response = await axios.get(`${API_URL}/trip/user`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

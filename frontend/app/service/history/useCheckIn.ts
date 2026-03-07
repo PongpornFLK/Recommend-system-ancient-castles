@@ -1,4 +1,5 @@
 import axios from "axios";
+import { API_URL } from "@/app/config";
 import { useRouter } from "next/navigation";
 
 export default function useCheckIn() {
@@ -11,7 +12,7 @@ export default function useCheckIn() {
     try {
       // VisitHistory
       await axios.post(
-        `http://127.0.0.1:8000/history/checkin/${user_id}`,
+        `${API_URL}/history/checkin/${user_id}`,
         {
           user_id: user_id,
           castle_id: castle_id,
@@ -25,7 +26,7 @@ export default function useCheckIn() {
 
       // status to 'success'
       await axios.post(
-        `http://127.0.0.1:8000/trip/${trip_id}/confirm`,
+        `${API_URL}/trip/${trip_id}/confirm`,
         {},
         {
           headers: {

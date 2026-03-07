@@ -25,6 +25,7 @@ import {
 import { parseDate, Time, CalendarDate } from "@internationalized/date";
 import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
+import { API_URL } from "@/app/config";
 import {
   Settings,
   Map,
@@ -106,7 +107,7 @@ export default function ManageEvent() {
     const token = localStorage.getItem("token");
 
     try {
-      const response = await axios.get<ApiResponse>(`http://127.0.0.1:8000/event/admin`, {
+      const response = await axios.get<ApiResponse>(`${API_URL}/event/admin`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -157,7 +158,7 @@ export default function ManageEvent() {
 
       try {
         await axios.delete(
-          `http://127.0.0.1:8000/event/${event_id}`,
+          `${API_URL}/event/${event_id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -178,7 +179,7 @@ export default function ManageEvent() {
 
     try {
       const response = await axios.put(
-        `http://127.0.0.1:8000/event/${eventId}`,
+        `${API_URL}/event/${eventId}`,
         {
           event_name: eventName,
           event_description: description,

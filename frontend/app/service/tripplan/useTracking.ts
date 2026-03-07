@@ -3,8 +3,8 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 
 export default function useTracking(
-  tripId: number, 
-  destLat: number, 
+  tripId: number,
+  destLat: number,
   destLng: number
 ) {
   const [isArrived, setIsArrived] = useState(false);
@@ -34,20 +34,9 @@ export default function useTracking(
         const distance = getDistanceInKm(userLat, userLng, destLat, destLng);
         setCurrentDistance(distance);
 
-        if (distance <= 0.05) {
+        if (distance <= 0.5) {
           setIsArrived(true);
-          
-          const token = localStorage.getItem("token");
-          try {
-            await axios.post(
-              `http://127.0.0.1:8000/trip/${tripId}/confirm`,
-              {},
-              { headers: { Authorization: `Bearer ${token}` } }
-            );
-            console.log("Status Success");
-          } catch (error) {
-            console.error("Error confirming trip:", error);
-          }
+          console.log("Reached destination!");
         }
       },
       (error) => {
@@ -60,7 +49,7 @@ export default function useTracking(
 
     // ไม่ทำงานต่อเมื่อออกจาก Tripplan
     return () => navigator.geolocation.clearWatch(watchId);
-    
+
   }, [tripId, destLat, destLng, isArrived]);
 
   return { isArrived, currentDistance };

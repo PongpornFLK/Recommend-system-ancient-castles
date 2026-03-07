@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams , useRouter} from "next/navigation";
 import { 
   ArrowLeft, Heart, CalendarPlus, Route, 
   MapPin, Landmark, Info, History, Map as MapIcon,
@@ -71,6 +71,7 @@ function ActionButton({ variant, active, icon, children, onClick }: { variant: "
 }
 
 export default function CastleDetailPage() {
+  const router =useRouter();
   const params = useParams();
   
   const id = useMemo(() => {
@@ -99,7 +100,7 @@ export default function CastleDetailPage() {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         next: { revalidate: 0 } 
-      } as any);
+      } as RequestInit);
 
       if (!res.ok) {
         throw new Error(`Server error: ${res.status} ${res.statusText}`);
@@ -123,7 +124,9 @@ export default function CastleDetailPage() {
         }
       }
 
-    } catch (e: any) {
+   
+    } catch (err) {
+      console.error("Fetch failure:", err);
       setError({ 
         message: "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ Backend ได้",
         url: targetUrl
@@ -295,8 +298,8 @@ export default function CastleDetailPage() {
                 >
                   {fav ? "บันทึกแล้ว" : "เพิ่มในรายการโปรด"}
                 </ActionButton>
-                <ActionButton variant="blue" icon={<CalendarPlus className="h-5 w-5" />}>สร้างแผนท่องเที่ยว</ActionButton>
-                <ActionButton variant="amber" icon={<Route className="h-5 w-5" />}>ดูเส้นทางบนแผนที่</ActionButton>
+                <ActionButton variant="blue" icon={<CalendarPlus className="h-5 w-5" />} onClick={() => router.push(`/plan?castle_id=${data.castle_id}`)}>Create Quick Plan</ActionButton>
+                <ActionButton variant="amber" icon={<Route className="h-5 w-5" />} onClick={() => router.push(`/tripplan`)}>Trip Plan</ActionButton>
               </div>
             </div>
 

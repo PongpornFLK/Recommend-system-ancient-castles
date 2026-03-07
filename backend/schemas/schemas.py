@@ -59,7 +59,7 @@ class SearchHistoryResponse(SearchHistoryBase):
 
 ##### Visit History 
 class VisitHistoryBase(BaseModel):
-    visit_date: datetime
+    visit_date: Optional[datetime] = None
 
 class VisitHistoryCreate(VisitHistoryBase):
     user_id: int
@@ -119,23 +119,23 @@ class TripPlanBase(BaseModel):
     end_date: datetime
     duration: int
     status: Optional[str] = "travelling"
-    destination_name: Optional[str] = None
-    destination_lat: Optional[float] = None
-    destination_lng: Optional[float] = None
 
 class TripPlanCreate(TripPlanBase):
-    destination_id : int
+    castle_id : int
     event_id: Optional[int] = None
     itinerary_data: Optional[List[TripItineraryFrontend]] = []
 
 class TripPlanResponse(TripPlanBase):
     plan_id: int
     user_id: int
+    castle_id : int
     route_id: Optional[int] = None
     event_id: Optional[int] = None
+    destination_name: Optional[str] = None
+    destination_lat: Optional[float] = None
+    destination_lng: Optional[float] = None
     class Config:
         from_attributes = True
-
 
 ##### Castle Type 
 class CastleTypeBase(BaseModel):

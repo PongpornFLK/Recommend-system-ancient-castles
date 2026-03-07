@@ -8,7 +8,7 @@ import useViewroute from "@/app/service/plan/useViewroute";
 import saveTrip from "@/app/service/tripplan/useSavetrip";
 import { ZonedDateTime } from "@internationalized/date";
 import { Button, Chip, Skeleton } from "@heroui/react";
-import { List, Route } from "lucide-react";
+import { Route } from "lucide-react";
 import { useEffect } from "react";
 import ButtonSave from "./buttonsave";
 
@@ -60,6 +60,10 @@ export default function Routesum({
       startDate = date.toDate();
     }
 
+    if (!locationCastle?.castle_id) {
+      return;
+    }
+
     const minutes = hours * 60 + minute;
     const endDate = new Date(startDate.getTime() + minutes * 60000);
 
@@ -71,21 +75,20 @@ export default function Routesum({
       end_date: endDate.toISOString(),
       duration: minutes,
       status: "travelling" as const,
-      destination_id: locationCastle?.castle_id || 0,
-      destination_name: locationCastle?.castle_name || "none",
-      destination_lat: locationCastle?.location.latitude || 0,
-      destination_lng: locationCastle?.location.longitude || 0,
+      castle_id: locationCastle.castle_id
     };
 
     const itinerary = boxSelect
       .filter((box) => box.placeName && box.placeName !== "")
-      .map((box) => ({
-        castle_id: Number(box.placeId) || 0,
-        event_id: eventId || 1,
-        start_time: startDate.toISOString(),
-        end_time: endDate.toISOString(),
-        place_name: box.placeName,
-      }));
+      .map((box) => {
+        return {
+          castle_id: Number(box.placeId) || 0,
+          event_id: eventId || null,
+          start_time: startDate.toISOString(),
+          end_time: endDate.toISOString(),
+          place_name: box.placeName,
+        };
+      });
 
     saveRoute(tripData, itinerary);
   };

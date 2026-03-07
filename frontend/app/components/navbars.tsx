@@ -34,7 +34,7 @@ export default function Navbars() {
 
   const menuItems = [
     "Home",
-    "My Plan",
+    "MyPlan",
     "History",
     "Map",
     "About",
@@ -137,6 +137,7 @@ export default function Navbars() {
                 radius="full"
                 aria-label="User profile"
                 className="bg-tone-orange text-white"
+                suppressHydrationWarning
               >
                 <UserRound />
               </Button>

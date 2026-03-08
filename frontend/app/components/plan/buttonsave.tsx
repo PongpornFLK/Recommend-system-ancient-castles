@@ -27,7 +27,7 @@ export default function ButtonSave({
           onSave(); 
         }}
       >
-        Save
+        บันทึกแผนการเดินทาง
       </Button>
     </div>
   );

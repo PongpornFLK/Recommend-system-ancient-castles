@@ -1,72 +1,37 @@
 services:
-  # --- 1. Database Service ---
-  db:
-    image: postgres:15-alpine
-    restart: always
-    env_file:
-      - .env
-    environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
-    ports:
-      - "5432:5432"
-    volumes:
-      - pg_data:/var/lib/postgresql/data
-    networks:
-      - app-networks
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
-  # --- 2. Backend Service (FastAPI) ---
+  # --- 1. Backend Service (FastAPI) ---
   backend:
     build: ./backend
     container_name: fastapi-backend
     restart: always
     env_file:
-      - .env
-    environment:
-      # ใช้ชื่อ service 'db' ในการเชื่อมต่อภายใน Docker Network
-      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
-      ZILLIZ_URI: ${ZILLIZ_URI}
-      ZILLIZ_TOKEN: ${ZILLIZ_TOKEN}
-      GROQ_API_KEY: ${GROQ_API_KEY}
+      - ./backend/.env 
     ports:
       - "8000:8000"
     networks:
       - app-networks
-    depends_on:
-      db:
-        condition: service_healthy
-    # สั่งรัน uvicorn ให้รับ connection จากภายนอก container (--host 0.0.0.0)
     command: uvicorn main:app --host 0.0.0.0 --port 8000
 
-  # --- 3. Frontend Service (Next.js) ---
+  # --- 2. Frontend Service (Next.js) ---
   app:
     build:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        # สำคัญมาก: ต้องส่งค่าเหล่านี้ไปตอน Build เพื่อให้ Browser เรียกใช้ได้
         - NEXT_PUBLIC_API_URL=http://localhost:8000
         - NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
+    env_file:
+      - ./frontend/.env.local 
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=http://localhost:8000
-      - NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
     depends_on:
       - backend
     networks:
       - app-networks
 
-volumes:
-  pg_data:
-
+# ลบ volumes: pg_data: ออกเรียบร้อย
 networks:
   app-networks:
     driver: bridge

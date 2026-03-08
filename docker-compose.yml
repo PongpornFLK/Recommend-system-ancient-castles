@@ -1,27 +1,31 @@
 services:
-  # --- 1. Backend Service (FastAPI) ---
+  # --- Backend Service (FastAPI) ---
   backend:
     build: ./backend
     container_name: fastapi-backend
     restart: always
     env_file:
-      - ./backend/.env 
+      - ./backend/.env
+    environment:
+      # ให้ DATABASE_URL ดึงจากไฟล์ .env โดยตรงแล้ว (ลบการตั้งค่า override ตรงนี้ทิ้ง)
+      FRONTEND_URL: "http://localhost:3000"
     ports:
       - "8000:8000"
     networks:
       - app-networks
+    # สั่งรัน uvicorn ให้รับ connection จากภายนอก container (--host 0.0.0.0)
     command: uvicorn main:app --host 0.0.0.0 --port 8000
 
-  # --- 2. Frontend Service (Next.js) ---
+  # --- Frontend Service (Next.js) ---
   app:
     build:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        - NEXT_PUBLIC_API_URL=http://localhost:8000
-        - NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
+        - NEXT_PUBLIC_API_URL=https://recommend-system-ancient-castles.onrender.com
+        - NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=AIzaSyDs-WzwwttdnD5E1SIKrYGLpdxyWINi2ps
     env_file:
-      - ./frontend/.env.local 
+      - ./frontend/.env.local
     ports:
       - "3000:3000"
     environment:
@@ -31,7 +35,6 @@ services:
     networks:
       - app-networks
 
-# ลบ volumes: pg_data: ออกเรียบร้อย
 networks:
   app-networks:
     driver: bridge

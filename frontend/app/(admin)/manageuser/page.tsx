@@ -15,6 +15,7 @@ import {
 import { Search, Trash2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { API_URL } from "@/app/config";
 import AdminBar from "@/app/components/admin/adminbar";
 import ModalDelete from "@/app/components/admin/modal";
 import Searching from "@/app/components/admin/searching";
@@ -55,7 +56,7 @@ export default function ManageUser() {
     const token = localStorage.getItem("token");
     // console.log("Page :", page);
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/users`, {
+      const response = await axios.get(`${API_URL}/users`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -101,7 +102,7 @@ export default function ManageUser() {
 
       try {
         const response = await axios.delete(
-          `http://127.0.0.1:8000/users/${user_id}`,
+          `${API_URL}/users/${user_id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

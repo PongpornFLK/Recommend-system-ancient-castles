@@ -5,6 +5,7 @@ import { Eye, EyeOff, LockKeyhole, User, AtSign, Phone, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
+import { API_URL } from "../../config";
 import NextImage from "next/image";
 
 export default function Register() {
@@ -24,19 +25,18 @@ export default function Register() {
 
     if (password == confirmpwd) {
       try {
-        // ใช้ NEXT_PUBLIC_API_URL และระบุ headers
-        const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/users`, {
-          username : username,
-          email : email,
-          tel : tel,
-          roles : "user",
-          password : password,
+        const res = await axios.post(`${API_URL}/users`, {
+          username: username,
+          email: email,
+          tel: tel,
+          roles: "user",
+          password: password,
         }, {
           headers: { "Content-Type": "application/json" }
         });
 
         console.log("Register success", res.status);
-        
+
         setIsData(res.data);
 
         addToast({

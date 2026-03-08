@@ -5,6 +5,7 @@ import { Eye, EyeOff, LockKeyhole, User, LogIn, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
+import { API_URL } from "../../config";
 import { jwtDecode } from "jwt-decode";
 import NextImage from "next/image";
 
@@ -41,12 +42,11 @@ export default function Login() {
     formData.append("password", password);
 
     try {
-      // ใช้ NEXT_PUBLIC_API_URL แทน 127.0.0.1
       const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/token`,
+        `${API_URL}/auth/token`,
         formData
       );
-      
+
       const token = res.data.access_token;
       const decode = jwtDecode<customToken>(token);
 

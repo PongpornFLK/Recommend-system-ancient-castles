@@ -19,6 +19,7 @@ import {
 } from "@heroui/react";
 import React, { useEffect } from "react";
 import axios from "axios";
+import { API_URL } from "../config";
 import { useRouter } from "next/navigation";
 
 export default function Navbars() {
@@ -53,7 +54,7 @@ export default function Navbars() {
 
       try {
         const response = await axios.get(
-          `http://127.0.0.1:8000/users/${userId}`,
+          `${API_URL}/users/${userId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -160,16 +161,16 @@ export default function Navbars() {
                       Setting
                     </Button>
                   </Link>
-                 <Link href="/favorite" className="w-full">
-                      <Button
-                        color="default"
-                        variant="light"
-                        startContent={<Heart size={16} />}
-                        className="justify-start pr-30 w-full"
-                      >
-                        Favorite
-                      </Button>
-                    </Link>
+                  <Link href="/favorite" className="w-full">
+                    <Button
+                      color="default"
+                      variant="light"
+                      startContent={<Heart size={16} />}
+                      className="justify-start pr-30 w-full"
+                    >
+                      Favorite
+                    </Button>
+                  </Link>
                   <Button
                     // color="danger"
                     startContent={<LogOut size={16} />}

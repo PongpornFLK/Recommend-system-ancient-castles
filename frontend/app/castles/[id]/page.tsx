@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams , useRouter} from "next/navigation";
-import { 
-  ArrowLeft, Heart, CalendarPlus, Route, 
+import { useParams, useRouter } from "next/navigation";
+import {
+  ArrowLeft, Heart, CalendarPlus, Route,
   MapPin, Landmark, Info, History, Map as MapIcon,
   AlertCircle, RefreshCw
 } from "lucide-react";
@@ -71,9 +71,9 @@ function ActionButton({ variant, active, icon, children, onClick }: { variant: "
 }
 
 export default function CastleDetailPage() {
-  const router =useRouter();
+  const router = useRouter();
   const params = useParams();
-  
+
   const id = useMemo(() => {
     if (!params?.id) return "";
     return Array.isArray(params.id) ? params.id[0] : params.id;
@@ -85,7 +85,7 @@ export default function CastleDetailPage() {
   const [error, setError] = useState<{ message: string; url: string } | null>(null);
   const [data, setData] = useState<CastleDetail | null>(null);
 
-  {/* ดึง user_id จาก localStorage เพื่อใช้จัดการรายการโปรด */}
+  {/* ดึง user_id จาก localStorage เพื่อใช้จัดการรายการโปรด */ }
   const userId = typeof window !== "undefined" ? localStorage.getItem("user_id") : null;
 
   const fetchData = async () => {
@@ -99,7 +99,7 @@ export default function CastleDetailPage() {
       const res = await fetch(targetUrl, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
-        next: { revalidate: 0 } 
+        next: { revalidate: 0 }
       } as RequestInit);
 
       if (!res.ok) {
@@ -109,7 +109,7 @@ export default function CastleDetailPage() {
       const d = await res.json();
       setData(d);
 
-      {/* ตรวจสอบสถานะการกดถูกใจและดึง ID จากฐานข้อมูล */}
+      {/* ตรวจสอบสถานะการกดถูกใจและดึง ID จากฐานข้อมูล */ }
       if (userId) {
         try {
           const favCheck = await axios.get(`${API_BASE}/interests/check`, {
@@ -124,10 +124,10 @@ export default function CastleDetailPage() {
         }
       }
 
-   
+
     } catch (err) {
       console.error("Fetch failure:", err);
-      setError({ 
+      setError({
         message: "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ Backend ได้",
         url: targetUrl
       });
@@ -140,7 +140,7 @@ export default function CastleDetailPage() {
     fetchData();
   }, [id]);
 
-  {/* ฟังก์ชันจัดการการเพิ่มและลบ รายการโปรดแบบ Toggle */}
+  {/* ฟังก์ชันจัดการการเพิ่มและลบ รายการโปรดแบบ Toggle */ }
   const toggleFavorite = async () => {
     if (!userId) {
       alert("กรุณาเข้าสู่ระบบก่อนทำรายการ");
@@ -149,19 +149,19 @@ export default function CastleDetailPage() {
 
     try {
       if (!fav) {
-        {/* กรณี: ยังไม่เป็นรายการโปรด -> ให้เพิ่ม (POST) */}
+        {/* กรณี: ยังไม่เป็นรายการโปรด -> ให้เพิ่ม (POST) */ }
         const res = await axios.post(`${API_BASE}/interests`, {
           user_id: parseInt(userId),
           castle_id: data?.castle_id,
           interest_name: data?.castle_name
         });
-        
+
         if (res.data.interest_id) {
           setInterestId(res.data.interest_id);
         }
         setFav(true);
       } else {
-        {/* กรณี: เป็นรายการโปรดอยู่แล้ว -> ให้ลบออก (DELETE) */}
+        {/* กรณี: เป็นรายการโปรดอยู่แล้ว -> ให้ลบออก (DELETE) */ }
         if (interestId) {
           await axios.delete(`${API_BASE}/interests/${interestId}`);
           setFav(false);
@@ -194,11 +194,11 @@ export default function CastleDetailPage() {
         <AlertCircle className="w-16 h-16 text-rose-500 mx-auto mb-4" />
         <h2 className="text-2xl font-black text-stone-800 mb-2">Failed to Fetch</h2>
         <p className="text-stone-600 mb-6 leading-relaxed">
-          {error.message} <br/> 
+          {error.message} <br />
           <code className="bg-rose-100 px-2 py-1 rounded text-xs font-mono text-rose-700 break-all">{error.url}</code>
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <button 
+          <button
             onClick={() => fetchData()}
             className="flex items-center justify-center gap-2 px-6 py-3 bg-stone-900 text-white rounded-2xl font-bold hover:bg-stone-800 transition-all active:scale-95"
           >
@@ -290,16 +290,16 @@ export default function CastleDetailPage() {
               <h3 className="mb-4 text-center font-bold text-stone-400 uppercase tracking-widest text-xs text-[#8B4513]/50">วางแผนการเดินทาง</h3>
               <div className="flex flex-col gap-3">
                 {/* ปุ่ม Favorite ที่รองรับทั้งการเพิ่มและลบรายการ */}
-                <ActionButton 
-                  variant="brown" 
-                  active={fav} 
-                  icon={<Heart className={cn("h-5 w-5", fav && "fill-current text-rose-500")} />} 
+                <ActionButton
+                  variant="brown"
+                  active={fav}
+                  icon={<Heart className={cn("h-5 w-5", fav && "fill-current text-rose-500")} />}
                   onClick={toggleFavorite}
                 >
                   {fav ? "บันทึกแล้ว" : "เพิ่มในรายการโปรด"}
                 </ActionButton>
-                <ActionButton variant="blue" icon={<CalendarPlus className="h-5 w-5" />} onClick={() => router.push(`/plan?castle_id=${data.castle_id}`)}>Create Quick Plan</ActionButton>
-                <ActionButton variant="amber" icon={<Route className="h-5 w-5" />} onClick={() => router.push(`/tripplan`)}>Trip Plan</ActionButton>
+                <ActionButton variant="blue" icon={<CalendarPlus className="h-5 w-5" />} onClick={() => router.push(`/plan?castle_id=${data.castle_id}`)}>สร้างแผนการเดินทาง</ActionButton>
+                <ActionButton variant="amber" icon={<Route className="h-5 w-5" />} onClick={() => router.push(`/tripplan`)}>แผนการเดินทางของเรา</ActionButton>
               </div>
             </div>
 

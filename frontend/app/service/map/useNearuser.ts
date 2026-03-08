@@ -1,4 +1,5 @@
 import axios from "axios";
+import { API_URL } from "@/app/config";
 import { useEffect, useState } from "react";
 
 interface UserProps {
@@ -20,7 +21,7 @@ export default function useNearUser({ lat, lng }: UserProps) {
 
       try {
         const response = await axios.get(
-          `http://127.0.0.1:8000/locationcastle/castle/nearby/user=${lat}&${lng}`,
+          `${API_URL}/locationcastle/castle/nearby/user=${lat}&${lng}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

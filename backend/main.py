@@ -4,7 +4,7 @@ load_dotenv()
 import os
 from fastapi import FastAPI
 from db import Base , engine
-from route import auth , user , history , event , nearplace , trip , locationcastle
+from route import auth , user , history , event , nearplace , trip , locationcastle , route
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_pagination import add_pagination
 from contextlib import asynccontextmanager
@@ -41,14 +41,16 @@ app = FastAPI(lifespan=lifespan)
 
 add_pagination(app)
 
+frontend_url = os.getenv("FRONTEND_URL")
 origins = [
     "http://localhost:3000",
     "http://localhost:3001",
     "http://127.0.0.1:3000",
     "http://127.0.0.1:3001",
-    "http://127.0.0.1:8000",
-    "http://127.0.0.1:8000",
 ]
+
+if frontend_url:
+    origins.append(frontend_url)
 
 app.add_middleware(
     CORSMiddleware,
@@ -71,6 +73,7 @@ app.include_router(nearplace.router)
 app.include_router(trip.router)
 app.include_router(locationcastle.router)
 app.include_router(interest.router)
+app.include_router(route.router)
 
 
 @app.get("/")

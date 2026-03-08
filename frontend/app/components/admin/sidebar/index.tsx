@@ -12,11 +12,12 @@ import { useRouter } from "next/navigation";
 import { Button } from "@heroui/react";
 import React, { useEffect } from "react";
 import axios from "axios";
+import { API_URL } from "@/app/config";
 
 
 
 export default function Sidebar() {
-    const [user, setUser] = React.useState<UserData | null>(null);
+  const [user, setUser] = React.useState<UserData | null>(null);
   const router = useRouter();
 
   interface ISidebarItem {
@@ -47,7 +48,7 @@ export default function Sidebar() {
     },
   ];
 
-   useEffect(() => {
+  useEffect(() => {
     const fetchUser = async () => {
       const token = localStorage.getItem("token");
       const userId = localStorage.getItem("user_id");
@@ -57,7 +58,7 @@ export default function Sidebar() {
 
       try {
         const response = await axios.get(
-          `http://127.0.0.1:8000/users/${userId}`,
+          `${API_URL}/users/${userId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

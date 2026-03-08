@@ -10,6 +10,7 @@ import {
 } from "@heroui/table";
 import React from "react";
 import useHistory , { HistoryData} from "@/app/service/history/useHistory";
+import Buttonview from "./buttonview";
 
 export default function TableHistory() {
   const { historyData } = useHistory()
@@ -45,9 +46,7 @@ export default function TableHistory() {
           return data.event_description;
         case "action":
           return (
-            <button className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
-              View
-            </button>
+            <Buttonview plan_id={data.plan_id}/>
           );
         default:
           return cellValue;

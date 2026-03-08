@@ -1,5 +1,6 @@
 "use client";
 import axios from "axios";
+import { API_URL } from "@/app/config";
 import { useRouter } from "next/navigation";
 
 export default function useSaveTrip() {
@@ -28,7 +29,7 @@ export default function useSaveTrip() {
     try {
       const data = { ...tripData, itinerary_data: itinerary };
       const response = await axios.post(
-        `http://127.0.0.1:8000/trip/create`,
+        `${API_URL}/trip/create`,
         data,
         {
           headers: {

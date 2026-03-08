@@ -29,10 +29,11 @@ export default function FromPlan({ placeName, setPlaceName }: FromPlaceProps) {
           value={placeName}
           onChange={(e) => setPlaceName(e.target.value)}
           className="flex-1"
-          startContent={<Map size={18}/>}
+          startContent={<Map size={18} />}
+          suppressHydrationWarning
         />
       </div>
-      
+
       <div className="my-8">
         <div className="flex items-start gap-3">
           <span className="font-semibold text-sm text-gray-700 min-w-[120px]">

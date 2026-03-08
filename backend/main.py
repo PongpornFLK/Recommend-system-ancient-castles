@@ -4,7 +4,7 @@ load_dotenv()
 import os
 from fastapi import FastAPI
 from db import Base , engine
-from route import auth , user , history , event , nearplace , trip , locationcastle
+from route import auth , user , history , event , nearplace , trip , locationcastle , route
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_pagination import add_pagination
 from contextlib import asynccontextmanager
@@ -73,6 +73,7 @@ app.include_router(nearplace.router)
 app.include_router(trip.router)
 app.include_router(locationcastle.router)
 app.include_router(interest.router)
+app.include_router(route.router)
 
 
 @app.get("/")

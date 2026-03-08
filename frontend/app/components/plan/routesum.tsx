@@ -75,7 +75,7 @@ export default function Routesum({
       end_date: endDate.toISOString(),
       duration: minutes,
       status: "travelling" as const,
-      castle_id: locationCastle.castle_id
+      castle_id: locationCastle.castle_id,
     };
 
     const itinerary = boxSelect
@@ -165,7 +165,7 @@ export default function Routesum({
             viewRoute(getGPS, validWaypoints, locationCastle, getNamePlace);
           }}
         >
-          View Route
+          ดูเส้นทางแผนที่
         </Button>
       </div>
     </div>

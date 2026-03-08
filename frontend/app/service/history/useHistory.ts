@@ -3,7 +3,7 @@ import { API_URL } from "@/app/config";
 import { useEffect, useState } from "react";
 
 export interface HistoryData {
-  plan_id: string;
+  plan_id: number;
   date: string;
   start_date: string;
   end_date: string;

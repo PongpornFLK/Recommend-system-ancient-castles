@@ -69,15 +69,7 @@ export default function Setuser() {
 
   const handleSaveProfile = async () => {
     const userId = localStorage.getItem("user_id");
-
-    // if (!username || !email || !tel) {
-    //   addToast({
-    //     title: "Validation Error",
-    //     description: "Please fill in all required fields",
-    //     color: "danger",
-    //   });
-    //   return;
-    // }
+    const token = localStorage.getItem("token");
 
     try {
       const response = await axios.put(
@@ -87,6 +79,11 @@ export default function Setuser() {
           email: email,
           tel: tel,
         },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       console.log(response.data);
@@ -328,9 +325,12 @@ export default function Setuser() {
                           <Button
                             startContent={<SquarePen size={18} />}
                             onPress={() => {
+                              setUsername(user?.username || "");
+                              setEmail(user?.email || "");
+                              setTel(user?.tel || "");
                               setIsEdit(true);
                             }}
-                            className="bg-tone-gray text-white w-[320px] font-bold"
+                            className="bg-tone-brown text-white w-[320px] font-bold"
                           >
                             Edit Profile
                           </Button>
@@ -408,7 +408,7 @@ export default function Setuser() {
                     </div>
                     <div className="flex gap-4 justify-center">
                       <Button
-                        className="bg-tone-gray text-white w-[320px] font-bold"
+                        className="bg-tone-brown text-white w-[320px] font-bold"
                         onPress={() => {
                           handleChangePassword();
                         }}

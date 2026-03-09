@@ -2,7 +2,7 @@ import axios from "axios";
 import { API_URL } from "@/app/config";
 import { useEffect, useState } from "react";
 
-interface TripData {
+export interface TripData {
   plan_id: number,
   plan_name: string,
   event_description: string,

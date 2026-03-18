@@ -97,9 +97,7 @@ const TripDetail = ({
         {(place.status === "cancel" || place.status === "success") && (
           <div className="flex flex-col justify-end items-end h-full py-1">
             <Button
-              color="danger"
-              variant="light"
-              className="font-bold text-xs rounded-xl hover:bg-red-50"
+              className="font-bold text-xs rounded-xl bg-white text-tone-red hover:bg-tone-red hover:text-white"
               startContent={<Trash2 size={16} />}
               isLoading={loadingDelete}
               onClick={() => deleteRoute(place.plan_id)}

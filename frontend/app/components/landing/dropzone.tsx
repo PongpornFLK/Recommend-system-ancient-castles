@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useEffect, useState, useRef } from "react";
@@ -6,7 +7,7 @@ import {
   ArrowRight, Heart, Upload, X, 
   ImageIcon, Search, Loader2, Sparkles 
 } from "lucide-react";
-import { getCastleGalleryByName } from "../lib/castleImages";
+import { getCastleGalleryByName } from "../../lib/castleImages";
 
 type Castle = {
   castle_id: number;
@@ -111,8 +112,9 @@ export default function Dropzone() {
       const res = await fetch(`${API_BASE}/zilliz/images?k=6`, { method: "POST", body: fd });
       const data = await res.json();
       setCastles(data.castles || []);
-    } catch (e) {
+    } catch (err) {
       alert("เกิดข้อผิดพลาดในการค้นหา");
+      console.error(err)
     } finally {
       setLoading(false);
     }
@@ -204,7 +206,7 @@ export default function Dropzone() {
       {!loading && file && castles.length === 0 && (
         <div className="text-center py-20 border-2 border-dashed border-slate-100 rounded-[2rem]">
           <ImageIcon className="w-12 h-12 text-slate-200 mx-auto mb-4" />
-          <p className="text-slate-400 font-medium">กดปุ่ม "เริ่มการค้นหา" เพื่อดูผลลัพธ์</p>
+          <p className="text-slate-400 font-medium">กดปุ่ม เริ่มการค้นหา เพื่อดูผลลัพธ์</p>
         </div>
       )}
     </div>

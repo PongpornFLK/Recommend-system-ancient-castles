@@ -94,8 +94,8 @@ export default function Routesum({
   };
 
   return (
-    <div className="bg-white rounded-2xl mt-5 p-6 w-full lg:w-2/5 lg:h-fit">
-      <h2 className="text-xl font-bold mb-4">Result</h2>
+    <div className="bg-white rounded-2xl mt-5 p-6 w-full lg:w-2/5 lg:h-fit shadow-md border border-slate-100">
+      <h2 className="text-xl font-bold mb-4">สรุปการเดินทาง</h2>
       <div className="space-y-3 mb-6">
         <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
           <div>เวลาเดินทางทั้งหมด :</div>
@@ -131,14 +131,19 @@ export default function Routesum({
           <div className="flex items-center gap-2">
             <Chip className="bg-tone-yellow text-white">2</Chip>
             <div>
-              {boxSelect
-                .filter((box) => box.placeName && box.placeName !== "")
-                .map((box) => (
-                  <div key={box.id} className="flex gap-2">
-                    {">"}
-                    {box.placeName}
-                  </div>
-                ))}
+              {boxSelect.filter((box) => box.placeName && box.placeName !== "")
+                .length > 0 ? (
+                boxSelect
+                  .filter((box) => box.placeName && box.placeName !== "")
+                  .map((box) => (
+                    <div key={box.id} className="flex gap-2 mt-2">
+                      {"> "}
+                      {box.placeName}
+                    </div>
+                  ))
+              ) : (
+                <div>คุณไม่ได้เลือกจุดแวะพัก</div>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2">

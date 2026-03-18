@@ -10,6 +10,7 @@ export interface HistoryData {
   duration: string;
   plan_name: string;
   event_description: string;
+  map_url: string;
 }
 
 export default function useHistory() {
@@ -53,6 +54,7 @@ export default function useHistory() {
           duration: item.duration?.toString() || "",
           plan_name: item.plan_name || "",
           event_description: item.event_description || "",
+          map_url: item.map_url || "",
         }));
 
         // console.log("Transformed Data:", historyData);

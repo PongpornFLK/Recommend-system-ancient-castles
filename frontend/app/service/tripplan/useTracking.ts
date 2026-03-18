@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect } from "react";
-import axios from "axios";
 
 export default function useTracking(
   tripId: number,
@@ -25,7 +24,6 @@ export default function useTracking(
 
   useEffect(() => {
     if (isArrived) return;
-    
 
     const watchId = navigator.geolocation.watchPosition(
       async (position) => {

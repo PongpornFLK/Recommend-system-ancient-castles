@@ -1,10 +1,10 @@
 "use client";
 
 import { Compass, ScanSearch, Image, FileText } from "lucide-react";
-import CardLanding from "@/app/components/cardlanding";
-import SlideImg from "@/app/components/slideimg";
-import Search from "@/app/components/searching";
-import Dropzone from "@/app/components/dropzone";
+import CardLanding from "@/app/components/landing/cardlanding";
+import SlideImg from "@/app/components/landing/slideimg";
+import Search from "@/app/components/landing/searching";
+import Dropzone from "@/app/components/landing/dropzone";
 import { Tabs, Tab } from "@heroui/react";
 
 export default function Landing() {
@@ -15,15 +15,15 @@ export default function Landing() {
       castle_name: "ปราสาทหินพิมาย",
       era: "ยุคเมืองพระนคร",
       type_detail: "เทวสถาน (พุทธศาสนานิกายมหายาน)",
-      architecture: "ศิลปะแบบปาปวนและนครวัด สร้างด้วยหินทรายและศิลาแลง"
+      architecture: "ศิลปะแบบปาปวนและนครวัด สร้างด้วยหินทรายและศิลาแลง",
     },
     {
       castle_id: 2,
       castle_name: "ปราสาทหินพนมรุ้ง",
       era: "ยุคเมืองพระนคร",
       type_detail: "ศาสนสถานในศาสนาฮินดู (ไศวนิกาย)",
-      architecture: "สถาปัตยกรรมขอมโบราณแบบนครวัด ตั้งอยู่บนยอดภูเขาไฟ"
-    }
+      architecture: "สถาปัตยกรรมขอมโบราณแบบนครวัด ตั้งอยู่บนยอดภูเขาไฟ",
+    },
   ];
 
   return (
@@ -34,16 +34,25 @@ export default function Landing() {
 
       <section className="my-5 px-4 md:px-10">
         <div className="my-20">
-          <div className="flex flex-row gap-3 my-10 items-center">
-            <ScanSearch size={38} className="text-tone-oldgray" />
-            <h1 className="font-bold text-3xl text-tone-oldgray">
-              Castle Similarity Search
-            </h1>
+          <div className="mb-10">
+            <div className="flex flex-row gap-3 items-center">
+              <ScanSearch size={38} className="text-tone-oldgray" />
+              <h1 className="font-bold text-3xl text-tone-oldgray uppercase tracking-tight">
+                Castle Similarity Search
+              </h1>
+            </div>
+            <p className="text-stone-500 mt-2">
+              ค้นหาความคล้ายคลึงกันของปราสาท
+            </p>
           </div>
 
           <div className="bg-white rounded-2xl shadow-sm border border-stone-100">
             <div className="p-5">
-              <Tabs aria-label="Search Options" variant="underlined" color="warning">
+              <Tabs
+                aria-label="Search Options"
+                variant="underlined"
+                color="warning"
+              >
                 <Tab
                   key="text"
                   title={
@@ -85,9 +94,11 @@ export default function Landing() {
               Interesting Places
             </h1>
           </div>
-          <p className="text-stone-500 mt-2">โบราณสถานที่น่าสนใจและมีการสืบค้นมากที่สุด</p>
+          <p className="text-stone-500 mt-2">
+            โบราณสถานที่น่าสนใจและมีการสืบค้นมากที่สุด
+          </p>
         </div>
-        
+
         {/* ส่วนแสดง Card โดยใช้ข้อมูลเปรียบเทียบลักษณะเด่น */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {featuredCastles.map((castle) => (

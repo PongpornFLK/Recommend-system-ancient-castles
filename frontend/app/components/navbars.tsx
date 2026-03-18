@@ -1,7 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { UserRound, Settings, Heart, LogOut } from "lucide-react";
+import {
+  UserRound,
+  Settings,
+  Heart,
+  LogOut,
+  House,
+  Map,
+  Info,
+  ChessRook,
+  MapPin,
+} from "lucide-react";
 import {
   Navbar,
   NavbarBrand,
@@ -34,14 +44,13 @@ export default function Navbars() {
   }
 
   const menuItems = [
-    "Home",
-    "MyPlan",
-    "History",
-    "Map",
-    "About",
-    "Setting",
-    "Favorite",
-    "Log Out",
+    { label: "Home", href: "/landing", icon: <House size={16} /> },
+    { label: "Plan", href: "/tripplan", icon: <MapPin size={16} /> },
+    { label: "History", href: "/history", icon: <ChessRook size={16} /> },
+    { label: "Map", href: "/map", icon: <Map size={16} /> },
+    { label: "About", href: "/about", icon: <Info size={16} /> },
+    { label: "Setting", href: "/setuser", icon: <Settings size={16} /> },
+    { label: "Favorite", href: "/favorite", icon: <Heart size={16} /> },
   ];
 
   useEffect(() => {
@@ -53,14 +62,11 @@ export default function Navbars() {
       // console.log("User_id:", userId);
 
       try {
-        const response = await axios.get(
-          `${API_URL}/users/${userId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+        const response = await axios.get(`${API_URL}/users/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
           },
-        );
+        });
 
         const userData = response.data;
         console.log("User Data:", userData);
@@ -83,6 +89,7 @@ export default function Navbars() {
 
   return (
     <Navbar
+      isMenuOpen={isMenuOpen}
       onMenuOpenChange={setIsMenuOpen}
       className=""
       maxWidth="full"
@@ -106,28 +113,43 @@ export default function Navbars() {
 
       <NavbarContent className="hidden sm:flex gap-4" justify="end">
         <NavbarItem>
-          <Link color="foreground" href="/landing" className="text-tone-gray">
-            {menuItems[0]}
+          <Link
+            href="/landing"
+            className="text-tone-gray hover:text-tone-orange transition-colors"
+          >
+            Home
           </Link>
         </NavbarItem>
         <NavbarItem>
-          <Link color="foreground" href="/tripplan" className="text-tone-gray">
-            {menuItems[1]}
+          <Link
+            href="/tripplan"
+            className="text-tone-gray hover:text-tone-orange transition-colors"
+          >
+            Plan
           </Link>
         </NavbarItem>
         <NavbarItem>
-          <Link aria-current="page" href="/history" className="text-tone-gray">
-            {menuItems[2]}
+          <Link
+            href="/history"
+            className="text-tone-gray hover:text-tone-orange transition-colors"
+          >
+            History
           </Link>
         </NavbarItem>
         <NavbarItem>
-          <Link color="foreground" href="/map" className="text-tone-gray">
-            {menuItems[3]}
+          <Link
+            href="/map"
+            className="text-tone-gray hover:text-tone-orange transition-colors"
+          >
+            Map
           </Link>
         </NavbarItem>
         <NavbarItem>
-          <Link color="foreground" href="/about" className="text-tone-gray">
-            {menuItems[4]}
+          <Link
+            href="/about"
+            className="text-tone-gray hover:text-tone-orange transition-colors"
+          >
+            About
           </Link>
         </NavbarItem>
         <NavbarItem>
@@ -187,23 +209,34 @@ export default function Navbars() {
         </NavbarItem>
       </NavbarContent>
       <NavbarMenu>
-        {menuItems.map((item, index) => (
-          <NavbarMenuItem key={`${item}-${index}`}>
-            <Link
-              className="w-full"
-              color={
-                index === 0
-                  ? "success"
-                  : index === menuItems.length - 1
-                    ? "danger"
-                    : "foreground"
-              }
-              href={`/${item.toLowerCase()}`}
-            >
-              {item}
-            </Link>
-          </NavbarMenuItem>
-        ))}
+        <div className="flex flex-col gap-2 mt-4">
+          {menuItems.map((item, index) => (
+            <NavbarMenuItem key={`${item.label}-${index}`}>
+              <Link
+                className="w-full text-lg flex items-center gap-3 py-2 text-slate-700 hover:text-tone-orange font-medium"
+                href={item.href}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <div className="text-slate-400">{item.icon}</div>
+                {item.label}
+              </Link>
+            </NavbarMenuItem>
+          ))}
+          {user && (
+            <NavbarMenuItem key="logout">
+              <Button
+                startContent={<LogOut size={16} />}
+                className="w-full justify-start text-lg py-2 pl-0 font-bold text-tone-red bg-opacity-100 "
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  handleLogOut();
+                }}
+              >
+                Log Out
+              </Button>
+            </NavbarMenuItem>
+          )}
+        </div>
       </NavbarMenu>
     </Navbar>
   );

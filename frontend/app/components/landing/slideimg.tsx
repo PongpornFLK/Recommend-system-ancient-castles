@@ -3,7 +3,7 @@
 import { Navigation, Pagination, Scrollbar, A11y , Keyboard, Autoplay } from "swiper/modules";
 
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Card, CardBody, Image, Button } from "@heroui/react";
+import { Image, Button } from "@heroui/react";
 
 // Import Swiper styles
 import "swiper/css";
@@ -13,9 +13,9 @@ import "swiper/css/scrollbar";
 
 export default function SlideImg() {
   const castles = [
-    { title: "ปราสาทตาควาย", img: "/assets/card/castle1.png" },
-    { title: "ปราสาทพระวิหาร", img: "/assets/card/castle1.png" },
-    { title: "ปราสาทสด๊กก็อกธม", img: "/assets/card/castle1.png" },
+    { title: "ปราสาทหินพิมาย", img: "/assets/phimai/phimai.jpg" },
+    { title: "ปราสาทพนมรุ้ง", img: "/assets/phanomRung/pnr3.jpg" },
+    { title: "ปราสาทเมืองต่ำ", img: "/assets/muangTam/mtam.jpg" },
   ];
   return (
     <div>
@@ -49,10 +49,10 @@ export default function SlideImg() {
             />
             <Button
               type="button"
-              className="absolute top-3 right-3 z-10 bg-white rounded-full p-2 shadow-md hover:scale-110 transition-transform"
+              className="absolute top-3 right-3 z-10 rounded-full p-2 hover:scale-110 transition-transform bg-opacity-0 border border-white text-white hover:bg-white-100"
               aria-label="Like"
             >
-              see more
+              See more
             </Button>
           </SwiperSlide>
         ))}

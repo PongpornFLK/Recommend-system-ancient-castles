@@ -1,33 +1,51 @@
 "use client";
 
-import useCheckIn from "@/app/service/history/useCheckIn";
+import useCheckIn from "@/app/service/tripplan/useCheckIn";
 import useCancel from "@/app/service/tripplan/useCancel";
 import useTracking from "@/app/service/tripplan/useTracking";
 import { Button } from "@heroui/button";
+import useRoutedata from "@/app/service/viewroute/useRoutedata";
 
 interface TrackerProps {
   trip_id: number;
+  castle_id: number;
   destLat: number;
   destLng: number;
-  castle_id: number;
 }
 
 export default function Tracker({
   trip_id,
+  castle_id,
   destLat,
   destLng,
-  castle_id,
 }: TrackerProps) {
   const { isArrived, currentDistance } = useTracking(trip_id, destLat, destLng);
   const { CheckIn } = useCheckIn();
   const { cancelRoute, loadingCancel } = useCancel();
+  const { routeData } = useRoutedata();
+
+  const handleCheckIn = () => {
+    const currentLat = routeData?.current.lat;
+    const currentLng = routeData?.current.lng;
+    const waypoint = routeData?.nearbyplace
+      ? routeData.nearbyplace.map((place) => ({
+          lat: place.latitude,
+          lng: place.longitude,
+        }))
+      : [];
+
+    if (currentLat === undefined || currentLng === undefined) {
+      console.error("Current location is undefined");
+      return;
+    }
+
+    CheckIn(castle_id, trip_id, currentLat, currentLng, waypoint, destLat, destLng);
+  };
 
   return (
     <div className="flex flex-col justify-between items-end h-full py-3">
       <div className="text-right">
-        <p className=" font-bold mb-1">
-          ระยะทางที่เหลือ
-        </p>
+        <p className=" font-bold mb-1">ระยะทางที่เหลือ</p>
         {isArrived ? (
           <div className="text-green-600 font-bold animate-pulse text-lg flex items-center gap-2">
             Success : ถึงจุดหมายแล้ว
@@ -43,9 +61,7 @@ export default function Tracker({
 
       <div className="flex flex-row gap-3 mt-8">
         <Button
-          color="danger"
-          variant="ghost"
-          className="font-bold h-10 px-6 rounded-xl"
+          className="font-bold h-10 px-6 rounded-xl bg-white text-tone-red hover:bg-tone-red hover:text-white"
           isLoading={loadingCancel}
           onClick={() => cancelRoute(trip_id)}
         >
@@ -59,7 +75,7 @@ export default function Tracker({
               : "shadow-green-100 hover:scale-105"
           }`}
           disabled={!isArrived}
-          onClick={() => isArrived && CheckIn(castle_id, trip_id)}
+          onClick={() => isArrived && handleCheckIn()}
         >
           Check-In
         </Button>

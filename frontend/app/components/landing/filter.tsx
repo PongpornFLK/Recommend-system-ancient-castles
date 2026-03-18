@@ -63,8 +63,9 @@ export default function Filter({ value, onApply, onClear }: Props) {
         if (!res.ok) throw new Error(await res.text());
         const data = await res.json();
         if (alive) setOpts(data);
-      } catch (e) {
+      } catch (err) {
         if (alive) setOpts(null);
+        console.error(err)
       } finally {
         if (alive) setOptLoading(false);
       }
@@ -100,9 +101,9 @@ export default function Filter({ value, onApply, onClear }: Props) {
         ตัวกรอง
       </Button>
 
-      <Modal 
-        isOpen={isOpen} 
-        onOpenChange={onOpenChange} 
+      <Modal
+        isOpen={isOpen}
+        onOpenChange={onOpenChange}
         size="3xl"
         scrollBehavior="inside"
         backdrop="blur"
@@ -117,19 +118,19 @@ export default function Filter({ value, onApply, onClear }: Props) {
           {(onClose) => (
             <>
               <ModalHeader className="flex items-center gap-3">
-                <SlidersHorizontal className="text-indigo-600" />
+                
                 กรองข้อมูลสถานที่
               </ModalHeader>
 
               <ModalBody>
                 {optLoading ? (
                   <div className="flex flex-col items-center justify-center py-20 gap-4">
-                   <Spinner size="lg" className="text-indigo-600" classNames={{ circle1: "border-b-indigo-600", circle2: "border-b-indigo-600" }} />
+                    <Spinner size="lg" className="text-indigo-600" classNames={{ circle1: "border-b-indigo-600", circle2: "border-b-indigo-600" }} />
                     <p className="text-sm font-medium text-slate-400">กำลังดึงข้อมูลตัวเลือก...</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    
+
                     {/* Section: Location */}
                     <div className="space-y-6">
                       <div className="flex items-center gap-2 mb-4">
@@ -138,8 +139,8 @@ export default function Filter({ value, onApply, onClear }: Props) {
                         </div>
                         <h3 className="text-lg font-bold text-slate-800">ที่ตั้ง / ตำแหน่ง</h3>
                       </div>
-                      
-                      <div className="space-y-5">
+
+                      <div className="space-y-5 mt-10">
                         <Select
                           label="จังหวัด"
                           placeholder="เลือกจังหวัด"
@@ -197,7 +198,7 @@ export default function Filter({ value, onApply, onClear }: Props) {
                         <h3 className="text-lg font-bold text-slate-800">ลักษณะเฉพาะ</h3>
                       </div>
 
-                      <div className="space-y-5">
+                      <div className="space-y-5 mt-10">
                         <Select
                           label="ยุคสมัย"
                           placeholder="ระบุยุคสมัย"
@@ -240,19 +241,17 @@ export default function Filter({ value, onApply, onClear }: Props) {
               </ModalBody>
 
               <ModalFooter className="flex items-center justify-between border-t border-slate-50 pt-6">
-                <Button 
-                  variant="light" 
-                  color="danger" 
+                <Button
                   onPress={handleClear}
                   startContent={<Trash2 className="w-4 h-4" />}
-                  className="font-bold rounded-xl"
+                  className="font-bold rounded-xl bg-white text-tone-red hover:bg-tone-red hover:text-white"
                 >
                   ล้างทั้งหมด
                 </Button>
 
                 <div className="flex gap-2">
-                  <Button 
-                    variant="flat" 
+                  <Button
+                    variant="flat"
                     onPress={onClose}
                     className="rounded-xl font-bold"
                   >

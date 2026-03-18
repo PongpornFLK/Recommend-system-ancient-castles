@@ -1,9 +1,10 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 import React, { useMemo } from "react";
 import { Landmark, History, Info, ArrowRight } from "lucide-react";
 import Link from "next/link";
 // ดึงฟังก์ชันจัดการรูปภาพตามที่คุณตั้งค่าไว้
-import { getCastleGalleryByName } from "../lib/castleImages";
+import { getCastleGalleryByName } from "@/app/lib/castleImages";
 
 interface Castle {
   castle_id: number;
@@ -20,11 +21,11 @@ export default function CardLanding({ castle }: { castle: Castle }) {
 
   return (
     <div className="group relative overflow-hidden rounded-[2.5rem] border border-stone-200 bg-white shadow-sm transition-all hover:-translate-y-2 hover:shadow-2xl hover:ring-2 hover:ring-[#D2B48C]/30">
-      
+
       {/* ส่วนแสดงรูปภาพ (Image Header) */}
       <div className="relative h-56 w-full overflow-hidden p-3">
-        <img 
-          src={imageUrl} 
+        <img
+          src={imageUrl}
           alt={castle.castle_name}
           className="h-full w-full rounded-[1.8rem] object-cover transition-transform duration-500 group-hover:scale-110"
         />
@@ -38,7 +39,7 @@ export default function CardLanding({ castle }: { castle: Castle }) {
             {castle.castle_name}
           </h3>
         </div>
-        
+
         <div className="space-y-4">
           {/* ข้อมูลยุคสมัย */}
           <div className="flex items-start gap-3">
@@ -77,7 +78,7 @@ export default function CardLanding({ castle }: { castle: Castle }) {
         </div>
 
         {/* ปุ่มดูรายละเอียด */}
-        <Link 
+        <Link
           href={`/castles/${castle.castle_id}`}
           className="mt-6 flex w-full items-center justify-center gap-2 rounded-[1.2rem] bg-[#5D4037] py-3.5 text-sm font-bold text-white transition-all hover:bg-[#3E2723] active:scale-95 shadow-lg shadow-stone-200"
         >

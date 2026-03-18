@@ -18,8 +18,8 @@ export default function FromPlan({ placeName, setPlaceName }: FromPlaceProps) {
       <div className="w-full">
         <Input
           label={
-            <div className="font-bold text-gray-700">
-              Plan Name
+            <div className="font-bold text-md">
+              ชื่อแผน
             </div>
           }
           type="text"
@@ -36,10 +36,10 @@ export default function FromPlan({ placeName, setPlaceName }: FromPlaceProps) {
 
       <div className="my-8">
         <div className="flex items-start gap-3">
-          <span className="font-semibold text-sm text-gray-700 min-w-[120px]">
-            Event Description:
+          <span className="font-semibold text-md min-w-[120px]">
+            คำอธิบายกิจกรรม
           </span>
-          <span className="text-sm text-gray-600 flex-1">
+          <span className="text-gray-600 flex-1 text-md">
             {eventDescript || "No event description available"}
           </span>
         </div>

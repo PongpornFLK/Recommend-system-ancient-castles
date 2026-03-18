@@ -74,7 +74,8 @@ class TripPlan(Base):
     end_date = Column(DateTime(timezone=True), server_default=func.now())
     duration = Column(Integer)
     status = Column(String, default="travelling")  # Add status field
-
+    map_url = Column(Text, nullable=True)
+    
     user = relationship("User", back_populates="trip_plans")
     castle = relationship("Castle")
     route = relationship("Route") # One-way trip

@@ -7,13 +7,14 @@ import {
   TableColumn,
   TableRow,
   TableCell,
-} from "@heroui/table";
+  Chip,
+} from "@heroui/react";
 import React from "react";
-import useHistory , { HistoryData} from "@/app/service/history/useHistory";
+import useHistory, { HistoryData } from "@/app/service/history/useHistory";
 import Buttonview from "./buttonview";
 
 export default function TableHistory() {
-  const { historyData } = useHistory()
+  const { historyData } = useHistory();
 
   const headCol = [
     { name: "Date", uid: "date" },
@@ -33,7 +34,13 @@ export default function TableHistory() {
 
       switch (columnKey) {
         case "date":
-          return data.date;
+          return (
+            <div>
+              <Chip radius="md" color="warning" variant="bordered">
+                {data.date}
+              </Chip>
+            </div>
+          );
         case "start_date":
           return data.start_date;
         case "end_date":
@@ -45,9 +52,7 @@ export default function TableHistory() {
         case "event_description":
           return data.event_description;
         case "action":
-          return (
-            <Buttonview plan_id={data.plan_id}/>
-          );
+          return <Buttonview plan_id={data.plan_id} />;
         default:
           return cellValue;
       }
@@ -56,32 +61,27 @@ export default function TableHistory() {
   );
 
   return (
-
-      <div>
-        <Table aria-label="Example static collection table">
-          <TableHeader columns={headCol}>
-            {(column) => (
-              <TableColumn key={column.uid} align="center">
-                {column.name}
-              </TableColumn>
-            )}
-          </TableHeader>
-          <TableBody emptyContent={"Don't Have History..."} items={historyData}>
-            {(item) => (
-              <TableRow key={item.plan_id}>
-                {(columnKey) => (
-                  <TableCell>
-                    {renderCell(
-                      item,
-                      columnKey as keyof HistoryData | "action",
-                    )}
-                  </TableCell>
-                )}
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
+    <div>
+      <Table aria-label="Example static collection table">
+        <TableHeader columns={headCol}>
+          {(column) => (
+            <TableColumn key={column.uid} align="center">
+              {column.name}
+            </TableColumn>
+          )}
+        </TableHeader>
+        <TableBody emptyContent={"Don't Have History..."} items={historyData}>
+          {(item) => (
+            <TableRow key={item.plan_id}>
+              {(columnKey) => (
+                <TableCell>
+                  {renderCell(item, columnKey as keyof HistoryData | "action")}
+                </TableCell>
+              )}
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </div>
   );
 }

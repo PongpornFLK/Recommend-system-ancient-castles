@@ -1,10 +1,8 @@
 "use client";
 
 import useTrip, { TripData } from "@/app/service/tripplan/useTrip";
-import { Accordion, AccordionItem, Chip, Image, Button } from "@heroui/react";
-import { ListIcon, MapPin, Calendar, Info, Trash2 } from "lucide-react";
+import { Accordion, AccordionItem, Chip, Image} from "@heroui/react";
 import useDelete from "@/app/service/tripplan/useDelete";
-import Tracker from "./tracker";
 
 import TripDetail from "./detail";
 

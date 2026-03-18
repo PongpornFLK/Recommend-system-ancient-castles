@@ -116,6 +116,7 @@ def createTrip(
 @router.post("/{trip_id}/confirm")
 def confirmTrip(
     trip_id: int,
+    request_data: TripConfirmRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(getCurrentUser),
 ):
@@ -135,7 +136,9 @@ def confirmTrip(
     # Update status
     trip_plan.status = "success"
     trip_plan.end_date = datetime.now()
-
+    if request_data.map_url:
+        trip_plan.map_url = request_data.map_url
+        
     db.commit()
 
     return {
@@ -176,6 +179,7 @@ def getUserTrips(
             "end_date" : trip_data.end_date,
             "duration" : trip_data.duration,
             "status" : trip_data.status,
+            "map_url" : trip_data.map_url,
             "destination_name" : castle_name,
             "destination_lat" : lat,
             "destination_lng" : lng,

@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { Card, CardFooter, Button, Image, Skeleton } from "@heroui/react";
 import { HeartOff, Eye, Heart } from "lucide-react";

@@ -41,4 +41,7 @@ async def getRouteTrip(plan_id : int , db : Session = Depends(get_db) , current_
     
     db_route_trip = db.query(Route).filter(Route.route_id == db_plan.route_id).all()
     
-    return db_route_trip
+    return {
+        "route_trip" : db_route_trip,
+        "map_url" : db_plan.map_url
+    }

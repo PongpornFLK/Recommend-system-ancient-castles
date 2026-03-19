@@ -1,15 +1,19 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { Card, CardFooter, Button, Image, Skeleton } from "@heroui/react";
 import { HeartOff, Eye, Heart } from "lucide-react";
 import Link from "next/link";
-import Navbars from "../components/navbars";
+import { getCastleGalleryByName } from "../../lib/castleImages";
 
-import { getCastleGalleryByName } from "../lib/castleImages";
+interface FavoriteItem {
+  interest_id: number;
+  castle_id: number;
+  castle_name: string;
+  user_id: number;
+}
 
 export default function FavoritePage() {
-  const [favList, setFavList] = useState<any[]>([]);
+  const [favList, setFavList] = useState<FavoriteItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   const userId = typeof window !== "undefined" ? localStorage.getItem("user_id") : null;
@@ -47,9 +51,7 @@ export default function FavoritePage() {
   }, [userId]);
 
   return (
-    <div className="min-h-screen bg-[#FDFDF0]">
-      <Navbars />
-      
+    <div className="min-h-screen">      
       <div className="max-w-7xl mx-auto p-6 md:p-10">
         <div className="flex items-center gap-4 mb-10">
           <div className="p-3 bg-rose-100 rounded-2xl">
@@ -71,7 +73,7 @@ export default function FavoritePage() {
           </div>
         ) : favList.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-            {favList.map((item: any) => {
+            {favList.map((item) => {
 
               const gallery = getCastleGalleryByName(item.castle_name);
               const displayImage = gallery.cover || "/assets/card/placeholder.jpg";

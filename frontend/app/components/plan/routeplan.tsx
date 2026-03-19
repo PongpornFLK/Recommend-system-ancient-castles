@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
 import { Flag, MapPin, Plus } from "lucide-react";
 import SelectPlace from "@/app/components/plan/selectplace";
 import React from "react";
-import { Spinner } from "@heroui/react"; 
+import { Spinner } from "@heroui/react";
 import useCreateroute from "@/app/service/plan/useCreateroute";
 import FromPlan from "./formplan";
 
@@ -17,21 +17,36 @@ interface RouteSelect {
   }[];
   //   Data เดียวกัน
   setBoxSelect: React.Dispatch<
-    React.SetStateAction<{ id: number; placeId: string; placeName: string,latitude: number,longitude: number }[]>
+    React.SetStateAction<
+      {
+        id: number;
+        placeId: string;
+        placeName: string;
+        latitude: number;
+        longitude: number;
+      }[]
+    >
   >;
-  currentPlace : string,
+  currentPlace: string;
   isLoading: boolean;
-  planName : string;
-  setPlanName : (name : string) => void
+  planName: string;
+  setPlanName: (name: string) => void;
 }
 
-export default function Routeplan({ boxSelect, setBoxSelect,currentPlace ,isLoading,planName,setPlanName}: RouteSelect) {
+export default function Routeplan({
+  boxSelect,
+  setBoxSelect,
+  currentPlace,
+  isLoading,
+  planName,
+  setPlanName,
+}: RouteSelect) {
   const { locationCastle } = useCreateroute();
 
   return (
-    <div className="bg-white rounded-2xl mt-5 p-6 w-full lg:w-3/5 lg:h-fit">
+    <div className="bg-white rounded-2xl mt-5 p-6 w-full lg:w-3/5 lg:h-fit shadow-md border border-slate-100">
       <div className="space-y-4">
-        <FromPlan placeName={planName} setPlaceName={setPlanName}/>
+        <FromPlan placeName={planName} setPlaceName={setPlanName} />
         <div className="flex items-start gap-3">
           <Flag size={24} className="text-tone-blue" />
           <div className="flex-1">
@@ -42,17 +57,18 @@ export default function Routeplan({ boxSelect, setBoxSelect,currentPlace ,isLoad
                 <p className="text-gray-600 text-sm">กำลังโหลดข้อมูลสถานที่</p>
               </div>
             ) : (
-              <div className="text-gray-600 text-sm mt-3">
-                {currentPlace}
-              </div>
+              <div className="text-gray-600 text-sm mt-3">{currentPlace}</div>
             )}
           </div>
         </div>
 
         <div className="flex items-start gap-3">
           <Plus size={24} className="text-yellow-500" />
-          <div className="flex-1 ">
-            <h3 className="font-semibold">เพิ่มจุดแวะพัก :</h3>
+          <div className="flex-1">
+            <div className="flex flex-row">
+              <h1 className="font-semibold mr-2">เพิ่มจุดแวะพัก : </h1>
+              <h1 className="text-gray-500">( ไม่บังคับ )</h1>
+            </div>
             <div className="mt-2">
               <SelectPlace boxSelect={boxSelect} setBoxSelect={setBoxSelect} />
             </div>
@@ -62,7 +78,7 @@ export default function Routeplan({ boxSelect, setBoxSelect,currentPlace ,isLoad
         <div className="flex items-start gap-3">
           <MapPin size={24} className="text-red-500" />
           <div className="flex-1 items-center">
-            <h3 className="font-semibold">จุดหมาย :</h3>
+            <h1 className="font-semibold">จุดหมาย :</h1>
             <p className="text-gray-600 text-sm mt-1">
               {locationCastle?.castle_name}
             </p>

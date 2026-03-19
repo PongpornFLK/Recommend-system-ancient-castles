@@ -10,6 +10,7 @@ interface RouteData {
 export default function useRoute(plan_id: number) {
   const [routeData, setRouteData] = useState<RouteData[]>([]);
   const [routeSeq, setRouteSeq] = useState("");
+  const [mapUrl, setMapUrl] = useState("");
 
   useEffect(() => {
     const fetchRoute = async () => {
@@ -22,10 +23,11 @@ export default function useRoute(plan_id: number) {
               Authorization: `Bearer ${token}`,
             },
           });
-        //   console.log("Route :", response.data);
-        //   console.log("Route :", response.data[0].description_gps);
+          // console.log("Route :", response.data);
+          // console.log("Route :", response.data.route_trip[0].description_gps);
           setRouteData(response.data);
-          setRouteSeq(response.data[0].description_gps);
+          setRouteSeq(response.data.route_trip[0].description_gps);
+          setMapUrl(response.data.map_url);
         } catch (err) {
           console.log(err);
         }
@@ -33,5 +35,5 @@ export default function useRoute(plan_id: number) {
     };
     fetchRoute();
   }, [plan_id]);
-  return { routeData, routeSeq };
+  return { routeData, routeSeq ,mapUrl };
 }

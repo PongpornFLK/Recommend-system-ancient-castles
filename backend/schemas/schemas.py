@@ -119,6 +119,10 @@ class TripPlanBase(BaseModel):
     end_date: datetime
     duration: int
     status: Optional[str] = "travelling"
+    map_url: Optional[str] = None
+    
+class TripConfirmRequest(BaseModel):
+    map_url: Optional[str] = None
 
 class TripPlanCreate(TripPlanBase):
     castle_id : int

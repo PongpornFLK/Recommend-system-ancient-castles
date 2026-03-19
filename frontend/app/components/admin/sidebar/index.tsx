@@ -83,7 +83,7 @@ export default function Sidebar() {
     localStorage.removeItem("token");
     localStorage.removeItem("user_id");
     setUser(null);
-    router.push("/login");
+    window.location.href = "/login";
   };
 
   return (

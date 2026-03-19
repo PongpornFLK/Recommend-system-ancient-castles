@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect } from "react";
-import axios from "axios";
 
 export default function useTracking(
   tripId: number,
@@ -44,7 +43,7 @@ export default function useTracking(
       },
 
       // ความแม่นยำ , realtime
-      { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+      { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
     );
 
     // ไม่ทำงานต่อเมื่อออกจาก Tripplan

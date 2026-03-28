@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi_pagination import add_pagination
 from contextlib import asynccontextmanager
 from route import interest
+from route import recommend
 
 from db import Base, engine
 
@@ -74,6 +75,7 @@ app.include_router(trip.router)
 app.include_router(locationcastle.router)
 app.include_router(interest.router)
 app.include_router(route.router)
+app.include_router(recommend.router)
 
 
 @app.get("/")

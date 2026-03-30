@@ -9,9 +9,7 @@ from loguru import logger
 from fastapi_pagination.ext.sqlalchemy import paginate
 from fastapi_pagination import Page, Params
 from typing import Annotated
-import jwt
 from authen.secur import createToken , supabase_client
-import base64
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -187,3 +185,28 @@ async def changePassword(
     db_user.password = pwd_context.hash(password.new_pass)
     db.commit()
     return {"message": "You change password success"}
+
+
+### Set Password for Google Users
+@router.post("/set_google_pwd")
+async def setGooglePassword(
+    password: SetGooglePwdRequest,
+    current_user: Annotated[dict, Depends(getCurrentUser)],
+    db: Session = Depends(get_db),
+):
+    if current_user.get("auth_provider") != "google":
+        raise HTTPException(
+            status_code=403,
+            detail="You don't have permission"
+        )
+
+    user_id = current_user["user_id"]
+    db_user = db.query(User).filter(User.user_id == user_id).first()
+
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="Not Found")
+
+    db_user.password = pwd_context.hash(password.new_pass)
+    db.commit()
+
+    return {"message": "Successfully set your new password"}

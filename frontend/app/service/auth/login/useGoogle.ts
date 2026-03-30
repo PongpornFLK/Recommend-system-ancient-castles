@@ -10,6 +10,7 @@ interface CustomToken {
   user_id: number;
   roles: string;
   exp: number;
+  auth_provider: "google";
 }
 
 export default function useGoogle() {
@@ -20,6 +21,12 @@ export default function useGoogle() {
     const { data: listener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event == "SIGNED_IN" && session) {
+
+          // มี Token แล้ว ไม่ต้องไปดึงใหม่
+          if (localStorage.getItem("token")) {
+            return;
+          }
+
           setIsLoading(true);
           const supabaseToken = session.access_token;
           try {
@@ -36,6 +43,8 @@ export default function useGoogle() {
             localStorage.setItem("token", token);
             localStorage.setItem("user_id", decode.user_id.toString());
             localStorage.setItem("roles", decode.roles);
+            localStorage.setItem("auth_provider", decode.auth_provider);
+            localStorage.setItem("username", decode.sub);
 
             window.location.reload();
             // console.log("Supabase Token :", response.data);

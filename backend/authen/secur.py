@@ -41,7 +41,9 @@ def verify_password(userInputPassword, passwordInDatabase):
 
 
 def authenticate_user(username: str, password: str, db):
-    dbUser = db.query(User).filter(User.username == username).first()
+    dbUser = db.query(User).filter(
+        (User.username == username) | (User.email == username)
+    ).first()
     if not dbUser:
         return False
     if not pwd_context.verify(password, dbUser.password):

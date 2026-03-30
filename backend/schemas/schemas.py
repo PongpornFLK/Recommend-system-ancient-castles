@@ -45,6 +45,9 @@ class ChangeNewPwdResponse(ChangeNewPwdBase):
     class Config:
         from_attributes = True
 
+class SetGooglePwdRequest(BaseModel):
+    new_pass : str
+
 ##### Search History 
 class SearchHistoryBase(BaseModel):
     query_text: str

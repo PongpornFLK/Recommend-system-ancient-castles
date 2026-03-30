@@ -1,23 +1,14 @@
 "use client";
 
-import React from "react";
 import {
-    History,
     Search,
     MapPin,
-    Users,
-    Target,
-    ShieldCheck,
-    ChevronRight,
-    Sparkles,
-    Info,
     Github
 } from "lucide-react";
 import {
     Card,
     CardBody,
     CardHeader,
-    CardFooter,
     Button,
     Divider,
     Image,

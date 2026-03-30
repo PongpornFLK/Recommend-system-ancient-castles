@@ -28,12 +28,12 @@ export default function LoginForm() {
         <Input
           isRequired
           errorMessage={
-            username === "" ? "Please enter your username" : undefined
+            username === "" ? "Please enter your username or email" : undefined
           }
           className="font-bold"
-          label="Username"
+          label="Username or Email"
           labelPlacement="outside"
-          placeholder="Type your username"
+          placeholder="Type your username or email"
           type="text"
           startContent={<User size={18} />}
           variant="bordered"

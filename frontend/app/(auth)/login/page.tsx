@@ -31,7 +31,7 @@ export default function Login() {
               </div>
             </div>
             <h2 className="my-5 text-center">
-              Please enter your username and password to login
+              Please enter your username or email and password to login
             </h2>
 
             <LoginForm />

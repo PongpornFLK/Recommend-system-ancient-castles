@@ -13,6 +13,7 @@ interface CustomToken {
   user_id: number;
   roles: string;
   exp: number;
+  auth_provider : "local"
 }
 
 export default function useLogin() {
@@ -35,6 +36,7 @@ export default function useLogin() {
 
       localStorage.setItem("token", token);
       localStorage.setItem("user_id", decode.user_id.toString());
+      localStorage.setItem("auth_provider", decode.auth_provider)
 
       // console.log("Decode : ", decode.roles);
       // console.log("User_id : ", decode.user_id);

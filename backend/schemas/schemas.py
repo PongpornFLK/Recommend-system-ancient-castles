@@ -1,5 +1,5 @@
 import string
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import List, Optional
 from datetime import datetime
 from sqlalchemy import Boolean
@@ -18,16 +18,16 @@ class GoogleTokenRequest(BaseModel):
 class UserBase(BaseModel):
     username: str
     email: EmailStr
-    tel: Optional[str] = None
+    tel: str = Field(..., pattern=r'^0[0-9]{9}$')
     roles: str = "user" or "admin"
 
 class UserCreate(UserBase): # สำหรับรับ field ทั้งหมดจาก UserBase + password เพื่อสร้าง
-    password: str
+    password: str = Field(..., min_length=6)
     
 class UserUpdate(BaseModel):
     username: Optional[str] = None
     email: Optional[EmailStr] = None
-    tel: Optional[str] = None
+    tel: Optional[str] = Field(None, pattern=r'^0[0-9]{9}$')
 
 class UserResponse(UserBase): # สำหรับ Response -> ห้ามส่ง Password กลับ
     user_id: int
@@ -39,14 +39,14 @@ class ChangeNewPwdBase(BaseModel):
 
 class ChangeNewPwdCreate(ChangeNewPwdBase):
     old_pass : str
-    new_pass : str
+    new_pass : str = Field(..., min_length=6)
     
 class ChangeNewPwdResponse(ChangeNewPwdBase):
     class Config:
         from_attributes = True
 
 class SetGooglePwdRequest(BaseModel):
-    new_pass : str
+    new_pass : str = Field(..., min_length=6)
 
 ##### Search History 
 class SearchHistoryBase(BaseModel):

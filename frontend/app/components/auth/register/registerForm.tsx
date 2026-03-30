@@ -26,7 +26,7 @@ export default function RegisterForm() {
     try {
       await handleRegister(e, username, email, tel, password, confirmpwd);
     } catch (err) {
-       console.error("Error : " , err)
+      console.error("Error : ", err)
     }
   };
 
@@ -48,12 +48,13 @@ export default function RegisterForm() {
         />
         <Input
           isRequired
-          errorMessage="Please enter your email"
+          isInvalid={email.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)}
+          errorMessage={email.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? "Invalid email format" : "Please enter your email"}
           className="font-bold"
           label="Email"
           labelPlacement="outside"
           placeholder="Type your email"
-          type="text"
+          type="email"
           startContent={<AtSign size={18} />}
           variant="bordered"
           value={email}
@@ -61,7 +62,8 @@ export default function RegisterForm() {
         />
         <Input
           isRequired
-          errorMessage="Please enter your phone-number"
+          isInvalid={tel.length > 0 && !/^0[0-9]{9}$/.test(tel)}
+          errorMessage={tel.length > 0 && !/^0[0-9]{9}$/.test(tel) ? "Phone must be 10 digits starting with 0" : "Please enter your phone-number"}
           className="font-bold"
           label="Phone-number"
           labelPlacement="outside"
@@ -74,7 +76,8 @@ export default function RegisterForm() {
         />
         <Input
           isRequired
-          errorMessage="Please enter your password"
+          isInvalid={password.length > 0 && password.length < 6}
+          errorMessage={password.length > 0 && password.length < 6 ? "Password must be at least 6 characters" : "Please enter your password"}
           className="font-bold"
           label="Password"
           labelPlacement="outside"
@@ -97,11 +100,12 @@ export default function RegisterForm() {
         />
         <Input
           isRequired
-          errorMessage="Please enter your confirm password"
+          isInvalid={confirmpwd.length > 0 && confirmpwd !== password}
+          errorMessage={confirmpwd.length > 0 && confirmpwd !== password ? "Passwords do not match" : "Please confirm your password"}
           className="font-bold"
           label="Confirm Password"
           labelPlacement="outside"
-          placeholder="Enter your confirm password"
+          placeholder="Type your password again"
           startContent={<LockKeyhole size={18} />}
           variant="bordered"
           value={confirmpwd}
@@ -118,7 +122,7 @@ export default function RegisterForm() {
           }
           type={isVisiblepwd ? "text" : "password"}
         />
-        
+
         <div className="flex flex-row gap-2 mt-4 w-full">
           <Button as={Link} href="/login" className="bg-black w-full text-white font-bold basis-1/3 md:basis-1/3">
             Back

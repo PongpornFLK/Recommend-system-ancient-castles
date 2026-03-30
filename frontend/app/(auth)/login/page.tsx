@@ -31,7 +31,7 @@ export default function Login() {
               </div>
             </div>
             <h2 className="my-5 text-center">
-              Please enter your username or email and password to login
+              Please enter your information to login
             </h2>
 
             <LoginForm />
@@ -39,7 +39,7 @@ export default function Login() {
             <div className="flex justify-center my-4 items-center">
               <span className="text-gray-400">or</span>
             </div>
-            
+
             <ButtonGoogle />
 
             <div className="mt-4 text-center">

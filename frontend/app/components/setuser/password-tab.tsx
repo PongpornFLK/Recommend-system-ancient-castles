@@ -45,7 +45,8 @@ export default function PasswordTab() {
               )}
               <Input
                 isRequired
-                errorMessage="Please enter your new password"
+                isInvalid={newpwd.length > 0 && newpwd.length < 6}
+                errorMessage={newpwd.length > 0 && newpwd.length < 6 ? "Password must be at least 6 characters" : "Please enter your new password"}
                 className="font-bold mb-4"
                 classNames={{ label: "text-md" }}
                 label="New password"
@@ -59,7 +60,8 @@ export default function PasswordTab() {
               />
               <Input
                 isRequired
-                errorMessage="Please confirm your new password"
+                isInvalid={confirmnewpwd.length > 0 && confirmnewpwd !== newpwd}
+                errorMessage={confirmnewpwd.length > 0 && confirmnewpwd !== newpwd ? "Passwords do not match" : "Please confirm your new password"}
                 className="font-bold mb-6"
                 classNames={{ label: "text-md" }}
                 label="Confirm new password"

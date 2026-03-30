@@ -4,6 +4,12 @@ from typing import List, Optional
 from datetime import datetime
 
 from sqlalchemy import Boolean
+class UploadImageVectorResponse(BaseModel):
+    status: str
+    message: str
+    img_id: int
+    castle_id: int
+    original_filename: Optional[str] = None
 
 class CastleFullCreate(BaseModel):
     castle_name: str

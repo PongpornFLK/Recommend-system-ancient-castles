@@ -17,6 +17,8 @@ from route import manage_vector
 from route.zilliz_search import router as zilliz_router
 from route.filter_search import router as filter_router
 from route.castle_detail import router as castle_detail_router
+from route import manage_document_vector
+
 
 print("DATABASE_URL set =", bool(os.getenv("DATABASE_URL")))
 print("ZILLIZ_URI set   =", bool(os.getenv("ZILLIZ_URI")))
@@ -78,6 +80,7 @@ app.include_router(route.router)
 app.include_router(recommend.router)
 app.include_router(manage_castle.router)
 app.include_router(manage_vector.router)
+app.include_router(manage_document_vector.router)
 
 @app.get("/")
 def root():

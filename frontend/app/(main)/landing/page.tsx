@@ -107,8 +107,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Section: สถานที่แนะนำ (Interesting Places) */}
-      {/* ✅ เงื่อนไข: แสดงเฉพาะเมื่อมีข้อมูลแนะนำ (ถูกใจแล้วเท่านั้น) */}
+      {/*Interesting Places */}
       {!loading && recommendedCastles.length > 0 && (
         <section className="my-10 px-4 md:px-10 pb-20 animate-appearance-in">
           <div className="mb-10">
@@ -134,7 +133,6 @@ export default function Landing() {
         </section>
       )}
 
-      {/* กรณีที่กำลังโหลด แสดง Spinner เล็กน้อยเพื่อความลื่นไหล */}
       {loading && (
         <div className="flex justify-center py-20">
           <Spinner color="warning" label="Checking for recommendations..." />

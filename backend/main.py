@@ -12,7 +12,7 @@ from route import interest
 from route import recommend
 from route import manage_castle
 from db import Base, engine
-
+from route import manage_vector
 # import router
 from route.zilliz_search import router as zilliz_router
 from route.filter_search import router as filter_router
@@ -77,7 +77,7 @@ app.include_router(interest.router)
 app.include_router(route.router)
 app.include_router(recommend.router)
 app.include_router(manage_castle.router)
-
+app.include_router(manage_vector.router)
 
 @app.get("/")
 def root():

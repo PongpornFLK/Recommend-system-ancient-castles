@@ -11,6 +11,13 @@ class UploadImageVectorResponse(BaseModel):
     castle_id: int
     original_filename: Optional[str] = None
 
+class UploadDocumentVectorResponse(BaseModel):
+    status: str
+    message: str
+    castle_id: int
+    document_name: str
+    chunks_inserted: int
+
 class CastleFullCreate(BaseModel):
     castle_name: str
     castle_description: Optional[str] = None

@@ -1,9 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 import React, { useMemo } from "react";
-import { Landmark, History, Info, ArrowRight } from "lucide-react";
+import { Landmark, History, Info, ArrowRight, Sparkles } from "lucide-react";
 import Link from "next/link";
-// ดึงฟังก์ชันจัดการรูปภาพตามที่คุณตั้งค่าไว้
 import { getCastleGalleryByName } from "@/app/lib/castleImages";
 
 interface Castle {
@@ -12,15 +11,25 @@ interface Castle {
   era: string;
   type_detail: string;
   architecture: string;
+  festivals?: string; 
+  is_recommended?: boolean; 
 }
 
 export default function CardLanding({ castle }: { castle: Castle }) {
-  // ค้นหารูปภาพที่ตรงกับชื่อปราสาท (รองรับระบบ Fuzzy Name ที่คุณเขียน)
+  // ค้นหารูปภาพที่ตรงกับชื่อปราสาทโดยใช้ useMemo เพื่อประสิทธิภาพ
   const gallery = useMemo(() => getCastleGalleryByName(castle.castle_name), [castle.castle_name]);
   const imageUrl = gallery.cover || "/assets/card/placeholder.jpg";
 
   return (
     <div className="group relative overflow-hidden rounded-[2.5rem] border border-stone-200 bg-white shadow-sm transition-all hover:-translate-y-2 hover:shadow-2xl hover:ring-2 hover:ring-[#D2B48C]/30">
+      
+      {/* ส่วนแสดง Badge แนะนำ (Personalized Badge) จะแสดงเมื่อ is_recommended เป็น true */}
+      {castle.is_recommended && (
+        <div className="absolute top-6 right-6 z-20 flex items-center gap-1.5 rounded-full bg-amber-500 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-white shadow-lg animate-pulse">
+          <Sparkles size={12} />
+          Recommended for You
+        </div>
+      )}
 
       {/* ส่วนแสดงรูปภาพ (Image Header) */}
       <div className="relative h-56 w-full overflow-hidden p-3">
@@ -52,7 +61,7 @@ export default function CardLanding({ castle }: { castle: Castle }) {
             </div>
           </div>
 
-          {/* ข้อมูลคติความเชื่อ */}
+          {/* ข้อมูลคติความเชื่อ / ประเภท */}
           <div className="flex items-start gap-3">
             <div className="rounded-xl bg-blue-50 p-2 text-blue-700 shadow-sm">
               <Landmark size={18} />
@@ -63,7 +72,7 @@ export default function CardLanding({ castle }: { castle: Castle }) {
             </div>
           </div>
 
-          {/* ข้อมูลลักษณะสถาปัตยกรรม */}
+          {/* ข้อมูลลักษณะสถาปัตยกรรมหลัก */}
           <div className="flex items-start gap-3 border-t border-stone-100 pt-4">
             <div className="rounded-xl bg-emerald-50 p-2 text-emerald-700 shadow-sm">
               <Info size={18} />
@@ -77,7 +86,6 @@ export default function CardLanding({ castle }: { castle: Castle }) {
           </div>
         </div>
 
-        {/* ปุ่มดูรายละเอียด */}
         <Link
           href={`/castles/${castle.castle_id}`}
           className="mt-6 flex w-full items-center justify-center gap-2 rounded-[1.2rem] bg-[#5D4037] py-3.5 text-sm font-bold text-white transition-all hover:bg-[#3E2723] active:scale-95 shadow-lg shadow-stone-200"

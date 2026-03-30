@@ -4,7 +4,7 @@
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { 
-  ArrowRight, Heart, Upload, X, 
+  ArrowRight, Upload, X, 
   ImageIcon, Search, Loader2, Sparkles 
 } from "lucide-react";
 import { getCastleGalleryByName } from "../../lib/castleImages";
@@ -27,7 +27,6 @@ function truncate(s: string, n = 160) {
 }
 
 function ResultCard({ c, idx }: { c: Castle; idx: number }) {
-  const [fav, setFav] = useState(false);
   const g = getCastleGalleryByName(c.castle_name);
   const cover = g.cover || "/assets/card/placeholder.jpg";
 
@@ -47,12 +46,7 @@ function ResultCard({ c, idx }: { c: Castle; idx: number }) {
           MATCH #{idx + 1}
         </div>
 
-        <button
-          onClick={() => setFav(!fav)}
-          className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 backdrop-blur flex items-center justify-center hover:bg-rose-50 transition-colors shadow-sm"
-        >
-          <Heart className={`w-4 h-4 transition-colors ${fav ? "fill-rose-500 text-rose-500" : "text-slate-400"}`} />
-        </button>
+        {/* ปุ่มหัวใจถูกนำออกแล้ว */}
       </div>
 
       <div className="p-5">

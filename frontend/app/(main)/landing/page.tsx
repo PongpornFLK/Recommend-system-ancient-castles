@@ -6,31 +6,60 @@ import SlideImg from "@/app/components/landing/slideimg";
 import Search from "@/app/components/landing/searching";
 import Dropzone from "@/app/components/landing/dropzone";
 import { Tabs, Tab, Spinner } from "@heroui/react";
-import useGoogle from "@/app/service/auth/login/useGoogle";
+import { useEffect, useState } from "react";
+import axios from "axios";
+
+interface Castle {
+  castle_id: number;
+  castle_name: string;
+  era: string;
+  type_detail: string;
+  architecture: string;
+  is_recommended?: boolean;
+}
 
 export default function Landing() {
-  const { isLoading } = useGoogle();
-  // ข้อมูลตัวอย่างสำหรับแสดงในหน้าแรก (Mock Data)
-  const featuredCastles = [
-    {
-      castle_id: 1,
-      castle_name: "ปราสาทหินพิมาย",
-      era: "ยุคเมืองพระนคร",
-      type_detail: "เทวสถาน (พุทธศาสนานิกายมหายาน)",
-      architecture: "ศิลปะแบบปาปวนและนครวัด สร้างด้วยหินทรายและศิลาแลง",
-    },
-    {
-      castle_id: 2,
-      castle_name: "ปราสาทหินพนมรุ้ง",
-      era: "ยุคเมืองพระนคร",
-      type_detail: "ศาสนสถานในศาสนาฮินดู (ไศวนิกาย)",
-      architecture: "สถาปัตยกรรมขอมโบราณแบบนครวัด ตั้งอยู่บนยอดภูเขาไฟ",
-    },
-  ];
+  const [recommendedCastles, setRecommendedCastles] = useState<Castle[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // ดึง API URL จาก env
+  const API_BASE =
+    process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ||
+    "http://127.0.0.1:8000";
+
+  useEffect(() => {
+    const fetchRecommendations = async () => {
+      const token = localStorage.getItem("token");
+
+      // ถ้าไม่มี Token (ยังไม่ Login) ไม่ต้องพยายามดึงข้อมูลแนะนำ
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await axios.get(`${API_BASE}/recommend`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        // รับข้อมูลจาก recommend.py
+        // ถ้าผู้ใช้ยังไม่กดถูกใจ Backend จะส่ง data: [] กลับมา
+        setRecommendedCastles(response.data.data || []);
+      } catch (err) {
+        console.error("Failed to fetch recommendations:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRecommendations();
+  }, [API_BASE]);
 
   return (
     <div>
-      {isLoading ? (
+      {loading ? (
         <div>
           <div className="flex flex-col items-center gap-2">
             <Spinner color="warning" />
@@ -43,6 +72,7 @@ export default function Landing() {
             <SlideImg />
           </section>
 
+          {/* Section: ค้นหาปราสาท */}
           <section className="my-5 px-4 md:px-10">
             <div className="my-20">
               <div className="mb-10">
@@ -53,7 +83,7 @@ export default function Landing() {
                   </h1>
                 </div>
                 <p className="text-stone-500 mt-2">
-                  ค้นหาความคล้ายคลึงกันของปราสาท
+                  ค้นหาความคล้ายคลึงกันของปราสาทด้วยข้อความหรือรูปภาพ
                 </p>
               </div>
 
@@ -77,7 +107,6 @@ export default function Landing() {
                         <Search />
                       </div>
                     </Tab>
-
                     <Tab
                       key="image"
                       title={
@@ -97,26 +126,40 @@ export default function Landing() {
             </div>
           </section>
 
-          <section className="my-10 px-4 md:px-10 pb-20">
-            <div className="mb-10">
-              <div className="flex flex-row gap-3 items-center">
-                <Compass size={38} className="text-tone-oldgray" />
-                <h1 className="font-bold text-3xl text-tone-oldgray uppercase tracking-tight">
-                  Interesting Places
-                </h1>
+          {/*Interesting Places */}
+          {!loading && recommendedCastles.length > 0 && (
+            <section className="my-10 px-4 md:px-10 pb-20 animate-appearance-in">
+              <div className="mb-10">
+                <div className="flex flex-row gap-3 items-center">
+                  <Compass size={38} className="text-tone-oldgray" />
+                  <h1 className="font-bold text-3xl text-tone-oldgray uppercase tracking-tight">
+                    Interesting Places
+                  </h1>
+                </div>
+                <p className="text-stone-500 mt-2">
+                  โบราณสถานที่แนะนำตามความสนใจล่าสุดของคุณ
+                </p>
               </div>
-              <p className="text-stone-500 mt-2">
-                โบราณสถานที่น่าสนใจและมีการสืบค้นมากที่สุด
-              </p>
-            </div>
 
-            {/* ส่วนแสดง Card โดยใช้ข้อมูลเปรียบเทียบลักษณะเด่น */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {featuredCastles.map((castle) => (
-                <CardLanding key={castle.castle_id} castle={castle} />
-              ))}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {recommendedCastles.map((castle) => (
+                  <CardLanding
+                    key={castle.castle_id}
+                    castle={{ ...castle, is_recommended: true }}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {loading && (
+            <div className="flex justify-center py-20">
+              <Spinner
+                color="warning"
+                label="Checking for recommendations..."
+              />
             </div>
-          </section>
+          )}
         </>
       )}
     </div>

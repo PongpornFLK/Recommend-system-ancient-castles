@@ -5,9 +5,11 @@ import CardLanding from "@/app/components/landing/cardlanding";
 import SlideImg from "@/app/components/landing/slideimg";
 import Search from "@/app/components/landing/searching";
 import Dropzone from "@/app/components/landing/dropzone";
-import { Tabs, Tab } from "@heroui/react";
+import { Tabs, Tab, Spinner } from "@heroui/react";
+import useGoogle from "@/app/service/auth/login/useGoogle";
 
 export default function Landing() {
+  const { isLoading } = useGoogle();
   // ข้อมูลตัวอย่างสำหรับแสดงในหน้าแรก (Mock Data)
   const featuredCastles = [
     {
@@ -28,84 +30,95 @@ export default function Landing() {
 
   return (
     <div>
-      <section className="p-0 m-0">
-        <SlideImg />
-      </section>
+      {isLoading ? (
+        <div>
+          <div className="flex flex-col items-center gap-2">
+            <Spinner color="warning" />
+            <span className="text-xs text-muted">Loading...</span>
+          </div>
+        </div>
+      ) : (
+        <>
+          <section className="p-0 m-0">
+            <SlideImg />
+          </section>
 
-      <section className="my-5 px-4 md:px-10">
-        <div className="my-20">
-          <div className="mb-10">
-            <div className="flex flex-row gap-3 items-center">
-              <ScanSearch size={38} className="text-tone-oldgray" />
-              <h1 className="font-bold text-3xl text-tone-oldgray uppercase tracking-tight">
-                Castle Similarity Search
-              </h1>
+          <section className="my-5 px-4 md:px-10">
+            <div className="my-20">
+              <div className="mb-10">
+                <div className="flex flex-row gap-3 items-center">
+                  <ScanSearch size={38} className="text-tone-oldgray" />
+                  <h1 className="font-bold text-3xl text-tone-oldgray uppercase tracking-tight">
+                    Castle Similarity Search
+                  </h1>
+                </div>
+                <p className="text-stone-500 mt-2">
+                  ค้นหาความคล้ายคลึงกันของปราสาท
+                </p>
+              </div>
+
+              <div className="bg-white rounded-2xl shadow-sm border border-stone-100">
+                <div className="p-5">
+                  <Tabs
+                    aria-label="Search Options"
+                    variant="underlined"
+                    color="warning"
+                  >
+                    <Tab
+                      key="text"
+                      title={
+                        <div className="flex items-center space-x-2">
+                          <FileText size={18} />
+                          <span>Search with Text & Filters</span>
+                        </div>
+                      }
+                    >
+                      <div className="py-4">
+                        <Search />
+                      </div>
+                    </Tab>
+
+                    <Tab
+                      key="image"
+                      title={
+                        <div className="flex items-center space-x-2">
+                          <Image size={18} />
+                          <span>Search by Image</span>
+                        </div>
+                      }
+                    >
+                      <div className="py-4">
+                        <Dropzone />
+                      </div>
+                    </Tab>
+                  </Tabs>
+                </div>
+              </div>
             </div>
-            <p className="text-stone-500 mt-2">
-              ค้นหาความคล้ายคลึงกันของปราสาท
-            </p>
-          </div>
+          </section>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-stone-100">
-            <div className="p-5">
-              <Tabs
-                aria-label="Search Options"
-                variant="underlined"
-                color="warning"
-              >
-                <Tab
-                  key="text"
-                  title={
-                    <div className="flex items-center space-x-2">
-                      <FileText size={18} />
-                      <span>Search with Text & Filters</span>
-                    </div>
-                  }
-                >
-                  <div className="py-4">
-                    <Search />
-                  </div>
-                </Tab>
-
-                <Tab
-                  key="image"
-                  title={
-                    <div className="flex items-center space-x-2">
-                      <Image size={18} />
-                      <span>Search by Image</span>
-                    </div>
-                  }
-                >
-                  <div className="py-4">
-                    <Dropzone />
-                  </div>
-                </Tab>
-              </Tabs>
+          <section className="my-10 px-4 md:px-10 pb-20">
+            <div className="mb-10">
+              <div className="flex flex-row gap-3 items-center">
+                <Compass size={38} className="text-tone-oldgray" />
+                <h1 className="font-bold text-3xl text-tone-oldgray uppercase tracking-tight">
+                  Interesting Places
+                </h1>
+              </div>
+              <p className="text-stone-500 mt-2">
+                โบราณสถานที่น่าสนใจและมีการสืบค้นมากที่สุด
+              </p>
             </div>
-          </div>
-        </div>
-      </section>
 
-      <section className="my-10 px-4 md:px-10 pb-20">
-        <div className="mb-10">
-          <div className="flex flex-row gap-3 items-center">
-            <Compass size={38} className="text-tone-oldgray" />
-            <h1 className="font-bold text-3xl text-tone-oldgray uppercase tracking-tight">
-              Interesting Places
-            </h1>
-          </div>
-          <p className="text-stone-500 mt-2">
-            โบราณสถานที่น่าสนใจและมีการสืบค้นมากที่สุด
-          </p>
-        </div>
-
-        {/* ส่วนแสดง Card โดยใช้ข้อมูลเปรียบเทียบลักษณะเด่น */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {featuredCastles.map((castle) => (
-            <CardLanding key={castle.castle_id} castle={castle} />
-          ))}
-        </div>
-      </section>
+            {/* ส่วนแสดง Card โดยใช้ข้อมูลเปรียบเทียบลักษณะเด่น */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {featuredCastles.map((castle) => (
+                <CardLanding key={castle.castle_id} castle={castle} />
+              ))}
+            </div>
+          </section>
+        </>
+      )}
     </div>
   );
 }

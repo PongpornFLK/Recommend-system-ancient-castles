@@ -2,7 +2,6 @@ import string
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 from datetime import datetime
-
 from sqlalchemy import Boolean
 
 
@@ -10,6 +9,10 @@ from sqlalchemy import Boolean
 class Token(BaseModel):
     access_token : str
     token_type : str
+
+### Google supabase token
+class GoogleTokenRequest(BaseModel):
+    access_token: str
 
 ##### UserRegister
 class UserBase(BaseModel):
@@ -41,7 +44,6 @@ class ChangeNewPwdCreate(ChangeNewPwdBase):
 class ChangeNewPwdResponse(ChangeNewPwdBase):
     class Config:
         from_attributes = True
-        
 
 ##### Search History 
 class SearchHistoryBase(BaseModel):

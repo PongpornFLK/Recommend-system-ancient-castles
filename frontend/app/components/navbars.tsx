@@ -61,6 +61,10 @@ export default function Navbars() {
       // console.log("Token:", token);
       // console.log("User_id:", userId);
 
+      if (!userId || userId === "null" || userId === "") {
+        return;
+      }
+
       try {
         const response = await axios.get(`${API_URL}/users/${userId}`, {
           headers: {

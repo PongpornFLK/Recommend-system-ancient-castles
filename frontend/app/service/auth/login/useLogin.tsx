@@ -8,7 +8,7 @@ import axios from "axios";
 import { API_URL } from "@/app/config";
 import { jwtDecode } from "jwt-decode";
 
-interface customToken {
+interface CustomToken {
   sub: string;
   user_id: number;
   roles: string;
@@ -31,7 +31,7 @@ export default function useLogin() {
       const res = await axios.post(`${API_URL}/auth/token`, formData);
 
       const token = res.data.access_token;
-      const decode = jwtDecode<customToken>(token);
+      const decode = jwtDecode<CustomToken>(token);
 
       localStorage.setItem("token", token);
       localStorage.setItem("user_id", decode.user_id.toString());

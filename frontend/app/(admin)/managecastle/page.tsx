@@ -41,6 +41,10 @@ export default function ManageCastle() {
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [vectorLoading, setVectorLoading] = useState(false);
 
+  const [selectedDocCastleId, setSelectedDocCastleId] = useState<string>("");
+  const [selectedDocFile, setSelectedDocFile] = useState<File | null>(null);
+  const [docLoading, setDocLoading] = useState(false);
+
   const menuButtons = [
     { id: 1, title: "Add New Castle", icon: PlusCircle, color: "bg-[#5D4037]" },
     { id: 2, title: "Add New Vector Data", icon: Database, color: "bg-[#8D6E63]" },
@@ -54,9 +58,11 @@ export default function ManageCastle() {
       setLoading(true);
       const token = localStorage.getItem("token");
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
       const response = await axios.get("http://127.0.0.1:8000/manage-castle/list", {
         headers,
       });
+
       const data = response.data?.data || response.data || [];
       setCastles(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -143,6 +149,13 @@ export default function ManageCastle() {
   const openEditModal = (castle: CastleType) => {
     setSelectedCastle(castle);
     setIsEditOpen(true);
+  };
+
+  const resetVectorModal = () => {
+    setSelectedVectorCastleId("");
+    setSelectedImageFile(null);
+    setSelectedDocCastleId("");
+    setSelectedDocFile(null);
   };
 
   return (
@@ -265,12 +278,11 @@ export default function ManageCastle() {
 
       {activeTab === 2 && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white p-8 rounded-[2rem] shadow-2xl max-w-lg w-full relative">
+          <div className="bg-white p-8 rounded-[2rem] shadow-2xl max-w-2xl w-full relative max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => {
                 setActiveTab(null);
-                setSelectedVectorCastleId("");
-                setSelectedImageFile(null);
+                resetVectorModal();
               }}
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
             >
@@ -282,88 +294,196 @@ export default function ManageCastle() {
               Add New Vector Data
             </h2>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-bold text-stone-700 mb-2">
-                  Select Castle
-                </label>
-                <select
-                  value={selectedVectorCastleId}
-                  onChange={(e) => setSelectedVectorCastleId(e.target.value)}
-                  className="w-full border border-stone-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-400"
-                >
-                  <option value="">-- เลือกปราสาท --</option>
-                  {castles.map((castle) => (
-                    <option
-                      key={getCastleId(castle)}
-                      value={String(getCastleId(castle))}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Image Vector */}
+              <div className="border border-stone-200 rounded-2xl p-5">
+                <h3 className="text-lg font-bold text-[#3E2723] mb-4">
+                  Upload Image Vector
+                </h3>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-bold text-stone-700 mb-2">
+                      Select Castle
+                    </label>
+                    <select
+                      value={selectedVectorCastleId}
+                      onChange={(e) => setSelectedVectorCastleId(e.target.value)}
+                      className="w-full border border-stone-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-400"
                     >
-                      {getCastleId(castle)} - {castle.castle_name}
-                      {castle.province ? ` (${castle.province})` : ""}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                      <option value="">-- เลือกปราสาท --</option>
+                      {castles.map((castle) => (
+                        <option
+                          key={getCastleId(castle)}
+                          value={String(getCastleId(castle))}
+                        >
+                          {getCastleId(castle)} - {castle.castle_name}
+                          {castle.province ? ` (${castle.province})` : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-              <div>
-                <label className="block text-sm font-bold text-stone-700 mb-2">
-                  Upload Image
-                </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setSelectedImageFile(e.target.files?.[0] || null)}
-                  className="w-full border border-stone-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-400"
-                />
-              </div>
-
-              <button
-                onClick={async () => {
-                  if (!selectedVectorCastleId) {
-                    alert("กรุณาเลือกปราสาทก่อน");
-                    return;
-                  }
-
-                  if (!selectedImageFile) {
-                    alert("กรุณาเลือกรูปภาพก่อน");
-                    return;
-                  }
-
-                  try {
-                    setVectorLoading(true);
-
-                    const formData = new FormData();
-                    formData.append("castle_id", selectedVectorCastleId);
-                    formData.append("file", selectedImageFile);
-
-                    const res = await axios.post(
-                      "http://127.0.0.1:8000/manage-vector/upload-image-vector",
-                      formData,
-                      {
-                        headers: {
-                          "Content-Type": "multipart/form-data",
-                        },
+                  <div>
+                    <label className="block text-sm font-bold text-stone-700 mb-2">
+                      Upload Image
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) =>
+                        setSelectedImageFile(e.target.files?.[0] || null)
                       }
-                    );
+                      className="w-full border border-stone-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-400"
+                    />
+                  </div>
 
-                    alert(`${res.data.message}\nimg_id: ${res.data.img_id}`);
-                    setActiveTab(null);
-                    setSelectedVectorCastleId("");
-                    setSelectedImageFile(null);
-                  } catch (error: any) {
-                    alert(
-                      "เพิ่ม vector ไม่สำเร็จ: " +
-                        (error.response?.data?.detail || error.message)
-                    );
-                  } finally {
-                    setVectorLoading(false);
-                  }
-                }}
-                disabled={vectorLoading}
-                className="w-full px-4 py-3 rounded-xl bg-[#5D4037] text-white font-bold hover:opacity-90 disabled:opacity-50"
-              >
-                {vectorLoading ? "กำลังเพิ่มข้อมูล..." : "Upload and Convert to Vector"}
-              </button>
+                  <button
+                    onClick={async () => {
+                      if (!selectedVectorCastleId) {
+                        alert("กรุณาเลือกปราสาทก่อน");
+                        return;
+                      }
+
+                      if (!selectedImageFile) {
+                        alert("กรุณาเลือกรูปภาพก่อน");
+                        return;
+                      }
+
+                      try {
+                        setVectorLoading(true);
+
+                        const formData = new FormData();
+                        formData.append("castle_id", selectedVectorCastleId);
+                        formData.append("file", selectedImageFile);
+
+                        const res = await axios.post(
+                          "http://127.0.0.1:8000/manage-vector/upload-image-vector",
+                          formData,
+                          {
+                            headers: {
+                              "Content-Type": "multipart/form-data",
+                            },
+                          }
+                        );
+
+                        alert(`${res.data.message}\nimg_id: ${res.data.img_id}`);
+                        setSelectedVectorCastleId("");
+                        setSelectedImageFile(null);
+                      } catch (error: any) {
+                        alert(
+                          "เพิ่ม image vector ไม่สำเร็จ: " +
+                            (error.response?.data?.detail || error.message)
+                        );
+                      } finally {
+                        setVectorLoading(false);
+                      }
+                    }}
+                    disabled={vectorLoading}
+                    className="w-full px-4 py-3 rounded-xl bg-[#5D4037] text-white font-bold hover:opacity-90 disabled:opacity-50"
+                  >
+                    {vectorLoading
+                      ? "กำลังเพิ่มข้อมูล..."
+                      : "Upload and Convert Image"}
+                  </button>
+                </div>
+              </div>
+
+              {/* Document Vector */}
+              <div className="border border-stone-200 rounded-2xl p-5">
+                <h3 className="text-lg font-bold text-[#3E2723] mb-4">
+                  Upload Document Vector
+                </h3>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-bold text-stone-700 mb-2">
+                      Select Castle
+                    </label>
+                    <select
+                      value={selectedDocCastleId}
+                      onChange={(e) => setSelectedDocCastleId(e.target.value)}
+                      className="w-full border border-stone-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-400"
+                    >
+                      <option value="">-- เลือกปราสาท --</option>
+                      {castles.map((castle) => (
+                        <option
+                          key={getCastleId(castle)}
+                          value={String(getCastleId(castle))}
+                        >
+                          {getCastleId(castle)} - {castle.castle_name}
+                          {castle.province ? ` (${castle.province})` : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold text-stone-700 mb-2">
+                      Upload Document (.pdf, .txt)
+                    </label>
+                    <input
+                      type="file"
+                      accept=".pdf,.txt"
+                      onChange={(e) =>
+                        setSelectedDocFile(e.target.files?.[0] || null)
+                      }
+                      className="w-full border border-stone-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-400"
+                    />
+                  </div>
+
+                  <button
+                    onClick={async () => {
+                      if (!selectedDocCastleId) {
+                        alert("กรุณาเลือกปราสาทก่อน");
+                        return;
+                      }
+
+                      if (!selectedDocFile) {
+                        alert("กรุณาเลือกไฟล์เอกสารก่อน");
+                        return;
+                      }
+
+                      try {
+                        setDocLoading(true);
+
+                        const formData = new FormData();
+                        formData.append("castle_id", selectedDocCastleId);
+                        formData.append("file", selectedDocFile);
+
+                        const res = await axios.post(
+                          "http://127.0.0.1:8000/manage-doc-vector/upload-document-vector",
+                          formData,
+                          {
+                            headers: {
+                              "Content-Type": "multipart/form-data",
+                            },
+                          }
+                        );
+
+                        alert(
+                          `${res.data.message}\nChunks inserted: ${res.data.chunks_inserted}`
+                        );
+                        setSelectedDocCastleId("");
+                        setSelectedDocFile(null);
+                      } catch (error: any) {
+                        alert(
+                          "เพิ่ม document vector ไม่สำเร็จ: " +
+                            (error.response?.data?.detail || error.message)
+                        );
+                      } finally {
+                        setDocLoading(false);
+                      }
+                    }}
+                    disabled={docLoading}
+                    className="w-full px-4 py-3 rounded-xl bg-[#8D6E63] text-white font-bold hover:opacity-90 disabled:opacity-50"
+                  >
+                    {docLoading
+                      ? "กำลังเพิ่มข้อมูล..."
+                      : "Upload and Convert Document"}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -10,7 +10,7 @@ from fastapi_pagination import add_pagination
 from contextlib import asynccontextmanager
 from route import interest
 from route import recommend
-
+from route import manage_castle
 from db import Base, engine
 
 # import router
@@ -76,6 +76,7 @@ app.include_router(locationcastle.router)
 app.include_router(interest.router)
 app.include_router(route.router)
 app.include_router(recommend.router)
+app.include_router(manage_castle.router)
 
 
 @app.get("/")

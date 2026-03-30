@@ -37,6 +37,10 @@ export default function ManageCastle() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedCastle, setSelectedCastle] = useState<CastleType | null>(null);
 
+  const [selectedVectorCastleId, setSelectedVectorCastleId] = useState<string>("");
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+  const [vectorLoading, setVectorLoading] = useState(false);
+
   const menuButtons = [
     { id: 1, title: "Add New Castle", icon: PlusCircle, color: "bg-[#5D4037]" },
     { id: 2, title: "Add New Vector Data", icon: Database, color: "bg-[#8D6E63]" },
@@ -50,7 +54,9 @@ export default function ManageCastle() {
       setLoading(true);
       const token = localStorage.getItem("token");
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      const response = await axios.get("http://127.0.0.1:8000/manage-castle/list", { headers });
+      const response = await axios.get("http://127.0.0.1:8000/manage-castle/list", {
+        headers,
+      });
       const data = response.data?.data || response.data || [];
       setCastles(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -67,8 +73,15 @@ export default function ManageCastle() {
   const filteredCastles = useMemo(() => {
     const keyword = searchTerm.trim().toLowerCase();
     if (!keyword) return castles;
+
     return castles.filter((castle) =>
-      [castle.castle_name, castle.province, castle.district, castle.sub_district, castle.era]
+      [
+        castle.castle_name,
+        castle.province,
+        castle.district,
+        castle.sub_district,
+        castle.era,
+      ]
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(keyword))
     );
@@ -77,6 +90,7 @@ export default function ManageCastle() {
   const handleDelete = async (castle: CastleType) => {
     const castleId = getCastleId(castle);
     if (!castleId || !window.confirm(`ต้องการลบ "${castle.castle_name}"?`)) return;
+
     try {
       const token = localStorage.getItem("token");
       await axios.delete(`http://127.0.0.1:8000/manage-castle/delete/${castleId}`, {
@@ -87,44 +101,44 @@ export default function ManageCastle() {
       console.error("ลบข้อมูลไม่สำเร็จ", error);
     }
   };
+
   const handleUpdate = async () => {
-  if (!selectedCastle) return;
+    if (!selectedCastle) return;
 
-  const castleId = getCastleId(selectedCastle);
-  if (!castleId) return;
+    const castleId = getCastleId(selectedCastle);
+    if (!castleId) return;
 
-  try {
-    const token = localStorage.getItem("token");
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    try {
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-    const payload = {
-      castle_name: selectedCastle.castle_name,
-      castle_description: selectedCastle.castle_description || "",
-      era: selectedCastle.era || "",
-      architecture_detail: selectedCastle.architecture_detail || "",
-      type_id: Number(selectedCastle.type_id) || 0,
-      province: selectedCastle.province || "",
-      district: selectedCastle.district || "",
-      sub_district: selectedCastle.sub_district || "",
-      latitude: Number(selectedCastle.latitude) || 0,
-      longitude: Number(selectedCastle.longitude) || 0,
-    };
+      const payload = {
+        castle_name: selectedCastle.castle_name,
+        castle_description: selectedCastle.castle_description || "",
+        era: selectedCastle.era || "",
+        architecture_detail: selectedCastle.architecture_detail || "",
+        type_id: Number(selectedCastle.type_id) || 0,
+        province: selectedCastle.province || "",
+        district: selectedCastle.district || "",
+        sub_district: selectedCastle.sub_district || "",
+        latitude: Number(selectedCastle.latitude) || 0,
+        longitude: Number(selectedCastle.longitude) || 0,
+      };
 
-    await axios.put(
-      `http://127.0.0.1:8000/manage-castle/update/${castleId}`,
-      payload,
-      { headers }
-    );
+      await axios.put(
+        `http://127.0.0.1:8000/manage-castle/update/${castleId}`,
+        payload,
+        { headers }
+      );
 
-    alert("แก้ไขสำเร็จ");
-    setIsEditOpen(false);
-    setSelectedCastle(null);
-    fetchCastles();
-
-  } catch (error: any) {
-    alert("แก้ไขไม่สำเร็จ: " + (error.response?.data?.detail || error.message));
-  }
-};
+      alert("แก้ไขสำเร็จ");
+      setIsEditOpen(false);
+      setSelectedCastle(null);
+      fetchCastles();
+    } catch (error: any) {
+      alert("แก้ไขไม่สำเร็จ: " + (error.response?.data?.detail || error.message));
+    }
+  };
 
   const openEditModal = (castle: CastleType) => {
     setSelectedCastle(castle);
@@ -142,7 +156,10 @@ export default function ManageCastle() {
 
         <div className="bg-white rounded-[2rem] shadow-lg border border-stone-200 p-6 mb-10">
           <div className="relative mb-8">
-            <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" />
+            <Search
+              size={20}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400"
+            />
             <input
               type="text"
               placeholder="Search castle name..."
@@ -185,33 +202,58 @@ export default function ManageCastle() {
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={9} className="py-8 text-stone-400">กำลังโหลด...</td></tr>
-                ) : filteredCastles.map((castle) => (
-                  <tr key={getCastleId(castle)} className="bg-white shadow-sm border border-stone-100">
-                    <td className="px-4 py-3">{getCastleId(castle)}</td>
-                    <td className="px-4 py-3 font-semibold text-[#3E2723]">{castle.castle_name}</td>
-                    <td className="px-4 py-3">{castle.era || "-"}</td>
-                    <td className="px-4 py-3">{castle.province || "-"}</td>
-                    <td className="px-4 py-3">{castle.district || "-"}</td>
-                    <td className="px-4 py-3">{castle.sub_district || "-"}</td>
-                    <td className="px-4 py-3">{castle.latitude || "-"}</td>
-                    <td className="px-4 py-3">{castle.longitude || "-"}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-center gap-3">
-                        <button onClick={() => openEditModal(castle)} className="text-stone-600 hover:text-orange-600"><Pencil size={18} /></button>
-                        <button onClick={() => handleDelete(castle)} className="text-red-500 hover:text-red-700"><Trash2 size={18} /></button>
-                      </div>
+                  <tr>
+                    <td colSpan={9} className="py-8 text-stone-400">
+                      กำลังโหลด...
                     </td>
                   </tr>
-                ))}
+                ) : filteredCastles.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} className="py-8 text-stone-400">
+                      ไม่พบข้อมูลสถานที่
+                    </td>
+                  </tr>
+                ) : (
+                  filteredCastles.map((castle) => (
+                    <tr
+                      key={getCastleId(castle)}
+                      className="bg-white shadow-sm border border-stone-100"
+                    >
+                      <td className="px-4 py-3">{getCastleId(castle)}</td>
+                      <td className="px-4 py-3 font-semibold text-[#3E2723]">
+                        {castle.castle_name}
+                      </td>
+                      <td className="px-4 py-3">{castle.era || "-"}</td>
+                      <td className="px-4 py-3">{castle.province || "-"}</td>
+                      <td className="px-4 py-3">{castle.district || "-"}</td>
+                      <td className="px-4 py-3">{castle.sub_district || "-"}</td>
+                      <td className="px-4 py-3">{castle.latitude || "-"}</td>
+                      <td className="px-4 py-3">{castle.longitude || "-"}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-center gap-3">
+                          <button
+                            onClick={() => openEditModal(castle)}
+                            className="text-stone-600 hover:text-orange-600"
+                          >
+                            <Pencil size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(castle)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
         </div>
       </div>
 
-      {/* --- ส่วนของ Modal ต่างๆ จะถูก Render ที่นี่เพื่อให้ลอยทับพื้นหลัง --- */}
-      
       {activeTab === 1 && (
         <AddCastleForm
           onClose={() => {
@@ -223,10 +265,106 @@ export default function ManageCastle() {
 
       {activeTab === 2 && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white p-12 rounded-[2rem] shadow-2xl text-center max-w-lg w-full relative">
-            <button onClick={() => setActiveTab(null)} className="absolute top-4 right-4 text-gray-400"><X /></button>
+          <div className="bg-white p-8 rounded-[2rem] shadow-2xl max-w-lg w-full relative">
+            <button
+              onClick={() => {
+                setActiveTab(null);
+                setSelectedVectorCastleId("");
+                setSelectedImageFile(null);
+              }}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+            >
+              <X />
+            </button>
+
             <Database size={48} className="mx-auto text-stone-300 mb-4" />
-            <h2 className="text-xl font-bold text-stone-600">Vector Data Coming Soon</h2>
+            <h2 className="text-xl font-bold text-stone-700 text-center mb-6">
+              Add New Vector Data
+            </h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-stone-700 mb-2">
+                  Select Castle
+                </label>
+                <select
+                  value={selectedVectorCastleId}
+                  onChange={(e) => setSelectedVectorCastleId(e.target.value)}
+                  className="w-full border border-stone-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-400"
+                >
+                  <option value="">-- เลือกปราสาท --</option>
+                  {castles.map((castle) => (
+                    <option
+                      key={getCastleId(castle)}
+                      value={String(getCastleId(castle))}
+                    >
+                      {getCastleId(castle)} - {castle.castle_name}
+                      {castle.province ? ` (${castle.province})` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-stone-700 mb-2">
+                  Upload Image
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setSelectedImageFile(e.target.files?.[0] || null)}
+                  className="w-full border border-stone-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-400"
+                />
+              </div>
+
+              <button
+                onClick={async () => {
+                  if (!selectedVectorCastleId) {
+                    alert("กรุณาเลือกปราสาทก่อน");
+                    return;
+                  }
+
+                  if (!selectedImageFile) {
+                    alert("กรุณาเลือกรูปภาพก่อน");
+                    return;
+                  }
+
+                  try {
+                    setVectorLoading(true);
+
+                    const formData = new FormData();
+                    formData.append("castle_id", selectedVectorCastleId);
+                    formData.append("file", selectedImageFile);
+
+                    const res = await axios.post(
+                      "http://127.0.0.1:8000/manage-vector/upload-image-vector",
+                      formData,
+                      {
+                        headers: {
+                          "Content-Type": "multipart/form-data",
+                        },
+                      }
+                    );
+
+                    alert(`${res.data.message}\nimg_id: ${res.data.img_id}`);
+                    setActiveTab(null);
+                    setSelectedVectorCastleId("");
+                    setSelectedImageFile(null);
+                  } catch (error: any) {
+                    alert(
+                      "เพิ่ม vector ไม่สำเร็จ: " +
+                        (error.response?.data?.detail || error.message)
+                    );
+                  } finally {
+                    setVectorLoading(false);
+                  }
+                }}
+                disabled={vectorLoading}
+                className="w-full px-4 py-3 rounded-xl bg-[#5D4037] text-white font-bold hover:opacity-90 disabled:opacity-50"
+              >
+                {vectorLoading ? "กำลังเพิ่มข้อมูล..." : "Upload and Convert to Vector"}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -234,73 +372,81 @@ export default function ManageCastle() {
       {activeTab === 3 && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <div className="bg-white p-12 rounded-[2rem] shadow-2xl text-center max-w-lg w-full relative">
-            <button onClick={() => setActiveTab(null)} className="absolute top-4 right-4 text-gray-400"><X /></button>
+            <button
+              onClick={() => setActiveTab(null)}
+              className="absolute top-4 right-4 text-gray-400"
+            >
+              <X />
+            </button>
             <MapPinned size={48} className="mx-auto text-stone-300 mb-4" />
-            <h2 className="text-xl font-bold text-stone-600">Nearby Places Coming Soon</h2>
+            <h2 className="text-xl font-bold text-stone-600">
+              Nearby Places Coming Soon
+            </h2>
           </div>
         </div>
       )}
-      
-      {/* Edit Modal (ถ้าคุณมี Component แยกก็สามารถนำมาวางที่นี่ได้เช่นกัน) */}
+
       {isEditOpen && selectedCastle && (
-  <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-    <div className="bg-white w-full max-w-2xl rounded-2xl p-6">
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-2xl rounded-2xl p-6">
+            <h2 className="text-xl font-bold mb-4">Edit Castle</h2>
 
-      <h2 className="text-xl font-bold mb-4">Edit Castle</h2>
+            <textarea
+              value={selectedCastle.castle_name}
+              onChange={(e) =>
+                setSelectedCastle({ ...selectedCastle, castle_name: e.target.value })
+              }
+              className="w-full border p-2 mb-2"
+            />
 
-      <textarea
-        value={selectedCastle.castle_name}
-        onChange={(e) =>
-          setSelectedCastle({ ...selectedCastle, castle_name: e.target.value })
-        }
-        className="w-full border p-2 mb-2"
-      />
+            <textarea
+              value={selectedCastle.era || ""}
+              onChange={(e) =>
+                setSelectedCastle({ ...selectedCastle, era: e.target.value })
+              }
+              className="w-full border p-2 mb-2"
+            />
 
-      <textarea
-        value={selectedCastle.era || ""}
-        onChange={(e) =>
-          setSelectedCastle({ ...selectedCastle, era: e.target.value })
-        }
-        className="w-full border p-2 mb-2"
-      />
+            <textarea
+              value={selectedCastle.architecture_detail || ""}
+              onChange={(e) =>
+                setSelectedCastle({
+                  ...selectedCastle,
+                  architecture_detail: e.target.value,
+                })
+              }
+              className="w-full border p-2 mb-2"
+            />
 
-      <textarea
-        value={selectedCastle.architecture_detail || ""}
-        onChange={(e) =>
-          setSelectedCastle({
-            ...selectedCastle,
-            architecture_detail: e.target.value,
-          })
-        }
-        className="w-full border p-2 mb-2"
-      />
+            <textarea
+              value={selectedCastle.province || ""}
+              onChange={(e) =>
+                setSelectedCastle({ ...selectedCastle, province: e.target.value })
+              }
+              className="w-full border p-2 mb-2"
+            />
 
-      <textarea
-        value={selectedCastle.province || ""}
-        onChange={(e) =>
-          setSelectedCastle({ ...selectedCastle, province: e.target.value })
-        }
-        className="w-full border p-2 mb-2"
-      />
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                onClick={() => {
+                  setIsEditOpen(false);
+                  setSelectedCastle(null);
+                }}
+                className="px-4 py-2 border"
+              >
+                Cancel
+              </button>
 
-      <div className="flex justify-end gap-2 mt-4">
-        <button
-          onClick={() => setIsEditOpen(false)}
-          className="px-4 py-2 border"
-        >
-          Cancel
-        </button>
-
-        <button
-          onClick={handleUpdate}
-          className="px-4 py-2 bg-orange-600 text-white"
-        >
-          Save
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+              <button
+                onClick={handleUpdate}
+                className="px-4 py-2 bg-orange-600 text-white"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

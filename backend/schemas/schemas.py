@@ -8,7 +8,11 @@ from sqlalchemy import Boolean
 #### TOKEN เพื่อ check 
 class Token(BaseModel):
     access_token : str
+    refresh_token : str
     token_type : str
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
 
 ### Google supabase token
 class GoogleTokenRequest(BaseModel):
@@ -18,8 +22,8 @@ class GoogleTokenRequest(BaseModel):
 class UserBase(BaseModel):
     username: str
     email: EmailStr
-    tel: str = Field(..., pattern=r'^0[0-9]{9}$')
-    roles: str = "user" or "admin"
+    tel: Optional[str] = None
+    roles: str = "user"
 
 class UserCreate(UserBase): # สำหรับรับ field ทั้งหมดจาก UserBase + password เพื่อสร้าง
     password: str = Field(..., min_length=6)

@@ -9,7 +9,7 @@ from loguru import logger
 from fastapi_pagination.ext.sqlalchemy import paginate
 from fastapi_pagination import Page, Params
 from typing import Annotated
-from authen.secur import createToken , supabase_client
+from authen.secur import createAccessToken, createRefreshToken, supabase_client
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -24,43 +24,59 @@ async def createUserWithGoogle(
     try:
         user_response = supabase_client.auth.get_user(supabase_token)
         email = user_response.user.email
-        user_metadata = user_response.user.user_metadata or {}
-        google_name = user_metadata.get("full_name")
 
         if email is None:
             raise HTTPException(status_code=400, detail="Not found email")
-
-
         db_user_email = db.query(User).filter(User.email == email).first()
 
         if db_user_email is None:
             import secrets
             import string
 
-            # สร้างรหัสผ่านสุ่มสำหรับผู้ใช้ Google ป้องกัน Error ช่อง password ล็อกไว้เป็น NOT NULL
+            user_metadata = user_response.user.user_metadata or {}
+            google_name = user_metadata.get("full_name")
+            mail_name = email.split("@")[0]
+            display_name = google_name if google_name else mail_name 
+            
+            print(f"👤 [Google Auth] Using display_name: {display_name}")
+
+            # สุ่ม pwd ป้องกัน Err สำหรับ user ที่สมัครผ่าน google
             alphabet = string.ascii_letters + string.digits
             random_pass = "".join(secrets.choice(alphabet) for i in range(20))
 
-            db_user = User(
-                email=email,
-                username=google_name,
-                password=pwd_context.hash(random_pass),
-                roles="user",
-            )
-            db.add(db_user)
-            db.commit()
-            db.refresh(db_user)
-            db_user_email = db_user
+            try:
+                db_user = User(
+                    email=email,
+                    username=display_name,
+                    password=pwd_context.hash(random_pass),
+                    roles="user",
+                    auth_provider="google" 
+                )
+                db.add(db_user)
+                db.commit()
+                db.refresh(db_user)
+                db_user_email = db_user
+            except Exception as db_err:
+                db.rollback()
+                raise db_err
+        else:
 
-        create_token = createToken(
+        create_token = createAccessToken(
             username=db_user_email.username,
             user_id=db_user_email.user_id,
             roles=db_user_email.roles,
-            auth_provider="google"
+            auth_provider="google",
         )
-        return {"access_token": create_token, "token_type": "bearer"}
+        
+        refresh_token = createRefreshToken(db_user_email.user_id)
+        db_user_email.refresh_token = refresh_token
+        db.commit()
+        print("Google Auth Success")
+        
+        return {"access_token": create_token, "refresh_token": refresh_token, "token_type": "bearer"}
 
     except Exception as e:
+        print("Google Auth FATAL ERROR: {e}")
         raise HTTPException(status_code=401, detail=f"Token error: {str(e)}")
 
 
@@ -195,10 +211,7 @@ async def setGooglePassword(
     db: Session = Depends(get_db),
 ):
     if current_user.get("auth_provider") != "google":
-        raise HTTPException(
-            status_code=403,
-            detail="You don't have permission"
-        )
+        raise HTTPException(status_code=403, detail="You don't have permission")
 
     user_id = current_user["user_id"]
     db_user = db.query(User).filter(User.user_id == user_id).first()

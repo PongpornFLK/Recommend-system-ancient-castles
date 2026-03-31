@@ -4,8 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { addToast } from "@heroui/react";
 import { X } from "lucide-react";
-import axios from "axios";
-import { API_URL } from "@/app/config";
+import api from "@/app/service/api";
 import { jwtDecode } from "jwt-decode";
 
 interface CustomToken {
@@ -29,14 +28,16 @@ export default function useLogin() {
     formData.append("password", password);
 
     try {
-      const res = await axios.post(`${API_URL}/auth/token`, formData);
+      const res = await api.post("/auth/token", formData);
 
-      const token = res.data.access_token;
-      const decode = jwtDecode<CustomToken>(token);
+      const { access_token, refresh_token } = res.data;
+      const decode = jwtDecode<CustomToken>(access_token);
 
-      localStorage.setItem("token", token);
+      localStorage.setItem("token", access_token);
+      localStorage.setItem("refresh_token", refresh_token);
       localStorage.setItem("user_id", decode.user_id.toString());
-      localStorage.setItem("auth_provider", decode.auth_provider)
+      localStorage.setItem("roles", decode.roles);
+      localStorage.setItem("auth_provider", decode.auth_provider);
 
       // console.log("Decode : ", decode.roles);
       // console.log("User_id : ", decode.user_id);

@@ -4,8 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { addToast } from "@heroui/react";
 import { X } from "lucide-react";
-import axios from "axios";
-import { API_URL } from "@/app/config";
+import api from "@/app/service/api";
 
 export default function useRegister() {
   const router = useRouter();
@@ -24,19 +23,13 @@ export default function useRegister() {
     if (password === confirmpwd) {
       setIsLoading(true);
       try {
-        const res = await axios.post(
-          `${API_URL}/users`,
-          {
-            username: username,
-            email: email,
-            tel: tel,
-            roles: "user",
-            password: password,
-          },
-          {
-            headers: { "Content-Type": "application/json" },
-          }
-        );
+        const res = await api.post("/users", {
+          username: username,
+          email: email,
+          tel: tel,
+          roles: "user",
+          password: password,
+        });
 
         console.log("Register success", res.status);
 

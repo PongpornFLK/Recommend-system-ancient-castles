@@ -56,7 +56,7 @@ def authenticate_user(username: str, password: str, db):
 # print(f"Hashed password: {hashed}")
 
 
-def createToken(
+def createAccessToken(
     username: str,
     user_id: int,
     roles: str,
@@ -72,9 +72,11 @@ def createToken(
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(days=7)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=60)
+        
     encode.update({"exp": expire})
     encode_jwt = jwt.encode(encode, SECRET_KEY, algorithm=ALGORITHM)
+    
     return encode_jwt
 
 
@@ -98,3 +100,13 @@ async def getCurrentUser(token: Annotated[str, Depends(oauth2_scheme)]):
 
     except (DecodeError, ExpiredSignatureError):
         raise HTTPException(status_code=401, detail="Not Validate ")
+    
+def createRefreshToken(user_id:int):
+    encode = {
+        "user_id" : user_id,
+        "type" : "refresh",
+    }
+    expire = datetime.now(timezone.utc) + timedelta(days=7)
+    encode.update({"exp" : expire})
+    encode_jwt = jwt.encode(encode,SECRET_KEY, algorithm=ALGORITHM)
+    return encode_jwt

@@ -7,7 +7,7 @@ from sqlalchemy import func
 
 router = APIRouter(prefix="/recommend", tags=["recommend"])
 
-@router.get("/")
+@router.get("")
 async def get_recommendations_by_type(
     db: Session = Depends(get_db), 
     current_user: dict = Depends(getCurrentUser)

@@ -28,6 +28,7 @@ supabase_client: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
+optional_oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token", auto_error=False)
 
 
 # สำหรับ Encrypt pwd ใช้ตอน Register
@@ -100,6 +101,20 @@ async def getCurrentUser(token: Annotated[str, Depends(oauth2_scheme)]):
 
     except (DecodeError, ExpiredSignatureError):
         raise HTTPException(status_code=401, detail="Not Validate ")
+
+async def getOptionalUser(token: Annotated[Optional[str], Depends(optional_oauth2_scheme)] = None):
+    if token is None or token == "undefined" or token == "null":
+        return None
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return {
+            "username": payload.get("sub"),
+            "user_id": payload.get("user_id"),
+            "roles": payload.get("roles"),
+            "auth_provider": payload.get("auth_provider"),
+        }
+    except:
+        return None
     
 def createRefreshToken(user_id:int):
     encode = {

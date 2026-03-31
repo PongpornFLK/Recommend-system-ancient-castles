@@ -59,7 +59,14 @@ export default function Navbars() {
   const handleLogOut = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user_id");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("auth_provider");
+    localStorage.removeItem("google_token");
+
     setUser(null);
+
+    window.dispatchEvent(new Event("auth-change"));
+
     router.push("/login");
   };
 

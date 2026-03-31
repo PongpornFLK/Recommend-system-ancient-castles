@@ -42,6 +42,9 @@ export default function Landing() {
     };
 
     fetchRecommendations();
+
+    window.addEventListener("auth-change", fetchRecommendations);
+    return () => window.removeEventListener("auth-change", fetchRecommendations);
   }, []);
 
   return (

@@ -34,13 +34,15 @@ export default function Login() {
               Please enter your information to login
             </h2>
 
-            <LoginForm />
+            <div className="max-w-xs mx-auto w-full">
+              <LoginForm />
 
-            <div className="flex justify-center my-4 items-center">
-              <span className="text-gray-400">or</span>
+              <div className="flex justify-center my-4 items-center">
+                <span className="text-gray-400">or</span>
+              </div>
+
+              <ButtonGoogle />
             </div>
-
-            <ButtonGoogle />
 
             <div className="mt-4 text-center">
               Don’t have an account?{" "}

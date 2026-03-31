@@ -59,7 +59,14 @@ api.interceptors.response.use(
       } catch (err) {
         console.error("Refresh Token Expired , please login again", err);
         localStorage.removeItem("token");
+
+        localStorage.removeItem("user_id");
         localStorage.removeItem("refresh_token");
+        localStorage.removeItem("auth_provider");
+        localStorage.removeItem("google_token");
+
+        window.dispatchEvent(new Event("auth-change"));
+
         window.location.href = "/login";
       }
     }

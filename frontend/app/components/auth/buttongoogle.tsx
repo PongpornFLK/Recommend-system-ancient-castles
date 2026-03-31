@@ -19,10 +19,14 @@ const ButtonGoogleContent = () => {
   };
 
   return (
-    <div className="flex justify-center w-full px-8">
-      <Button variant="bordered" className="w-full" onClick={handleLogin}>
-        <Icon icon="devicon:google" />
-        Sign in with google
+    <div className="flex justify-center w-full">
+      <Button
+        variant="bordered"
+        className="w-full text-stone-700 font-medium border-stone-200"
+        onClick={handleLogin}
+        startContent={<Icon icon="flat-color-icons:google" width={22} />}
+      >
+        Sign in with Google
       </Button>
     </div>
   );

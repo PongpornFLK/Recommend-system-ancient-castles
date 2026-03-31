@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from db import get_db
-from authen.secur import getCurrentUser
+from authen.secur import getOptionalUser
 from model.model import Interest, Castle, CastleType
 from sqlalchemy import func
 
@@ -10,9 +10,10 @@ router = APIRouter(prefix="/recommend", tags=["recommend"])
 @router.get("")
 async def get_recommendations_by_type(
     db: Session = Depends(get_db), 
-    current_user: dict = Depends(getCurrentUser)
+    current_user: dict = Depends(getOptionalUser)
 ):
-    user_id = current_user.get("user_id")
+    # check user
+    user_id = current_user.get("user_id") if current_user else None
     
     try:
         #ค้นหาปราสาทล่าสุดที่ผู้ใช้คนนี้กดถูกใจจากInterest

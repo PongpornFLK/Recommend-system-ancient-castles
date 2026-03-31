@@ -26,12 +26,13 @@ export default function Register() {
               Please enter your information to create account.{" "}
             </h2>
 
-            <RegisterForm />
-          <div className="flex justify-center my-4 items-center">
-              <span className="text-gray-400">or</span>
+            <div className="max-w-xs mx-auto w-full">
+              <RegisterForm />
+              <div className="flex justify-center my-4 items-center">
+                <span className="text-gray-400">or</span>
+              </div>
+              <ButtonGoogle />
             </div>
-
-            <ButtonGoogle />
           </div>
           <div className="hidden md:flex items-center justify-center p-8">
             <div className="w-full h-full max-h-[600px] rounded-2xl overflow-hidden shadow-lg">

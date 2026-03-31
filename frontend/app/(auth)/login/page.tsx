@@ -1,105 +1,19 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { Button, Input, Image, Form, addToast } from "@heroui/react";
-import { Eye, EyeOff, LockKeyhole, User, LogIn, X } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Image } from "@heroui/react";
+import { LogIn } from "lucide-react";
 import Link from "next/link";
-import axios from "axios";
-import { API_URL } from "../../config";
-import { jwtDecode } from "jwt-decode";
 import NextImage from "next/image";
+import ButtonGoogle from "@/app/components/auth/buttongoogle";
+import dynamic from "next/dynamic";
+
+const LoginForm = dynamic(
+  () => import("@/app/components/auth/login/loginForm"),
+  {
+    ssr: false,
+  },
+);
 
 export default function Login() {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(0);
-  const [isClient, setIsClient] = useState(false);
-
-  // fetch Data
-  const [data, setIsData] = useState([]);
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-
-  const controller = new AbortController();
-  const signal = controller.signal;
-
-  interface customToken {
-    sub: string;
-    user_id: number;
-    roles: string;
-    exp: number;
-  }
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  async function handleLogin(e: React.FormEvent) {
-    e.preventDefault();
-    setIsLoading(1);
-
-    const formData = new FormData();
-    formData.append("username", username);
-    formData.append("password", password);
-
-    try {
-      const res = await axios.post(
-        `${API_URL}/auth/token`,
-        formData
-      );
-
-      const token = res.data.access_token;
-      const decode = jwtDecode<customToken>(token);
-
-      localStorage.setItem("token", token);
-      localStorage.setItem("user_id", decode.user_id.toString());
-
-      console.log("Decode : ", decode.roles);
-      console.log("User_id : ", decode.user_id);
-      console.log("Token : ", token);
-
-      if (decode.roles === "user") {
-        addToast({
-          hideIcon: true,
-          title: "Login Success",
-          description: "Role : User",
-          classNames: {
-            closeButton:
-              "opacity-100 absolute right-4 top-1/2 -translate-y-1/2 font-bold",
-          },
-          closeIcon: <X />,
-          color: "success",
-        });
-        router.push("/landing");
-      } else if (decode.roles === "admin") {
-        addToast({
-          hideIcon: true,
-          title: "Login Success",
-          description: "Role : Admin",
-          classNames: {
-            closeButton:
-              "opacity-100 absolute right-4 top-1/2 -translate-y-1/2 font-bold",
-          },
-          closeIcon: <X />,
-          color: "success",
-        });
-        router.push("/managecastle");
-      }
-
-      setIsData(res.data);
-    } catch (err) {
-      console.error("Login Error", err);
-    } finally {
-      setIsLoading(0);
-    }
-  }
-
-  // console.log(data);
-
-  // pass visibility
-  const [isVisible, setIsVisible] = React.useState(false);
-  const toggleVisibility = () => setIsVisible(!isVisible);
-
-  if (!isClient) return <div>Loading...</div>;
   return (
     <section className="min-h-screen flex items-center justify-center p-4">
       <div className="shadow-xl bg-white rounded-2xl w-full max-w-5xl overflow-hidden">
@@ -117,59 +31,20 @@ export default function Login() {
               </div>
             </div>
             <h2 className="my-5 text-center">
-              Please enter your username and password to login
+              Please enter your information to login
             </h2>
-            <div className="flex items-center justify-center">
-              <Form onSubmit={handleLogin} className="w-full max-w-xs">
-                <Input
-                  isRequired
-                  errorMessage={
-                    username === "" ? "Please enter your username" : undefined
-                  }
-                  className="font-bold"
-                  label="Username"
-                  labelPlacement="outside"
-                  placeholder="Type your username"
-                  type="text"
-                  startContent={<User size={18} />}
-                  variant="bordered"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                />
-                <Input
-                  isRequired
-                  errorMessage="Please enter your password"
-                  className="font-bold"
-                  label="Password"
-                  labelPlacement="outside"
-                  placeholder="Enter your password"
-                  startContent={<LockKeyhole size={18} />}
-                  variant="bordered"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  endContent={
-                    <button
-                      aria-label="toggle password visibility"
-                      className="focus:outline-solid outline-transparent"
-                      type="button"
-                      onClick={toggleVisibility}
-                    >
-                      {isVisible ? <Eye size={18} /> : <EyeOff size={18} />}
-                    </button>
-                  }
-                  type={isVisible ? "text" : "password"}
-                />
-                <div className="mt-8 w-full">
-                  <Button
-                    className="bg-tone-orange w-full text-white font-bold"
-                    type="submit"
-                  >
-                    GET START
-                  </Button>
-                </div>
-              </Form>
+
+            <div className="max-w-xs mx-auto w-full">
+              <LoginForm />
+
+              <div className="flex justify-center my-4 items-center">
+                <span className="text-gray-400">or</span>
+              </div>
+
+              <ButtonGoogle />
             </div>
-            <div className="mt-2 text-center">
+
+            <div className="mt-4 text-center">
               Don’t have an account?{" "}
               <Link
                 aria-current="page"
@@ -188,6 +63,7 @@ export default function Login() {
                 src="/assets/castle/image.png"
                 width={600}
                 height={600}
+                priority
                 className="w-full h-full object-cover"
               />
             </div>

@@ -11,8 +11,7 @@ import { Image } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@heroui/react";
 import React, { useEffect } from "react";
-import axios from "axios";
-import { API_URL } from "@/app/config";
+import api from "@/app/service/api";
 
 
 
@@ -50,21 +49,11 @@ export default function Sidebar() {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const token = localStorage.getItem("token");
       const userId = localStorage.getItem("user_id");
 
-      console.log("Token:", token);
-      console.log("User_id:", userId);
-
+      if (!userId) return;
       try {
-        const response = await axios.get(
-          `${API_URL}/users/${userId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
+        const response = await api.get(`/users/${userId}`);
 
         const userData = response.data;
         console.log("User Data:", userData);

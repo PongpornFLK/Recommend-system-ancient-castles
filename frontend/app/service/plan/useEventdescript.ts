@@ -1,5 +1,4 @@
-import axios from "axios";
-import { API_URL } from "@/app/config";
+import api from "@/app/service/api";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -13,19 +12,10 @@ export default function useEventdescript() {
 
   useEffect(() => {
     const fetchEvent = async () => {
-      const token = localStorage.getItem("token")
-
       if (!castle_id) return;
 
       try {
-        const respone = await axios.get(
-          `${API_URL}/event/event/description/${castle_id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-
-        );
+        const respone = await api.get(`/event/event/description/${castle_id}`);
         console.log("fetchEvent", respone.data)
         setEventDescript(respone.data.event_description)
         setEventId(respone.data.event_id)

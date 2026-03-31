@@ -7,7 +7,8 @@ import Search from "@/app/components/landing/searching";
 import Dropzone from "@/app/components/landing/dropzone";
 import { Tabs, Tab, Spinner } from "@heroui/react";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "@/app/service/api";
+import useGoogle from "@/app/service/auth/login/useGoogle";
 
 interface Castle {
   castle_id: number;
@@ -19,29 +20,17 @@ interface Castle {
 }
 
 export default function Landing() {
+  const { isLoading: googleLoading } = useGoogle();
   const [recommendedCastles, setRecommendedCastles] = useState<Castle[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // ดึง API URL จาก env
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "http://127.0.0.1:8000";
-
   useEffect(() => {
     const fetchRecommendations = async () => {
-      const token = localStorage.getItem("token");
-      
-      // ถ้าไม่มี Token (ยังไม่ Login) ไม่ต้องพยายามดึงข้อมูลแนะนำ
-      if (!token) {
-        setLoading(false);
-        return;
-      }
+      setLoading(true);
 
       try {
-        const response = await axios.get(`${API_BASE}/recommend`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        
+        const response = await api.get("/recommend");
+
         // รับข้อมูลจาก recommend.py
         // ถ้าผู้ใช้ยังไม่กดถูกใจ Backend จะส่ง data: [] กลับมา
         setRecommendedCastles(response.data.data || []);
@@ -53,90 +42,115 @@ export default function Landing() {
     };
 
     fetchRecommendations();
-  }, [API_BASE]);
+
+    window.addEventListener("auth-change", fetchRecommendations);
+    return () => window.removeEventListener("auth-change", fetchRecommendations);
+  }, []);
 
   return (
     <div>
-      <section className="p-0 m-0">
-        <SlideImg />
-      </section>
-
-      {/* Section: ค้นหาปราสาท */}
-      <section className="my-5 px-4 md:px-10">
-        <div className="my-20">
-          <div className="mb-10">
-            <div className="flex flex-row gap-3 items-center">
-              <ScanSearch size={38} className="text-tone-oldgray" />
-              <h1 className="font-bold text-3xl text-tone-oldgray uppercase tracking-tight">
-                Castle Similarity Search
-              </h1>
-            </div>
-            <p className="text-stone-500 mt-2">
-              ค้นหาความคล้ายคลึงกันของปราสาทด้วยข้อความหรือรูปภาพ
-            </p>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-sm border border-stone-100">
-            <div className="p-5">
-              <Tabs aria-label="Search Options" variant="underlined" color="warning">
-                <Tab
-                  key="text"
-                  title={
-                    <div className="flex items-center space-x-2">
-                      <FileText size={18} />
-                      <span>Search with Text & Filters</span>
-                    </div>
-                  }
-                >
-                  <div className="py-4"><Search /></div>
-                </Tab>
-                <Tab
-                  key="image"
-                  title={
-                    <div className="flex items-center space-x-2">
-                      <Image size={18} />
-                      <span>Search by Image</span>
-                    </div>
-                  }
-                >
-                  <div className="py-4"><Dropzone /></div>
-                </Tab>
-              </Tabs>
-            </div>
+      {loading ? (
+        <div>
+          <div className="flex flex-col items-center gap-2">
+            <Spinner color="warning" />
+            <span className="text-xs text-muted">Loading...</span>
           </div>
         </div>
-      </section>
+      ) : (
+        <>
+          <section className="p-0 m-0">
+            <SlideImg />
+          </section>
 
-      {/*Interesting Places */}
-      {!loading && recommendedCastles.length > 0 && (
-        <section className="my-10 px-4 md:px-10 pb-20 animate-appearance-in">
-          <div className="mb-10">
-            <div className="flex flex-row gap-3 items-center">
-              <Compass size={38} className="text-tone-oldgray" />
-              <h1 className="font-bold text-3xl text-tone-oldgray uppercase tracking-tight">
-                Interesting Places
-              </h1>
+          {/* Section: ค้นหาปราสาท */}
+          <section className="my-5 px-4 md:px-10">
+            <div className="my-20">
+              <div className="mb-10">
+                <div className="flex flex-row gap-3 items-center">
+                  <ScanSearch size={38} className="text-tone-oldgray" />
+                  <h1 className="font-bold text-3xl text-tone-oldgray uppercase tracking-tight">
+                    Castle Similarity Search
+                  </h1>
+                </div>
+                <p className="text-stone-500 mt-2">
+                  ค้นหาความคล้ายคลึงกันของปราสาทด้วยข้อความหรือรูปภาพ
+                </p>
+              </div>
+
+              <div className="bg-white rounded-2xl shadow-sm border border-stone-100">
+                <div className="p-5">
+                  <Tabs
+                    aria-label="Search Options"
+                    variant="underlined"
+                    color="warning"
+                  >
+                    <Tab
+                      key="text"
+                      title={
+                        <div className="flex items-center space-x-2">
+                          <FileText size={18} />
+                          <span>Search with Text & Filters</span>
+                        </div>
+                      }
+                    >
+                      <div className="py-4">
+                        <Search />
+                      </div>
+                    </Tab>
+                    <Tab
+                      key="image"
+                      title={
+                        <div className="flex items-center space-x-2">
+                          <Image size={18} />
+                          <span>Search by Image</span>
+                        </div>
+                      }
+                    >
+                      <div className="py-4">
+                        <Dropzone />
+                      </div>
+                    </Tab>
+                  </Tabs>
+                </div>
+              </div>
             </div>
-            <p className="text-stone-500 mt-2">
-              โบราณสถานที่แนะนำตามความสนใจล่าสุดของคุณ
-            </p>
-          </div>
+          </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {recommendedCastles.map((castle) => (
-              <CardLanding 
-                key={castle.castle_id} 
-                castle={{ ...castle, is_recommended: true }} 
+          {/*Interesting Places */}
+          {!loading && recommendedCastles.length > 0 && (
+            <section className="my-10 px-4 md:px-10 pb-20 animate-appearance-in">
+              <div className="mb-10">
+                <div className="flex flex-row gap-3 items-center">
+                  <Compass size={38} className="text-tone-oldgray" />
+                  <h1 className="font-bold text-3xl text-tone-oldgray uppercase tracking-tight">
+                    Interesting Places
+                  </h1>
+                </div>
+                <p className="text-stone-500 mt-2">
+                  โบราณสถานที่แนะนำตามความสนใจล่าสุดของคุณ
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {recommendedCastles.map((castle) => (
+                  <CardLanding
+                    key={castle.castle_id}
+                    castle={{ ...castle, is_recommended: true }}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {loading && (
+            <div className="flex justify-center py-20">
+              <Spinner
+                color="warning"
+                label="Checking for recommendations..."
               />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {loading && (
-        <div className="flex justify-center py-20">
-          <Spinner color="warning" label="Checking for recommendations..." />
-        </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

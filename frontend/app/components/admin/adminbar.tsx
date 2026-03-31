@@ -2,8 +2,7 @@
 import { usePathname } from "next/navigation";
 import { UserRound, Settings, Heart, LogOut } from "lucide-react";
 import React, { useEffect } from "react";
-import axios from "axios";
-import { API_URL } from "@/app/config";
+import api from "@/app/service/api";
 import { useRouter } from "next/navigation";
 
 export default function AdminBar() {
@@ -29,21 +28,10 @@ export default function AdminBar() {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const token = localStorage.getItem("token");
       const userId = localStorage.getItem("user_id");
 
-      console.log("Token:", token);
-      console.log("User_id:", userId);
-
       try {
-        const response = await axios.get(
-          `${API_URL}/users/${userId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
+        const response = await api.get(`/users/${userId}`);
 
         const userData = response.data;
         console.log("User Data:", userData);

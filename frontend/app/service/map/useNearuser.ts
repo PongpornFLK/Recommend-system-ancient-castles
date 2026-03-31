@@ -1,5 +1,4 @@
-import axios from "axios";
-import { API_URL } from "@/app/config";
+import api from "@/app/service/api";
 import { useEffect, useState } from "react";
 
 interface UserProps {
@@ -17,16 +16,10 @@ export default function useNearUser({ lat, lng }: UserProps) {
       if (!lat && !lng) {
         return;
       }
-      const token = localStorage.getItem("token");
 
       try {
-        const response = await axios.get(
-          `${API_URL}/locationcastle/castle/nearby/user=${lat}&${lng}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
+        const response = await api.get(
+          `/locationcastle/castle/nearby/user=${lat}&${lng}`,
         );
         setCastle(response.data);
         // console.log("setCastle : " , response.data)

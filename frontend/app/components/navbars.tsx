@@ -1,35 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import {
-  UserRound,
-  Settings,
-  Heart,
-  LogOut,
-  House,
-  Map,
-  Info,
-  ChessRook,
-  MapPin,
-} from "lucide-react";
-import {
-  Navbar,
-  NavbarBrand,
-  NavbarContent,
-  NavbarItem,
-  Button,
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-  NavbarMenuToggle,
-  NavbarMenu,
-  NavbarMenuItem,
-  Divider,
-  Image,
-} from "@heroui/react";
+import { UserRound, Settings, Heart, LogOut, House, Map, Info, ChessRook, MapPin, } from "lucide-react";
+import { Navbar, NavbarBrand, NavbarContent, NavbarItem, Button, Popover, PopoverTrigger, PopoverContent, NavbarMenuToggle, NavbarMenu, NavbarMenuItem, Divider, Image, } from "@heroui/react";
+import api from "@/app/service/api";
 import React, { useEffect } from "react";
-import axios from "axios";
-import { API_URL } from "../config";
 import { useRouter } from "next/navigation";
 
 export default function Navbars() {
@@ -55,19 +30,14 @@ export default function Navbars() {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const token = localStorage.getItem("token");
       const userId = localStorage.getItem("user_id");
 
-      // console.log("Token:", token);
-      // console.log("User_id:", userId);
+      if (!userId || userId === "null" || userId === "") {
+        return;
+      }
 
       try {
-        const response = await axios.get(`${API_URL}/users/${userId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
+        const response = await api.get(`/users/${userId}`);
         const userData = response.data;
         console.log("User Data:", userData);
 
@@ -78,12 +48,25 @@ export default function Navbars() {
     };
 
     fetchUser();
+
+    window.addEventListener("auth-change", fetchUser); // รอการทำ GoogleLogin
+
+    return () => {
+      window.removeEventListener("auth-change", fetchUser);
+    };
   }, []);
 
   const handleLogOut = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user_id");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("auth_provider");
+    localStorage.removeItem("google_token");
+
     setUser(null);
+
+    window.dispatchEvent(new Event("auth-change"));
+
     router.push("/login");
   };
 

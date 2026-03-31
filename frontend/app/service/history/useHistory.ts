@@ -1,5 +1,4 @@
-import axios from "axios";
-import { API_URL } from "@/app/config";
+import api from "@/app/service/api";
 import { useEffect, useState } from "react";
 
 export interface HistoryData {
@@ -17,25 +16,11 @@ export default function useHistory() {
   const [historyData, setHistoryData] = useState<HistoryData[]>([]);
   useEffect(() => {
     const fetchHistory = async () => {
-      const token = localStorage.getItem("token");
       const userId = localStorage.getItem("user_id");
-
-      // console.log("Token:", token);
       // console.log("User_id:", userId);
 
       try {
-        const response = await axios.get(
-          `${API_URL}/history/${userId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            params: {
-              page: 1,
-              size: 20,
-            },
-          },
-        );
+        const response = await api.get(`/history/${userId}?page=1&size=20`);
 
         // console.log("API Response:", response.data);
         // console.log("Items:", response.data.items);

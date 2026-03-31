@@ -1,10 +1,8 @@
 "use client";
 
-import axios from "axios";
-import { API_URL } from "@/app/config";
+import api from "@/app/service/api";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-// import { useSearchParams } from "next/navigation";
 
 interface LocationCastle {
   castle_id: number;
@@ -27,17 +25,8 @@ export default function useCreateroute() {
 
   useEffect(() => {
     const fetchLocationCastle = async () => {
-      const token = localStorage.getItem("token");
-
       try {
-        const response = await axios.get(
-          `${API_URL}/locationcastle/${castle_id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
+        const response = await api.get(`/locationcastle/${castle_id}`);
         console.log("LocationCastle : ", response.data);
 
         setLocationCastle(response.data);

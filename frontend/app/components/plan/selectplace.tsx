@@ -1,7 +1,6 @@
 "use client";
 import { Select, SelectItem, Button } from "@heroui/react";
-import axios from "axios";
-import { API_URL } from "@/app/config";
+import api from "@/app/service/api";
 import { CirclePlus, X } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import React from "react";
@@ -28,17 +27,8 @@ export default function SelectPlace({ boxSelect, setBoxSelect }: SelectPlaceProp
 
   useEffect(() => {
     const fetchNearPlace = async () => {
-      const token = localStorage.getItem("token");
-
       try {
-        const response = await axios.get(
-          `${API_URL}/nearplace?castle_id=${castle_id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
+        const response = await api.get(`/nearplace?castle_id=${castle_id}`);
 
         setNearPlace(response.data);
         console.log("NearPlaceData : ", response.data);

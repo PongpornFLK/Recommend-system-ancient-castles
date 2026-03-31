@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
-import { API_URL } from "@/app/config";
+import api from "@/app/service/api";
 import { addToast } from "@heroui/react";
 
 export interface UserData {
@@ -18,50 +17,36 @@ export function useProfile() {
   const [email, setEmail] = useState("");
   const [tel, setTel] = useState("");
 
-  const fetchUser = async () => {
-    const token = localStorage.getItem("token");
-    const userId = localStorage.getItem("user_id");
-
-    if (!token || !userId) return;
-
-    try {
-      const response = await axios.get(`${API_URL}/users/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setUser(response.data);
-      setUsername(response.data.username || "");
-      setEmail(response.data.email || "");
-      setTel(response.data.tel || "");
-    } catch (err) {
-      console.log("Fetching error : ", err);
-    }
-  };
-
   useEffect(() => {
-    fetchUser();
+    const fetchUserData = async () => {
+      const userId = localStorage.getItem("user_id");
+
+      if (!userId) return;
+
+      try {
+        const response = await api.get(`/users/${userId}`);
+        setUser(response.data);
+        setUsername(response.data.username || "");
+        setEmail(response.data.email || "");
+        setTel(response.data.tel || "");
+      } catch (err) {
+        console.log("Fetching error : ", err);
+      }
+    };
+
+    fetchUserData();
   }, []);
 
   const handleSaveProfile = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const userId = localStorage.getItem("user_id");
-    const token = localStorage.getItem("token");
 
     try {
-      const response = await axios.put(
-        `${API_URL}/users/${userId}`,
-        {
-          username: username,
-          email: email,
-          tel: tel,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await api.put(`/users/${userId}`, {
+        username: username,
+        email: email,
+        tel: tel,
+      });
 
       setUser(response.data);
       setIsEdit(false);

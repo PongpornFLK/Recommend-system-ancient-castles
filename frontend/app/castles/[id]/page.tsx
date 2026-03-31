@@ -17,7 +17,7 @@ import {
   ChevronLeft,
 } from "lucide-react";
 import { getCastleGalleryByName } from "../../lib/castleImages";
-import axios from "axios";
+import api from "@/app/service/api";
 import { Chip, Button } from "@heroui/react";
 import Navbars from "@/app/components/navbars";
 
@@ -105,9 +105,7 @@ export default function CastleDetailPage() {
       }
       if (userId) {
         try {
-          const favCheck = await axios.get(`${API_BASE}/interests/check`, {
-            params: { user_id: userId, castle_id: d.castle_id },
-          });
+          const favCheck = await api.get(`/interests/check?user_id=${userId}&castle_id=${d.castle_id}`);
           setFav(favCheck.data.is_favorite);
           if (favCheck.data.interest_id) {
             setInterestId(favCheck.data.interest_id);
@@ -145,7 +143,7 @@ export default function CastleDetailPage() {
         {
           /* กรณี: ยังไม่เป็นรายการโปรด -> ให้เพิ่ม (POST) */
         }
-        const res = await axios.post(`${API_BASE}/interests`, {
+        const res = await api.post("/interests", {
           user_id: parseInt(userId),
           castle_id: data?.castle_id,
           interest_name: data?.castle_name,
@@ -160,7 +158,7 @@ export default function CastleDetailPage() {
           /* กรณี: เป็นรายการโปรดอยู่แล้ว -> ให้ลบออก (DELETE) */
         }
         if (interestId) {
-          await axios.delete(`${API_BASE}/interests/${interestId}`);
+          await api.delete(`/interests/${interestId}`);
           setFav(false);
           setInterestId(null);
         } else {

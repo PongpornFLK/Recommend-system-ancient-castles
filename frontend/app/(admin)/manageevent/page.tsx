@@ -24,8 +24,7 @@ import {
 } from "@heroui/react";
 import { parseDate, Time, CalendarDate } from "@internationalized/date";
 import React, { useEffect, useState, useCallback } from "react";
-import axios from "axios";
-import { API_URL } from "@/app/config";
+import api from "@/app/service/api";
 import {
   Settings,
   Map,
@@ -104,13 +103,8 @@ export default function ManageEvent() {
   ];
 
   const fetchEvent = useCallback(async () => {
-    const token = localStorage.getItem("token");
-
     try {
-      const response = await axios.get<ApiResponse>(`${API_URL}/event/admin`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await api.get<ApiResponse>(`/event/admin`, {
         params: {
           page: page,
           size: rowSize,
@@ -154,16 +148,9 @@ export default function ManageEvent() {
 
   const deleteEvent = useCallback(
     async (event_id: string) => {
-      const token = localStorage.getItem("token");
-
       try {
-        await axios.delete(
-          `${API_URL}/event/${event_id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
+        await api.delete(
+          `/event/${event_id}`,
         );
 
         fetchEvent();
@@ -175,11 +162,9 @@ export default function ManageEvent() {
   );
 
   const updateEvent = async () => {
-    const token = localStorage.getItem("token");
-
     try {
-      const response = await axios.put(
-        `${API_URL}/event/${eventId}`,
+      const response = await api.put(
+        `/event/${eventId}`,
         {
           event_name: eventName,
           event_description: description,
@@ -189,11 +174,6 @@ export default function ManageEvent() {
           castle: {
             castle_id: castleId,
             castle_name: castleName,
-          },
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
           },
         },
       );

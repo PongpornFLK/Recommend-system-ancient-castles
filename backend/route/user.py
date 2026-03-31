@@ -14,7 +14,7 @@ from authen.secur import createAccessToken, createRefreshToken, supabase_client
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-### Google token
+### Login Google token
 @router.post("/auth/google_login")
 async def createUserWithGoogle(
     request: GoogleTokenRequest, db: Session = Depends(get_db)
@@ -24,79 +24,65 @@ async def createUserWithGoogle(
     try:
         user_response = supabase_client.auth.get_user(supabase_token)
         email = user_response.user.email
+        user_metadata = user_response.user.user_metadata or {}
+        google_name = user_metadata.get("full_name")
 
         if email is None:
             raise HTTPException(status_code=400, detail="Not found email")
+
         db_user_email = db.query(User).filter(User.email == email).first()
 
         if db_user_email is None:
             import secrets
             import string
 
-            user_metadata = user_response.user.user_metadata or {}
-            google_name = user_metadata.get("full_name")
-            mail_name = email.split("@")[0]
-            display_name = google_name if google_name else mail_name 
-            
-            print(f"👤 [Google Auth] Using display_name: {display_name}")
-
-            # สุ่ม pwd ป้องกัน Err สำหรับ user ที่สมัครผ่าน google
+            # random pwd ถ้า login Google กัน Error
             alphabet = string.ascii_letters + string.digits
             random_pass = "".join(secrets.choice(alphabet) for i in range(20))
 
-            try:
-                db_user = User(
-                    email=email,
-                    username=display_name,
-                    password=pwd_context.hash(random_pass),
-                    roles="user",
-                    auth_provider="google" 
-                )
-                db.add(db_user)
-                db.commit()
-                db.refresh(db_user)
-                db_user_email = db_user
-            except Exception as db_err:
-                db.rollback()
-                raise db_err
-        else:
+            db_user = User(
+                email=email,
+                username=google_name,
+                password=pwd_context.hash(random_pass),
+                roles="user",
+            )
+            db.add(db_user)
+            db.commit()
+            db.refresh(db_user)
+            db_user_email = db_user
 
-        create_token = createAccessToken(
+        create_token = createAccessToken (
             username=db_user_email.username,
             user_id=db_user_email.user_id,
             roles=db_user_email.roles,
             auth_provider="google",
         )
         
+        # สร้าง-เก็บ refresh token
         refresh_token = createRefreshToken(db_user_email.user_id)
         db_user_email.refresh_token = refresh_token
         db.commit()
-        print("Google Auth Success")
         
         return {"access_token": create_token, "refresh_token": refresh_token, "token_type": "bearer"}
 
     except Exception as e:
-        print("Google Auth FATAL ERROR: {e}")
         raise HTTPException(status_code=401, detail=f"Token error: {str(e)}")
 
 
-### Register: สร้าง User ใหม่ (เช็ค Username/Email ซ้ำ + Hash Password)
+### Register
 @router.post("", response_model=UserResponse)
 def createUser(user: UserCreate, db: Session = Depends(get_db)):
-    # ตรวจสอบ Username ซ้ำ
-    existing_user = db.query(User).filter(User.username == user.username).first()
+    existing_user = db.query(User).filter(User.username == user.username).first() # Username ซ้ำ
     if existing_user:
         raise HTTPException(status_code=400, detail="Username already registered")
 
-    # ตรวจสอบ Email ซ้ำ
-    existing_email = db.query(User).filter(User.email == user.email).first()
+    existing_email = db.query(User).filter(User.email == user.email).first() # Email ซ้ำ
     if existing_email:
         raise HTTPException(status_code=400, detail="Email already registered")
 
-    # บันทึกพร้อม Hash รหัสผ่าน (ป้องกัน Error 500 ตอน Login)
     db_user = User(
         **user.model_dump(exclude={"password"}),
-        password=pwd_context.hash(user.password),
+        password=pwd_context.hash(user.password), # Hash รหัสผ่าน
     )
 
     try:
@@ -137,7 +123,7 @@ def readUser(user_id: int, db: Session = Depends(get_db)):
     return db_user
 
 
-### Update User (เช็คสิทธิ์เจ้าของบัญชี หรือ Admin)
+### Update User 
 @router.put("/{user_id}", response_model=UserResponse)
 async def updateUser(
     user_id: int,
@@ -145,7 +131,7 @@ async def updateUser(
     db: Session = Depends(get_db),
     current_user: Annotated[dict, Depends(getCurrentUser)] = None,
 ):
-    # ป้องกันการแก้ไขข้อมูลข้ามบัญชี
+
     if current_user["user_id"] != user_id and current_user["roles"] != "admin":
         raise HTTPException(
             status_code=403, detail="Not authorized to update this user"

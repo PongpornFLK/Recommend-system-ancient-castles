@@ -1,9 +1,11 @@
 "use client";
+
+import dynamic from "next/dynamic";
 import { supabase } from "@/app/service/auth/supabase";
 import { Button } from "@heroui/react";
 import { Icon } from "@iconify/react";
 
-export default function ButtonGoogle() {
+const ButtonGoogleContent = () => {
   const handleLogin = async () => {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -24,4 +26,9 @@ export default function ButtonGoogle() {
       </Button>
     </div>
   );
-}
+};
+
+// dynamic ปิด ssr: false
+export default dynamic(() => Promise.resolve(ButtonGoogleContent), {
+  ssr: false
+});

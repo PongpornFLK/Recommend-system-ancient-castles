@@ -7,7 +7,8 @@ import Search from "@/app/components/landing/searching";
 import Dropzone from "@/app/components/landing/dropzone";
 import { Tabs, Tab, Spinner } from "@heroui/react";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "@/app/service/api";
+import useGoogle from "@/app/service/auth/login/useGoogle";
 
 interface Castle {
   castle_id: number;
@@ -19,30 +20,16 @@ interface Castle {
 }
 
 export default function Landing() {
+  const { isLoading: googleLoading } = useGoogle();
   const [recommendedCastles, setRecommendedCastles] = useState<Castle[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // ดึง API URL จาก env
-  const API_BASE =
-    process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ||
-    "http://127.0.0.1:8000";
-
   useEffect(() => {
     const fetchRecommendations = async () => {
-      const token = localStorage.getItem("token");
-
-      // ถ้าไม่มี Token (ยังไม่ Login) ไม่ต้องพยายามดึงข้อมูลแนะนำ
-      if (!token) {
-        setLoading(false);
-        return;
-      }
+      setLoading(true);
 
       try {
-        const response = await axios.get(`${API_BASE}/recommend`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await api.get("/recommend");
 
         // รับข้อมูลจาก recommend.py
         // ถ้าผู้ใช้ยังไม่กดถูกใจ Backend จะส่ง data: [] กลับมา
@@ -55,7 +42,7 @@ export default function Landing() {
     };
 
     fetchRecommendations();
-  }, [API_BASE]);
+  }, []);
 
   return (
     <div>

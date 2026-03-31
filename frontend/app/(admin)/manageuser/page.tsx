@@ -14,8 +14,7 @@ import {
 } from "@heroui/react";
 import { Search, Trash2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { API_URL } from "@/app/config";
+import api from "@/app/service/api";
 import AdminBar from "@/app/components/admin/adminbar";
 import ModalDelete from "@/app/components/admin/modal";
 import Searching from "@/app/components/admin/searching";
@@ -53,13 +52,8 @@ export default function ManageUser() {
   ];
 
   const fetchUser = React.useCallback(async () => {
-    const token = localStorage.getItem("token");
-    // console.log("Page :", page);
     try {
-      const response = await axios.get(`${API_URL}/users`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await api.get(`/users`, {
         params: {
           page: page,
           size: rowSize,
@@ -98,16 +92,9 @@ export default function ManageUser() {
 
   const deleteUser = React.useCallback(
     async (user_id: string) => {
-      const token = localStorage.getItem("token");
-
       try {
-        const response = await axios.delete(
-          `${API_URL}/users/${user_id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
+        const response = await api.delete(
+          `/users/${user_id}`,
         );
         fetchUser();
       } catch (err) {

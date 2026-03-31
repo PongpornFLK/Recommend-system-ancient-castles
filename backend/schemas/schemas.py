@@ -4,6 +4,17 @@ from typing import List, Optional
 from datetime import datetime
 from sqlalchemy import Boolean
 
+class CastleFullCreate(BaseModel):
+    castle_name: str
+    castle_description: Optional[str] = None
+    era: Optional[str] = None
+    type_id: int
+    architecture_detail: str
+    latitude: float
+    longitude: float
+    sub_district: str
+    district: str
+    province: str
 
 #### TOKEN เพื่อ check 
 class Token(BaseModel):

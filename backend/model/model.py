@@ -12,11 +12,13 @@ class User(Base):
 
     user_id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, nullable=False)
-    password = Column(String, nullable=False) # เก็บ Hash 
+    password = Column(String, nullable=True) # เก็บ Hash 
     email = Column(String, unique=True, nullable=False)
     tel = Column(String)
     roles = Column(String, default="user") # 'admin' / 'user'
-
+    refresh_token = Column(String, nullable=True)
+    auth_provider = Column(String, default="local")
+    
     # Relationships
     search_histories = relationship("SearchHistory", back_populates="user")
     visit_histories = relationship("VisitHistory", back_populates="user")

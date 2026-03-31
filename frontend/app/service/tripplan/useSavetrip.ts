@@ -1,6 +1,5 @@
 "use client";
-import axios from "axios";
-import { API_URL } from "@/app/config";
+import api from "@/app/service/api";
 import { useRouter } from "next/navigation";
 
 export default function useSaveTrip() {
@@ -25,18 +24,9 @@ export default function useSaveTrip() {
       place_name: string;
     }[],
   ) => {
-    const token = localStorage.getItem("token");
     try {
       const data = { ...tripData, itinerary_data: itinerary };
-      const response = await axios.post(
-        `${API_URL}/trip/create`,
-        data,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
+      const response = await api.post("/trip/create", data);
       console.log("Save", response.data);
       router.push("/tripplan");
     } catch (err) {

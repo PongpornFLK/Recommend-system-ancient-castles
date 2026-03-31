@@ -1,5 +1,4 @@
-import axios from "axios";
-import { API_URL } from "@/app/config";
+import api from "@/app/service/api";
 import { useRouter } from "next/navigation";
 import { MapStaticImg } from "./mapImg";
 
@@ -18,7 +17,6 @@ export default function useCheckIn() {
     destLng: number,
   ) => {
     const user_id = localStorage.getItem("user_id");
-    const token = localStorage.getItem("token");
     const mapImg = MapStaticImg(
       currentLat,
       currentLng,
@@ -31,31 +29,15 @@ export default function useCheckIn() {
     // console.log("USER ID", user_id, "CASTLE ID", castle_id, "TRIP ID", trip_id)
     try {
       // VisitHistory
-      await axios.post(
-        `${API_URL}/history/checkin/${user_id}`,
-        {
-          user_id: user_id,
-          castle_id: castle_id,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
+      await api.post(`/history/checkin/${user_id}`, {
+        user_id: user_id,
+        castle_id: castle_id,
+      });
 
       // status to 'success'
-      await axios.post(
-        `${API_URL}/trip/${trip_id}/confirm`,
-        {
-          map_url: mapImg,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
+      await api.post(`/trip/${trip_id}/confirm`, {
+        map_url: mapImg,
+      });
 
       console.log("Check-in and Confirmation complete");
       router.push("/history");

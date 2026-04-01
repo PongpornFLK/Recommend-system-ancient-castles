@@ -12,22 +12,16 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import axios from "axios";
-
-type CastleType = {
-  castle_id?: number;
-  id?: number;
-  castle_name: string;
-  castle_description?: string;
-  era?: string;
-  architecture_detail?: string;
-  type_id?: number | string;
-  province?: string;
-  district?: string;
-  sub_district?: string;
-  latitude?: number | string;
-  longitude?: number | string;
-};
+import {
+  CastleType,
+  getCastles,
+  getCastleId,
+  deleteCastle,
+  updateCastle,
+  uploadImageVector,
+  uploadDocumentVector,
+  addNearbyPlace,
+} from "@/app/service/castle/managecastle";
 
 export default function ManageCastle() {
   const [activeTab, setActiveTab] = useState<number | null>(null);
@@ -45,26 +39,30 @@ export default function ManageCastle() {
   const [selectedDocFile, setSelectedDocFile] = useState<File | null>(null);
   const [docLoading, setDocLoading] = useState(false);
 
+  const [nearbyCastleId, setNearbyCastleId] = useState<string>("");
+  const [nearbyPlaceName, setNearbyPlaceName] = useState("");
+  const [nearbyDetail, setNearbyDetail] = useState("");
+  const [nearbyLatitude, setNearbyLatitude] = useState("");
+  const [nearbyLongitude, setNearbyLongitude] = useState("");
+  const [nearbyLoading, setNearbyLoading] = useState(false);
+  const resetNearbyModal = () => {
+    setNearbyCastleId("");
+    setNearbyPlaceName("");
+    setNearbyDetail("");
+    setNearbyLatitude("");
+    setNearbyLongitude("");
+  };
   const menuButtons = [
     { id: 1, title: "Add New Castle", icon: PlusCircle, color: "bg-[#5D4037]" },
     { id: 2, title: "Add New Vector Data", icon: Database, color: "bg-[#8D6E63]" },
     { id: 3, title: "Add Nearby Places", icon: MapPinned, color: "bg-[#A1887F]" },
   ];
 
-  const getCastleId = (castle: CastleType) => castle.castle_id ?? castle.id;
-
   const fetchCastles = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
-      const response = await axios.get("http://127.0.0.1:8000/manage-castle/list", {
-        headers,
-      });
-
-      const data = response.data?.data || response.data || [];
-      setCastles(Array.isArray(data) ? data : []);
+      const data = await getCastles();
+      setCastles(data);
     } catch (error) {
       console.error("โหลดข้อมูลปราสาทไม่สำเร็จ", error);
     } finally {
@@ -98,10 +96,7 @@ export default function ManageCastle() {
     if (!castleId || !window.confirm(`ต้องการลบ "${castle.castle_name}"?`)) return;
 
     try {
-      const token = localStorage.getItem("token");
-      await axios.delete(`http://127.0.0.1:8000/manage-castle/delete/${castleId}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      await deleteCastle(castleId);
       fetchCastles();
     } catch (error) {
       console.error("ลบข้อมูลไม่สำเร็จ", error);
@@ -115,9 +110,6 @@ export default function ManageCastle() {
     if (!castleId) return;
 
     try {
-      const token = localStorage.getItem("token");
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
       const payload = {
         castle_name: selectedCastle.castle_name,
         castle_description: selectedCastle.castle_description || "",
@@ -131,11 +123,7 @@ export default function ManageCastle() {
         longitude: Number(selectedCastle.longitude) || 0,
       };
 
-      await axios.put(
-        `http://127.0.0.1:8000/manage-castle/update/${castleId}`,
-        payload,
-        { headers }
-      );
+      await updateCastle(castleId, payload);
 
       alert("แก้ไขสำเร็จ");
       setIsEditOpen(false);
@@ -295,7 +283,6 @@ export default function ManageCastle() {
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Image Vector */}
               <div className="border border-stone-200 rounded-2xl p-5">
                 <h3 className="text-lg font-bold text-[#3E2723] mb-4">
                   Upload Image Vector
@@ -353,21 +340,12 @@ export default function ManageCastle() {
                       try {
                         setVectorLoading(true);
 
-                        const formData = new FormData();
-                        formData.append("castle_id", selectedVectorCastleId);
-                        formData.append("file", selectedImageFile);
-
-                        const res = await axios.post(
-                          "http://127.0.0.1:8000/manage-vector/upload-image-vector",
-                          formData,
-                          {
-                            headers: {
-                              "Content-Type": "multipart/form-data",
-                            },
-                          }
+                        const res = await uploadImageVector(
+                          Number(selectedVectorCastleId),
+                          selectedImageFile
                         );
 
-                        alert(`${res.data.message}\nimg_id: ${res.data.img_id}`);
+                        alert(`${res.message}\nimg_id: ${res.img_id}`);
                         setSelectedVectorCastleId("");
                         setSelectedImageFile(null);
                       } catch (error: any) {
@@ -389,7 +367,6 @@ export default function ManageCastle() {
                 </div>
               </div>
 
-              {/* Document Vector */}
               <div className="border border-stone-200 rounded-2xl p-5">
                 <h3 className="text-lg font-bold text-[#3E2723] mb-4">
                   Upload Document Vector
@@ -447,22 +424,13 @@ export default function ManageCastle() {
                       try {
                         setDocLoading(true);
 
-                        const formData = new FormData();
-                        formData.append("castle_id", selectedDocCastleId);
-                        formData.append("file", selectedDocFile);
-
-                        const res = await axios.post(
-                          "http://127.0.0.1:8000/manage-doc-vector/upload-document-vector",
-                          formData,
-                          {
-                            headers: {
-                              "Content-Type": "multipart/form-data",
-                            },
-                          }
+                        const res = await uploadDocumentVector(
+                          Number(selectedDocCastleId),
+                          selectedDocFile
                         );
 
                         alert(
-                          `${res.data.message}\nChunks inserted: ${res.data.chunks_inserted}`
+                          `${res.message || "เพิ่ม document vector สำเร็จ"}\nChunks inserted: ${res.chunks_inserted ?? res.inserted ?? 0}`
                         );
                         setSelectedDocCastleId("");
                         setSelectedDocFile(null);
@@ -489,19 +457,152 @@ export default function ManageCastle() {
         </div>
       )}
 
-      {activeTab === 3 && (
+            {activeTab === 3 && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white p-12 rounded-[2rem] shadow-2xl text-center max-w-lg w-full relative">
+          <div className="bg-white p-8 rounded-[2rem] shadow-2xl max-w-2xl w-full relative max-h-[90vh] overflow-y-auto">
             <button
-              onClick={() => setActiveTab(null)}
-              className="absolute top-4 right-4 text-gray-400"
+              onClick={() => {
+                setActiveTab(null);
+                resetNearbyModal();
+              }}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
             >
               <X />
             </button>
+
             <MapPinned size={48} className="mx-auto text-stone-300 mb-4" />
-            <h2 className="text-xl font-bold text-stone-600">
-              Nearby Places Coming Soon
+            <h2 className="text-xl font-bold text-stone-700 text-center mb-6">
+              Add Nearby Place
             </h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-stone-700 mb-2">
+                  Select Castle
+                </label>
+                <select
+                  value={nearbyCastleId}
+                  onChange={(e) => setNearbyCastleId(e.target.value)}
+                  className="w-full border border-stone-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-400"
+                >
+                  <option value="">-- เลือกปราสาท --</option>
+                  {castles.map((castle) => (
+                    <option
+                      key={getCastleId(castle)}
+                      value={String(getCastleId(castle))}
+                    >
+                      {getCastleId(castle)} - {castle.castle_name}
+                      {castle.province ? ` (${castle.province})` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-stone-700 mb-2">
+                  Place Name
+                </label>
+                <input
+                  type="text"
+                  value={nearbyPlaceName}
+                  onChange={(e) => setNearbyPlaceName(e.target.value)}
+                  placeholder="เช่น พิพิธภัณฑสถานแห่งชาติพิมาย"
+                  className="w-full border border-stone-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-stone-700 mb-2">
+                  Nearby Detail
+                </label>
+                <textarea
+                  value={nearbyDetail}
+                  onChange={(e) => setNearbyDetail(e.target.value)}
+                  placeholder="รายละเอียดสถานที่ใกล้เคียง..."
+                  rows={4}
+                  className="w-full border border-stone-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-400 resize-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-stone-700 mb-2">
+                    Latitude
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    value={nearbyLatitude}
+                    onChange={(e) => setNearbyLatitude(e.target.value)}
+                    placeholder="15.223599"
+                    className="w-full border border-stone-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-400"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-stone-700 mb-2">
+                    Longitude
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    value={nearbyLongitude}
+                    onChange={(e) => setNearbyLongitude(e.target.value)}
+                    placeholder="102.4919033"
+                    className="w-full border border-stone-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-400"
+                  />
+                </div>
+              </div>
+
+              <button
+                onClick={async () => {
+                  if (!nearbyCastleId) {
+                    alert("กรุณาเลือกปราสาทก่อน");
+                    return;
+                  }
+
+                  if (!nearbyPlaceName.trim()) {
+                    alert("กรุณากรอกชื่อสถานที่ใกล้เคียง");
+                    return;
+                  }
+
+                  const lat = Number(nearbyLatitude);
+                  const lng = Number(nearbyLongitude);
+
+                  if (isNaN(lat) || isNaN(lng)) {
+                    alert("Latitude และ Longitude ต้องเป็นตัวเลข");
+                    return;
+                  }
+
+                  try {
+                    setNearbyLoading(true);
+
+                    const res = await addNearbyPlace({
+                      castle_id: Number(nearbyCastleId),
+                      place_name: nearbyPlaceName.trim(),
+                      nearby_detail: nearbyDetail.trim(),
+                      latitude: lat,
+                      longitude: lng,
+                    });
+
+                    alert(res.message || "เพิ่มสถานที่ใกล้เคียงสำเร็จ");
+                    resetNearbyModal();
+                    setActiveTab(null);
+                  } catch (error: any) {
+                    alert(
+                      "เพิ่มสถานที่ใกล้เคียงไม่สำเร็จ: " +
+                        (error.response?.data?.detail || error.message)
+                    );
+                  } finally {
+                    setNearbyLoading(false);
+                  }
+                }}
+                disabled={nearbyLoading}
+                className="w-full px-4 py-3 rounded-xl bg-[#A1887F] text-white font-bold hover:opacity-90 disabled:opacity-50"
+              >
+                {nearbyLoading ? "กำลังเพิ่มข้อมูล..." : "Add Nearby Place"}
+              </button>
+            </div>
           </div>
         </div>
       )}

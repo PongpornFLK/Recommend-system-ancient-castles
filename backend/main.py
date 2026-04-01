@@ -12,11 +12,14 @@ from route import interest
 from route import recommend
 from route import manage_castle
 from db import Base, engine
-
+from route import manage_vector
 # import router
 from route.zilliz_search import router as zilliz_router
 from route.filter_search import router as filter_router
 from route.castle_detail import router as castle_detail_router
+from route import manage_document_vector
+from route.manage_nearby_place import router as manage_nearby_place_router
+
 
 print("DATABASE_URL set =", bool(os.getenv("DATABASE_URL")))
 print("ZILLIZ_URI set   =", bool(os.getenv("ZILLIZ_URI")))
@@ -77,7 +80,9 @@ app.include_router(interest.router)
 app.include_router(route.router)
 app.include_router(recommend.router)
 app.include_router(manage_castle.router)
-
+app.include_router(manage_vector.router)
+app.include_router(manage_document_vector.router)
+app.include_router(manage_nearby_place_router)
 
 @app.get("/")
 def root():

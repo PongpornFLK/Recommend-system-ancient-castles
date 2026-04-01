@@ -2,6 +2,26 @@ from pydantic import BaseModel, EmailStr, Field
 from typing import List, Optional
 from datetime import datetime, date
 from sqlalchemy import Boolean
+class UploadImageVectorResponse(BaseModel):
+    status: str
+    message: str
+    img_id: int
+    castle_id: int
+    original_filename: Optional[str] = None
+
+class UploadDocumentVectorResponse(BaseModel):
+    status: str
+    message: str
+    castle_id: int
+    document_name: str
+    chunks_inserted: int
+
+class NearbyPlaceCreate(BaseModel):
+    castle_id: int
+    place_name: str
+    nearby_detail: str
+    latitude: float
+    longitude: float
 
 class CastleFullCreate(BaseModel):
     castle_name: str

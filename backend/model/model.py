@@ -196,14 +196,13 @@ class Event(Base):
 
     castle = relationship("Castle", back_populates="events")
 
-
 class NearbyPlace(Base):
     __tablename__ = "nearby_places"
 
-    nearplace_id = Column(Integer, primary_key=True, index=True)
-    castle_id = Column(Integer, ForeignKey("castles.castle_id"))
-    place_name = Column(String)
-    nearby_detail = Column(Text)
+    nearplace_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    castle_id = Column(Integer, ForeignKey("castles.castle_id"), nullable=False)
+    place_name = Column(String(255), nullable=False)
+    nearby_detail = Column(Text, nullable=True)
     latitude = Column(Float, nullable=True)
     longitude = Column(Float, nullable=True)
 

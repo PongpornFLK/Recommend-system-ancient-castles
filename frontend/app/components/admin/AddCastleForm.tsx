@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { Search, MapPin, X } from "lucide-react";
-import axios from "axios";
+import { addCastle } from "@/app/service/castle/managecastle";
 
 type FormDataType = {
   castle_name: string;
@@ -127,7 +127,6 @@ export default function AddCastleForm({ onClose }: { onClose: () => void }) {
     }
 
     try {
-      const token = localStorage.getItem("token");
       const payload = {
         ...formData,
         type_id: typeId,
@@ -135,10 +134,9 @@ export default function AddCastleForm({ onClose }: { onClose: () => void }) {
         longitude: lng,
       };
 
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      const response = await axios.post("http://127.0.0.1:8000/manage-castle/add", payload, { headers });
+      const response = await addCastle(payload);
 
-      if (response.data.status === "success") {
+      if (response.status === "success") {
         alert("เพิ่มข้อมูลสำเร็จ!");
         onClose();
         window.location.reload();
@@ -153,7 +151,10 @@ export default function AddCastleForm({ onClose }: { onClose: () => void }) {
       <div className="bg-white p-6 rounded-[2.5rem] shadow-2xl max-w-3xl w-full border border-gray-100 relative animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-[#3E2723]">Add New Castle</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-2 transition-colors">
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 p-2 transition-colors"
+          >
             <X size={24} />
           </button>
         </div>
@@ -245,7 +246,10 @@ export default function AddCastleForm({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="flex flex-col gap-1 mb-6">
-          <label htmlFor="castle_description" className="text-sm font-bold text-gray-700">
+          <label
+            htmlFor="castle_description"
+            className="text-sm font-bold text-gray-700"
+          >
             Description
           </label>
           <textarea

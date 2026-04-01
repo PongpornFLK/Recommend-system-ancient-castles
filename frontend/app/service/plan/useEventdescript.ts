@@ -15,7 +15,7 @@ export default function useEventdescript() {
       if (!castle_id) return;
 
       try {
-        const respone = await api.get(`/event/event/description/${castle_id}`);
+        const respone = await api.get(`/description/${castle_id}`);
         console.log("fetchEvent", respone.data)
         setEventDescript(respone.data.event_description)
         setEventId(respone.data.event_id)

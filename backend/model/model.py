@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, Boolean, Float, Time
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, Boolean, Float, Time , Date
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 # from pgvector.sqlalchemy import Vector
@@ -189,9 +189,10 @@ class Event(Base):
     castle_id = Column(Integer, ForeignKey("castles.castle_id"))
     event_name = Column(String)
     event_description = Column(Text)
-    event_date = Column(DateTime(timezone=True), server_default=func.now())
-    event_start = Column(String) 
-    event_end = Column(String)    
+    event_start_date = Column(Date)
+    event_end_date = Column(Date)
+    event_start_time = Column(String) 
+    event_end_time = Column(String)    
 
     castle = relationship("Castle", back_populates="events")
 

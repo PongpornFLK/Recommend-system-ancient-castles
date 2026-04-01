@@ -1,32 +1,21 @@
 "use client";
-import {
-  Button,
-  Table,
-  TableHeader,
-  TableBody,
-  TableColumn,
-  TableRow,
-  TableCell,
-  Input,
-  Pagination,
-  Tooltip,
-  useDisclosure,
-} from "@heroui/react";
-import { Search, Trash2 } from "lucide-react";
-import React, { useEffect, useState } from "react";
-import api from "@/app/service/api";
+import React, { useEffect, useState, useCallback } from "react";
+import { useDisclosure } from "@heroui/react";
 import AdminBar from "@/app/components/admin/adminbar";
 import ModalDelete from "@/app/components/admin/modal";
 import Searching from "@/app/components/admin/searching";
+import UserTable from "@/app/components/admin/manageuser/UserTable";
+import { UserData } from "@/app/(admin)/manageuser/types";
+import { userService } from "@/app/service/admin/manageuser/userService";
 
 export default function ManageUser() {
-  const [page, setPage] = React.useState(1);
-  const [total, setTotal] = React.useState(0);
+  const [userData, setUserData] = useState<UserData[]>([]);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
   const rowSize = 10;
   const pages = Math.ceil(total / rowSize);
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
-  const [userData, setUserData] = React.useState<UserData[]>([]);
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [userId, setUserId] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
 
@@ -36,41 +25,19 @@ export default function ManageUser() {
       user.email.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
-  interface UserData {
-    user_id: string;
-    username: string;
-    email: string;
-    roles: string;
-  }
-
-  const headCol = [
-    { name: "User ID", uid: "user_id" },
-    { name: "Username", uid: "username" },
-    { name: "Email", uid: "email" },
-    { name: "Roles", uid: "roles" },
-    { name: "Action", uid: "action" },
-  ];
-
-  const fetchUser = React.useCallback(async () => {
+  const fetchUser = useCallback(async () => {
     try {
-      const response = await api.get(`/users`, {
-        params: {
-          page: page,
-          size: rowSize,
-        },
-      });
+      const data = await userService.getUsers(page, rowSize);
+      setTotal(data.total);
 
-      setTotal(response.data.total);
-
-      const userData = response.data.items.map((item: UserData) => ({
+      const mappedUsers = data.items.map((item: UserData) => ({
         user_id: item.user_id?.toString(),
         username: item.username || "",
         email: item.email || "",
         roles: item.roles || "",
       }));
 
-      setUserData(userData);
-      console.log(userData);
+      setUserData(mappedUsers);
     } catch (err) {
       console.error(err);
     }
@@ -90,12 +57,10 @@ export default function ManageUser() {
     };
   }, [page, rowSize, fetchUser]);
 
-  const deleteUser = React.useCallback(
-    async (user_id: string) => {
+  const deleteUser = useCallback(
+    async (id: string) => {
       try {
-        const response = await api.delete(
-          `/users/${user_id}`,
-        );
+        await userService.deleteUser(id);
         fetchUser();
       } catch (err) {
         console.error(err);
@@ -104,139 +69,52 @@ export default function ManageUser() {
     [fetchUser],
   );
 
-  const renderCell = React.useCallback(
-    (data: UserData, columnKey: keyof UserData | "action") => {
-      const cellValue = data[columnKey as keyof UserData];
-
-      switch (columnKey) {
-        case "user_id":
-          return data.user_id;
-        case "username":
-          return data.username;
-        case "email":
-          return data.email;
-        case "roles":
-          return data.roles;
-        case "action":
-          return (
-            <div>
-              <Tooltip content="Delete">
-                <Button
-                  onPress={() => {
-                    setUserId(data.user_id);
-                    onOpen();
-                  }}
-                  isIconOnly
-                  className="text-tone-red bg-white hover:bg-tone-red hover:text-white"
-                  size="sm"
-                >
-                  <Trash2 size={16} />
-                </Button>
-              </Tooltip>
-            </div>
-          );
-        default:
-          if (typeof cellValue === "object" && cellValue !== null) {
-            return "";
-          }
-          return cellValue as React.ReactNode;
-      }
-    },
-    [deleteUser, onOpen, onOpenChange],
-  );
+  const handleDeleteClick = (id: string) => {
+    setUserId(id);
+    onOpen();
+  };
 
   return (
-    <section>
-      <div>
-        <AdminBar />
-      </div>
-      <div className="bg-white rounded-2xl mt-5">
-        <div className="p-5">
-          <div className="flex-1 gap-4 items-center">
-            <Searching
-              items={userData.map((user) => ({
-                key: user.user_id,
-                title: user.username,
-              }))}
-              placeholder="Search username..."
-              onInputChange={(value) => {
-                setSearchTerm(value);
-              }}
-              onSelectionChange={(key: React.Key | null) => {
-                if (key) {
-                  const selectedUser = userData.find(
-                    (user) => user.user_id === key,
-                  );
-                  if (selectedUser) {
-                    setSearchTerm(selectedUser.username);
-                  }
-                }
-              }}
+    <section className="min-h-screen bg-gray-50 pb-10">
+      <AdminBar />
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-5">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
+          <div className="p-4 sm:p-6 lg:p-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+              <div className="w-full sm:max-w-md">
+                <Searching
+                  items={userData.map((user) => ({
+                    key: user.user_id,
+                    title: user.username,
+                  }))}
+                  placeholder="Search username..."
+                  onInputChange={(value) => setSearchTerm(value)}
+                  onSelectionChange={(key) => {
+                    if (key) {
+                      const selectedUser = userData.find((user) => user.user_id === key);
+                      if (selectedUser) {
+                        setSearchTerm(selectedUser.username);
+                      }
+                    }
+                  }}
+                />
+              </div>
+              <div className="font-bold text-xl text-gray-800">Users Management</div>
+            </div>
+
+            <UserTable
+              users={filteredUsers}
+              page={page}
+              pages={pages}
+              onPageChange={setPage}
+              onDelete={handleDeleteClick}
             />
           </div>
-          <div className="mt-5 font-bold">Users Table</div>
-          <div className="overflow-x-auto mt-5">
-            <Table
-              aria-label="Users Data"
-              removeWrapper
-              classNames={{
-                wrapper: "min-w-full",
-                table: "min-w-full",
-                th: "bg-gray-50 text-gray-700 font-semibold",
-                td: "border-b border-gray-100",
-              }}
-              bottomContent={
-                <div className="flex w-full justify-center mt-2">
-                  <Pagination
-                    isCompact
-                    showControls
-                    showShadow
-                    classNames={{
-                      cursor: "bg-tone-orange",
-                    }}
-                    page={page}
-                    total={pages}
-                    onChange={(page) => {
-                      setPage(page);
-                    }}
-                  />
-                </div>
-              }
-            >
-              <TableHeader columns={headCol}>
-                {(column) => (
-                  <TableColumn key={column.uid} align="center">
-                    {column.name}
-                  </TableColumn>
-                )}
-              </TableHeader>
-              <TableBody
-                emptyContent={"Don't Have History..."}
-                items={filteredUsers}
-              >
-                {(item) => (
-                  <TableRow key={item.user_id}>
-                    {(columnKey) => (
-                      <TableCell key={columnKey}>
-                        {renderCell(
-                          item,
-                          columnKey as keyof UserData | "action",
-                        )}
-                      </TableCell>
-                    )}
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-        <div>
+
           <ModalDelete
             isOpen={isOpen}
             onOpenChange={onOpenChange}
-            onEvent={() => {
-              deleteUser(userId);
-            }}
+            onEvent={() => deleteUser(userId)}
             item={userId}
             size="md"
           />

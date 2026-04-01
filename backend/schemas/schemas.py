@@ -17,6 +17,13 @@ class UploadDocumentVectorResponse(BaseModel):
     document_name: str
     chunks_inserted: int
 
+class NearbyPlaceCreate(BaseModel):
+    castle_id: int
+    place_name: str
+    nearby_detail: str
+    latitude: float
+    longitude: float
+
 class CastleFullCreate(BaseModel):
     castle_name: str
     castle_description: Optional[str] = None

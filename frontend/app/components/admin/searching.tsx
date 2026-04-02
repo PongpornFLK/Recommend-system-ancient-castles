@@ -29,6 +29,7 @@ export default function Searching({
       <Autocomplete
         defaultItems={items}
         placeholder={placeholder}
+        aria-label="Search"
         onInputChange={onInputChange}
         onSelectionChange={onSelectionChange}
         radius="full"

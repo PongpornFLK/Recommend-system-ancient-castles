@@ -1,7 +1,6 @@
-import string
 from pydantic import BaseModel, EmailStr, Field
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, date
 from sqlalchemy import Boolean
 class UploadImageVectorResponse(BaseModel):
     status: str
@@ -258,9 +257,10 @@ class ImageResponse(ImageBase):
 class EventBase(BaseModel):
     event_name: str
     event_description: Optional[str] = None
-    event_start: Optional[str] = None
-    event_end: Optional[str] = None
-    event_date: datetime
+    event_start_time: Optional[str] = None
+    event_end_time: Optional[str] = None
+    event_start_date: date
+    event_end_date: date
 
 class EventCreate(EventBase):
     castle_id: int

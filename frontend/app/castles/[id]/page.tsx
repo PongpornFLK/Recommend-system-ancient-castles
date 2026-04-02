@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { getCastleGalleryByName } from "../../lib/castleImages";
 import api from "@/app/service/api";
-import { Chip, Button } from "@heroui/react";
+import { Chip, Button, addToast } from "@heroui/react";
 import Navbars from "@/app/components/navbars";
 
 // --- Types ---
@@ -134,7 +134,7 @@ export default function CastleDetailPage() {
   }
   const toggleFavorite = async () => {
     if (!userId) {
-      alert("กรุณาเข้าสู่ระบบก่อนทำรายการ");
+      addToast({ title: "กรุณาเข้าสู่ระบบก่อนทำรายการ", color: "warning" });
       return;
     }
 

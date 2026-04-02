@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import AdminBar from "@/app/components/admin/adminbar";
-import AddCastleForm from "@/app/components/admin/AddCastleForm";
+import AddCastleForm from "@/app/components/admin/managecastle/AddCastleForm";
 import {
   PlusCircle,
   Database,
@@ -11,6 +11,7 @@ import {
   Pencil,
   Trash2,
   X,
+  TextAlignJustify
 } from "lucide-react";
 import {
   CastleType,
@@ -21,7 +22,9 @@ import {
   uploadImageVector,
   uploadDocumentVector,
   addNearbyPlace,
-} from "@/app/service/castle/managecastle";
+} from "@/app/service/admin/managecastle/castleService";
+import { useDisclosure, Form, Input, Button, addToast, Select, SelectItem, Textarea, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/react";
+import ModalDelete from "@/app/components/admin/modal";
 
 export default function ManageCastle() {
   const [activeTab, setActiveTab] = useState<number | null>(null);
@@ -31,7 +34,12 @@ export default function ManageCastle() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedCastle, setSelectedCastle] = useState<CastleType | null>(null);
 
-  const [selectedVectorCastleId, setSelectedVectorCastleId] = useState<string>("");
+  // Delete modal state
+  const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onOpenChange: onDeleteOpenChange } = useDisclosure();
+  const [castleToDelete, setCastleToDelete] = useState<CastleType | null>(null);
+
+  const [selectedVectorCastleId, setSelectedVectorCastleId] =
+    useState<string>("");
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [vectorLoading, setVectorLoading] = useState(false);
 
@@ -53,9 +61,19 @@ export default function ManageCastle() {
     setNearbyLongitude("");
   };
   const menuButtons = [
-    { id: 1, title: "Add New Castle", icon: PlusCircle, color: "bg-[#5D4037]" },
-    { id: 2, title: "Add New Vector Data", icon: Database, color: "bg-[#8D6E63]" },
-    { id: 3, title: "Add Nearby Places", icon: MapPinned, color: "bg-[#A1887F]" },
+    { id: 1, title: "Add New Castle", icon: PlusCircle, color: "bg-tone-orange" },
+    {
+      id: 3,
+      title: "Add Nearby Place",
+      icon: MapPinned,
+      color: "bg-tone-orange",
+    },
+    {
+      id: 2,
+      title: "Export Data Vector",
+      icon: Database,
+      color: "border-tone-orange text-tone-orange",
+    },
   ];
 
   const fetchCastles = async () => {
@@ -64,7 +82,7 @@ export default function ManageCastle() {
       const data = await getCastles();
       setCastles(data);
     } catch (error) {
-      console.error("โหลดข้อมูลปราสาทไม่สำเร็จ", error);
+      console.error("Fetch Error", error);
     } finally {
       setLoading(false);
     }
@@ -87,19 +105,27 @@ export default function ManageCastle() {
         castle.era,
       ]
         .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(keyword))
+        .some((value) => String(value).toLowerCase().includes(keyword)),
     );
   }, [castles, searchTerm]);
 
-  const handleDelete = async (castle: CastleType) => {
-    const castleId = getCastleId(castle);
-    if (!castleId || !window.confirm(`ต้องการลบ "${castle.castle_name}"?`)) return;
+  const handleDeleteClick = (castle: CastleType) => {
+    setCastleToDelete(castle);
+    onDeleteOpen();
+  };
+
+  const handleDelete = async () => {
+    if (!castleToDelete) return;
+
+    const castleId = getCastleId(castleToDelete);
+    if (!castleId) return;
 
     try {
       await deleteCastle(castleId);
       fetchCastles();
+      onDeleteOpenChange();
     } catch (error) {
-      console.error("ลบข้อมูลไม่สำเร็จ", error);
+      console.error("Delete Error", error);
     }
   };
 
@@ -125,12 +151,12 @@ export default function ManageCastle() {
 
       await updateCastle(castleId, payload);
 
-      alert("แก้ไขสำเร็จ");
+      addToast({ title: "แก้ไขสำเร็จ", color: "success" });
       setIsEditOpen(false);
       setSelectedCastle(null);
       fetchCastles();
-    } catch (error: any) {
-      alert("แก้ไขไม่สำเร็จ: " + (error.response?.data?.detail || error.message));
+    } catch (error) {
+      console.log("Update Error", error);
     }
   };
 
@@ -152,7 +178,7 @@ export default function ManageCastle() {
 
       <div className="p-8 max-w-7xl mx-auto">
         <h1 className="text-4xl font-black text-[#3E2723] mb-10 tracking-tight">
-          Manage Castle System
+          Castle Management System
         </h1>
 
         <div className="bg-white rounded-[2rem] shadow-lg border border-stone-200 p-6 mb-10">
@@ -170,18 +196,20 @@ export default function ManageCastle() {
             />
           </div>
 
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-            <h2 className="text-2xl font-bold text-[#3E2723]">Castle Table</h2>
-            <div className="flex flex-wrap gap-3">
+          <div className="flex items-center justify-between w-full mb-6 gap-4">
+            <h2 className="text-2xl font-bold text-[#3E2723] whitespace-nowrap">Table</h2>
+            <div className="flex items-center justify-end gap-3 flex-wrap">
               {menuButtons.map((btn) => (
-                <button
+                <Button
                   key={btn.id}
                   onClick={() => setActiveTab(btn.id)}
-                  className={`flex items-center gap-2 py-2.5 px-5 rounded-xl text-white text-sm font-bold transition-all transform hover:scale-[1.03] shadow-md ${btn.color}`}
+                  variant={btn.title === "Export Data Vector" ? "bordered" : "solid"}
+                  className={`flex items-center gap-2 py-2.5 px-5 rounded-xl text-sm font-bold transition-all transform hover:scale-[1.03] shadow-md ${btn.title !== "Export Data Vector" ? "text-white " + btn.color : btn.color
+                    }`}
                 >
                   <btn.icon size={18} />
                   <span>{btn.title}</span>
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -227,23 +255,27 @@ export default function ManageCastle() {
                       <td className="px-4 py-3">{castle.era || "-"}</td>
                       <td className="px-4 py-3">{castle.province || "-"}</td>
                       <td className="px-4 py-3">{castle.district || "-"}</td>
-                      <td className="px-4 py-3">{castle.sub_district || "-"}</td>
+                      <td className="px-4 py-3">
+                        {castle.sub_district || "-"}
+                      </td>
                       <td className="px-4 py-3">{castle.latitude || "-"}</td>
                       <td className="px-4 py-3">{castle.longitude || "-"}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-center gap-3">
-                          <button
+                          <Button
+                            isIconOnly
                             onClick={() => openEditModal(castle)}
-                            className="text-stone-600 hover:text-orange-600"
+                            className="text-stone-600 hover:text-orange-600 bg-white"
                           >
                             <Pencil size={18} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(castle)}
-                            className="text-red-500 hover:text-red-700"
+                          </Button>
+                          <Button
+                            isIconOnly
+                            onClick={() => handleDeleteClick(castle)}
+                            className="text-red-500 hover:text-red-700 bg-white"
                           >
                             <Trash2 size={18} />
-                          </button>
+                          </Button>
                         </div>
                       </td>
                     </tr>
@@ -265,409 +297,553 @@ export default function ManageCastle() {
       )}
 
       {activeTab === 2 && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white p-8 rounded-[2rem] shadow-2xl max-w-2xl w-full relative max-h-[90vh] overflow-y-auto">
-            <button
-              onClick={() => {
-                setActiveTab(null);
-                resetVectorModal();
-              }}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-            >
-              <X />
-            </button>
+        <Modal
+          isOpen={true}
+          onOpenChange={(open) => {
+            if (!open) {
+              setActiveTab(null);
+              resetVectorModal();
+            }
+          }}
+          size="3xl"
+          scrollBehavior="inside"
+          classNames={{ base: "rounded-[2rem]" }}
+          backdrop="blur"
+        >
+          <ModalContent>
+            {() => (
+              <>
+                <ModalHeader className="flex flex-col items-center justify-center pt-8 pb-2">
+                  <Database size={48} className="text-stone-300 mb-4" />
+                  <h2 className="text-xl font-bold text-stone-700 text-center">
+                    Add New Vector Data
+                  </h2>
+                </ModalHeader>
+                <ModalBody className="pb-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="border border-stone-200 rounded-2xl p-5">
+                      <h3 className="text-lg font-bold text-[#3E2723] mb-4">
+                        Upload Image Vector
+                      </h3>
 
-            <Database size={48} className="mx-auto text-stone-300 mb-4" />
-            <h2 className="text-xl font-bold text-stone-700 text-center mb-6">
-              Add New Vector Data
-            </h2>
+                      <div className="space-y-4">
+                        <div className="flex flex-col gap-1 w-full">
+                          <label className="text-sm font-bold text-stone-700">Select Castle</label>
+                          <Select
+                            variant="bordered"
+                            placeholder="-- เลือกปราสาท --"
+                            selectedKeys={selectedVectorCastleId ? new Set([selectedVectorCastleId]) : new Set([])}
+                            onSelectionChange={(keys) => {
+                              const selectedValue = Array.from(keys)[0] as string;
+                              if (selectedValue) {
+                                setSelectedVectorCastleId(selectedValue);
+                              }
+                            }}
+                          >
+                            {castles.map((castle) => (
+                              <SelectItem
+                                key={String(getCastleId(castle))}
+                              >
+                                {`${getCastleId(castle)} - ${castle.castle_name}${castle.province ? ` (${castle.province})` : ""}`}
+                              </SelectItem>
+                            ))}
+                          </Select>
+                        </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="border border-stone-200 rounded-2xl p-5">
-                <h3 className="text-lg font-bold text-[#3E2723] mb-4">
-                  Upload Image Vector
-                </h3>
+                        <div className="flex flex-col gap-1 w-full">
+                          <label className="text-sm font-bold text-stone-700">Upload Image</label>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) =>
+                              setSelectedImageFile(e.target.files?.[0] || null)
+                            }
+                            className="w-full border-2 border-stone-100 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-orange-400"
+                          />
+                        </div>
 
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-bold text-stone-700 mb-2">
-                      Select Castle
-                    </label>
-                    <select
-                      value={selectedVectorCastleId}
-                      onChange={(e) => setSelectedVectorCastleId(e.target.value)}
-                      className="w-full border border-stone-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-400"
-                    >
-                      <option value="">-- เลือกปราสาท --</option>
-                      {castles.map((castle) => (
-                        <option
-                          key={getCastleId(castle)}
-                          value={String(getCastleId(castle))}
+                        <Button
+                          onClick={async () => {
+                            if (!selectedVectorCastleId) {
+                              addToast({ title: "กรุณาเลือกปราสาทก่อน", color: "warning" });
+                              return;
+                            }
+
+                            if (!selectedImageFile) {
+                              addToast({ title: "กรุณาเลือกรูปภาพก่อน", color: "warning" });
+                              return;
+                            }
+
+                            try {
+                              setVectorLoading(true);
+
+                              const res = await uploadImageVector(
+                                Number(selectedVectorCastleId),
+                                selectedImageFile,
+                              );
+
+                              addToast({ title: `${res.message}\nimg_id: ${res.img_id}`, color: "success" });
+                              setSelectedVectorCastleId("");
+                              setSelectedImageFile(null);
+                            } catch (error) {
+                              console.log("Error", error);
+                            } finally {
+                              setVectorLoading(false);
+                            }
+                          }}
+                          isLoading={vectorLoading}
+                          className="w-full px-4 py-3 rounded-xl bg-tone-brownold text-white font-bold hover:opacity-90 disabled:opacity-50"
                         >
-                          {getCastleId(castle)} - {castle.castle_name}
-                          {castle.province ? ` (${castle.province})` : ""}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                          {vectorLoading
+                            ? "กำลังเพิ่มข้อมูล..."
+                            : "Upload and Convert Image"}
+                        </Button>
+                      </div>
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-bold text-stone-700 mb-2">
-                      Upload Image
-                    </label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) =>
-                        setSelectedImageFile(e.target.files?.[0] || null)
-                      }
-                      className="w-full border border-stone-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-400"
-                    />
-                  </div>
+                    <div className="border border-stone-200 rounded-2xl p-5">
+                      <h3 className="text-lg font-bold text-[#3E2723] mb-4">
+                        Upload Document Vector
+                      </h3>
 
-                  <button
-                    onClick={async () => {
-                      if (!selectedVectorCastleId) {
-                        alert("กรุณาเลือกปราสาทก่อน");
-                        return;
-                      }
+                      <div className="space-y-4">
+                        <div className="flex flex-col gap-1 w-full">
+                          <label className="text-sm font-bold text-stone-700">Select Castle</label>
+                          <Select
+                            variant="bordered"
+                            placeholder="-- เลือกปราสาท --"
+                            selectedKeys={selectedDocCastleId ? new Set([selectedDocCastleId]) : new Set([])}
+                            onSelectionChange={(keys) => {
+                              const selectedValue = Array.from(keys)[0] as string;
+                              if (selectedValue) {
+                                setSelectedDocCastleId(selectedValue);
+                              }
+                            }}
+                          >
+                            {castles.map((castle) => (
+                              <SelectItem
+                                key={String(getCastleId(castle))}
+                              >
+                                {`${getCastleId(castle)} - ${castle.castle_name}${castle.province ? ` (${castle.province})` : ""}`}
+                              </SelectItem>
+                            ))}
+                          </Select>
+                        </div>
 
-                      if (!selectedImageFile) {
-                        alert("กรุณาเลือกรูปภาพก่อน");
-                        return;
-                      }
+                        <div className="flex flex-col gap-1 w-full">
+                          <label className="text-sm font-bold text-stone-700">Upload Document (.pdf, .txt)</label>
+                          <input
+                            type="file"
+                            accept=".pdf,.txt"
+                            onChange={(e) =>
+                              setSelectedDocFile(e.target.files?.[0] || null)
+                            }
+                            className="w-full border-2 border-stone-100 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-orange-400"
+                          />
+                        </div>
 
-                      try {
-                        setVectorLoading(true);
+                        <Button
+                          onClick={async () => {
+                            if (!selectedDocCastleId) {
+                              addToast({ title: "กรุณาเลือกปราสาทก่อน", color: "warning" });
+                              return;
+                            }
 
-                        const res = await uploadImageVector(
-                          Number(selectedVectorCastleId),
-                          selectedImageFile
-                        );
+                            if (!selectedDocFile) {
+                              addToast({ title: "กรุณาเลือกไฟล์เอกสารก่อน", color: "warning" });
+                              return;
+                            }
 
-                        alert(`${res.message}\nimg_id: ${res.img_id}`);
-                        setSelectedVectorCastleId("");
-                        setSelectedImageFile(null);
-                      } catch (error: any) {
-                        alert(
-                          "เพิ่ม image vector ไม่สำเร็จ: " +
-                            (error.response?.data?.detail || error.message)
-                        );
-                      } finally {
-                        setVectorLoading(false);
-                      }
-                    }}
-                    disabled={vectorLoading}
-                    className="w-full px-4 py-3 rounded-xl bg-[#5D4037] text-white font-bold hover:opacity-90 disabled:opacity-50"
-                  >
-                    {vectorLoading
-                      ? "กำลังเพิ่มข้อมูล..."
-                      : "Upload and Convert Image"}
-                  </button>
-                </div>
-              </div>
+                            try {
+                              setDocLoading(true);
 
-              <div className="border border-stone-200 rounded-2xl p-5">
-                <h3 className="text-lg font-bold text-[#3E2723] mb-4">
-                  Upload Document Vector
-                </h3>
+                              const res = await uploadDocumentVector(
+                                Number(selectedDocCastleId),
+                                selectedDocFile,
+                              );
 
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-bold text-stone-700 mb-2">
-                      Select Castle
-                    </label>
-                    <select
-                      value={selectedDocCastleId}
-                      onChange={(e) => setSelectedDocCastleId(e.target.value)}
-                      className="w-full border border-stone-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-400"
-                    >
-                      <option value="">-- เลือกปราสาท --</option>
-                      {castles.map((castle) => (
-                        <option
-                          key={getCastleId(castle)}
-                          value={String(getCastleId(castle))}
+                              addToast({ title: `${res.message || "เพิ่ม document vector สำเร็จ"}\nChunks inserted: ${res.chunks_inserted ?? res.inserted ?? 0}`, color: "success" });
+                              setSelectedDocCastleId("");
+                              setSelectedDocFile(null);
+                            } catch (error) {
+                              console.log("Error", error);
+                            } finally {
+                              setDocLoading(false);
+                            }
+                          }}
+                          isLoading={docLoading}
+                          className="w-full px-4 py-3 rounded-xl bg-tone-brownold text-white font-bold hover:opacity-90 disabled:opacity-50 shadow-lg shadow-[#8C5A3C]/20"
                         >
-                          {getCastleId(castle)} - {castle.castle_name}
-                          {castle.province ? ` (${castle.province})` : ""}
-                        </option>
-                      ))}
-                    </select>
+                          {docLoading
+                            ? "กำลังเพิ่มข้อมูล..."
+                            : "Upload and Convert Document"}
+                        </Button>
+                      </div>
+                    </div>
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-bold text-stone-700 mb-2">
-                      Upload Document (.pdf, .txt)
-                    </label>
-                    <input
-                      type="file"
-                      accept=".pdf,.txt"
-                      onChange={(e) =>
-                        setSelectedDocFile(e.target.files?.[0] || null)
-                      }
-                      className="w-full border border-stone-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-400"
-                    />
-                  </div>
-
-                  <button
-                    onClick={async () => {
-                      if (!selectedDocCastleId) {
-                        alert("กรุณาเลือกปราสาทก่อน");
-                        return;
-                      }
-
-                      if (!selectedDocFile) {
-                        alert("กรุณาเลือกไฟล์เอกสารก่อน");
-                        return;
-                      }
-
-                      try {
-                        setDocLoading(true);
-
-                        const res = await uploadDocumentVector(
-                          Number(selectedDocCastleId),
-                          selectedDocFile
-                        );
-
-                        alert(
-                          `${res.message || "เพิ่ม document vector สำเร็จ"}\nChunks inserted: ${res.chunks_inserted ?? res.inserted ?? 0}`
-                        );
-                        setSelectedDocCastleId("");
-                        setSelectedDocFile(null);
-                      } catch (error: any) {
-                        alert(
-                          "เพิ่ม document vector ไม่สำเร็จ: " +
-                            (error.response?.data?.detail || error.message)
-                        );
-                      } finally {
-                        setDocLoading(false);
-                      }
-                    }}
-                    disabled={docLoading}
-                    className="w-full px-4 py-3 rounded-xl bg-[#8D6E63] text-white font-bold hover:opacity-90 disabled:opacity-50"
-                  >
-                    {docLoading
-                      ? "กำลังเพิ่มข้อมูล..."
-                      : "Upload and Convert Document"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+                </ModalBody>
+              </>
+            )}
+          </ModalContent>
+        </Modal>
       )}
 
-            {activeTab === 3 && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white p-8 rounded-[2rem] shadow-2xl max-w-2xl w-full relative max-h-[90vh] overflow-y-auto">
-            <button
-              onClick={() => {
-                setActiveTab(null);
-                resetNearbyModal();
-              }}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-            >
-              <X />
-            </button>
+      {activeTab === 3 && (
+        <Modal
+          isOpen={true}
+          onOpenChange={(open) => {
+            if (!open) {
+              setActiveTab(null);
+              resetNearbyModal();
+            }
+          }}
+          size="2xl"
+          scrollBehavior="inside"
+          classNames={{ base: "rounded-[2rem]" }}
+          backdrop="blur"
+        >
+          <ModalContent>
+            {() => (
+              <>
+                <ModalHeader className="flex flex-col items-center justify-center pt-8 pb-2">
+                  <MapPinned size={48} className="text-stone-300 mb-4" />
+                  <h2 className="text-xl font-bold text-stone-700 text-center">
+                    Add Nearby Place
+                  </h2>
+                </ModalHeader>
+                <ModalBody className="pb-8">
 
-            <MapPinned size={48} className="mx-auto text-stone-300 mb-4" />
-            <h2 className="text-xl font-bold text-stone-700 text-center mb-6">
-              Add Nearby Place
-            </h2>
+                  <Form
+                    className="space-y-4 w-full"
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      if (!nearbyCastleId) {
+                        addToast({ title: "กรุณาเลือกปราสาทก่อน", color: "warning" });
+                        return;
+                      }
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-bold text-stone-700 mb-2">
-                  Select Castle
-                </label>
-                <select
-                  value={nearbyCastleId}
-                  onChange={(e) => setNearbyCastleId(e.target.value)}
-                  className="w-full border border-stone-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-400"
-                >
-                  <option value="">-- เลือกปราสาท --</option>
-                  {castles.map((castle) => (
-                    <option
-                      key={getCastleId(castle)}
-                      value={String(getCastleId(castle))}
+                      if (!nearbyPlaceName.trim()) {
+                        addToast({ title: "กรุณากรอกชื่อสถานที่ใกล้เคียง", color: "warning" });
+                        return;
+                      }
+
+                      const lat = Number(nearbyLatitude);
+                      const lng = Number(nearbyLongitude);
+
+                      if (isNaN(lat) || isNaN(lng)) {
+                        addToast({ title: "Latitude และ Longitude ต้องเป็นตัวเลข", color: "danger" });
+                        return;
+                      }
+
+                      try {
+                        setNearbyLoading(true);
+
+                        const res = await addNearbyPlace({
+                          castle_id: Number(nearbyCastleId),
+                          place_name: nearbyPlaceName.trim(),
+                          nearby_detail: nearbyDetail.trim(),
+                          latitude: lat,
+                          longitude: lng,
+                        });
+
+                        addToast({ title: res.message || "เพิ่มสถานที่ใกล้เคียงสำเร็จ", color: "success" });
+                        resetNearbyModal();
+                        setActiveTab(null);
+                      } catch (error) {
+                        console.log("Error", error);
+                      } finally {
+                        setNearbyLoading(false);
+                      }
+                    }}
+                  >
+                    <div className="flex flex-col gap-1 w-full">
+                      <label className="text-sm font-bold text-stone-700">Select Castle</label>
+                      <Select
+                        variant="bordered"
+                        placeholder="-- เลือกปราสาท --"
+                        selectedKeys={nearbyCastleId ? new Set([nearbyCastleId]) : new Set([])}
+                        onSelectionChange={(keys) => {
+                          const selectedValue = Array.from(keys)[0] as string;
+                          if (selectedValue) {
+                            setNearbyCastleId(selectedValue);
+                          }
+                        }}
+                      >
+                        {castles.map((castle) => (
+                          <SelectItem
+                            key={String(getCastleId(castle))}
+                          >
+                            {`${getCastleId(castle)} - ${castle.castle_name}${castle.province ? ` (${castle.province})` : ""}`}
+                          </SelectItem>
+                        ))}
+                      </Select>
+                    </div>
+
+                    <div className="flex flex-col gap-1 w-full">
+                      <label className="text-sm font-bold text-stone-700">Place Name</label>
+                      <Input
+                        variant="bordered"
+                        value={nearbyPlaceName}
+                        onChange={(e) => setNearbyPlaceName(e.target.value)}
+                        placeholder="เช่น พิพิธภัณฑสถานแห่งชาติพิมาย"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1 w-full">
+                      <label className="text-sm font-bold text-stone-700">Nearby Detail</label>
+                      <Textarea
+                        variant="bordered"
+                        value={nearbyDetail}
+                        onChange={(e) => setNearbyDetail(e.target.value)}
+                        placeholder="รายละเอียดสถานที่ใกล้เคียง..."
+                        minRows={4}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                      <div className="flex flex-col gap-1 w-full">
+                        <label className="text-sm font-bold text-stone-700">Latitude</label>
+                        <Input
+                          type="number"
+                          step="any"
+                          variant="bordered"
+                          value={nearbyLatitude}
+                          onChange={(e) => setNearbyLatitude(e.target.value)}
+                          placeholder="15.223599"
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-1 w-full">
+                        <label className="text-sm font-bold text-stone-700">Longitude</label>
+                        <Input
+                          type="number"
+                          step="any"
+                          variant="bordered"
+                          value={nearbyLongitude}
+                          onChange={(e) => setNearbyLongitude(e.target.value)}
+                          placeholder="102.4919033"
+                        />
+                      </div>
+                    </div>
+                    <Button
+                      type="submit"
+                      isLoading={nearbyLoading}
+                      className="w-full mt-4 px-4 py-3 rounded-xl shadow-lg bg-green-600 text-white font-bold hover:bg-green-700 transition-all shadow-green-600/20 disabled:opacity-50"
                     >
-                      {getCastleId(castle)} - {castle.castle_name}
-                      {castle.province ? ` (${castle.province})` : ""}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-stone-700 mb-2">
-                  Place Name
-                </label>
-                <input
-                  type="text"
-                  value={nearbyPlaceName}
-                  onChange={(e) => setNearbyPlaceName(e.target.value)}
-                  placeholder="เช่น พิพิธภัณฑสถานแห่งชาติพิมาย"
-                  className="w-full border border-stone-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-400"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-stone-700 mb-2">
-                  Nearby Detail
-                </label>
-                <textarea
-                  value={nearbyDetail}
-                  onChange={(e) => setNearbyDetail(e.target.value)}
-                  placeholder="รายละเอียดสถานที่ใกล้เคียง..."
-                  rows={4}
-                  className="w-full border border-stone-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-400 resize-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-bold text-stone-700 mb-2">
-                    Latitude
-                  </label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={nearbyLatitude}
-                    onChange={(e) => setNearbyLatitude(e.target.value)}
-                    placeholder="15.223599"
-                    className="w-full border border-stone-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-stone-700 mb-2">
-                    Longitude
-                  </label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={nearbyLongitude}
-                    onChange={(e) => setNearbyLongitude(e.target.value)}
-                    placeholder="102.4919033"
-                    className="w-full border border-stone-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-400"
-                  />
-                </div>
-              </div>
-
-              <button
-                onClick={async () => {
-                  if (!nearbyCastleId) {
-                    alert("กรุณาเลือกปราสาทก่อน");
-                    return;
-                  }
-
-                  if (!nearbyPlaceName.trim()) {
-                    alert("กรุณากรอกชื่อสถานที่ใกล้เคียง");
-                    return;
-                  }
-
-                  const lat = Number(nearbyLatitude);
-                  const lng = Number(nearbyLongitude);
-
-                  if (isNaN(lat) || isNaN(lng)) {
-                    alert("Latitude และ Longitude ต้องเป็นตัวเลข");
-                    return;
-                  }
-
-                  try {
-                    setNearbyLoading(true);
-
-                    const res = await addNearbyPlace({
-                      castle_id: Number(nearbyCastleId),
-                      place_name: nearbyPlaceName.trim(),
-                      nearby_detail: nearbyDetail.trim(),
-                      latitude: lat,
-                      longitude: lng,
-                    });
-
-                    alert(res.message || "เพิ่มสถานที่ใกล้เคียงสำเร็จ");
-                    resetNearbyModal();
-                    setActiveTab(null);
-                  } catch (error: any) {
-                    alert(
-                      "เพิ่มสถานที่ใกล้เคียงไม่สำเร็จ: " +
-                        (error.response?.data?.detail || error.message)
-                    );
-                  } finally {
-                    setNearbyLoading(false);
-                  }
-                }}
-                disabled={nearbyLoading}
-                className="w-full px-4 py-3 rounded-xl bg-[#A1887F] text-white font-bold hover:opacity-90 disabled:opacity-50"
-              >
-                {nearbyLoading ? "กำลังเพิ่มข้อมูล..." : "Add Nearby Place"}
-              </button>
-            </div>
-          </div>
-        </div>
+                      {nearbyLoading ? "กำลังเพิ่มข้อมูล..." : "Add Nearby Place"}
+                    </Button>
+                  </Form>
+                </ModalBody>
+              </>
+            )}
+          </ModalContent>
+        </Modal>
       )}
 
       {isEditOpen && selectedCastle && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-2xl rounded-2xl p-6">
-            <h2 className="text-xl font-bold mb-4">Edit Castle</h2>
-
-            <textarea
-              value={selectedCastle.castle_name}
-              onChange={(e) =>
-                setSelectedCastle({ ...selectedCastle, castle_name: e.target.value })
-              }
-              className="w-full border p-2 mb-2"
-            />
-
-            <textarea
-              value={selectedCastle.era || ""}
-              onChange={(e) =>
-                setSelectedCastle({ ...selectedCastle, era: e.target.value })
-              }
-              className="w-full border p-2 mb-2"
-            />
-
-            <textarea
-              value={selectedCastle.architecture_detail || ""}
-              onChange={(e) =>
-                setSelectedCastle({
-                  ...selectedCastle,
-                  architecture_detail: e.target.value,
-                })
-              }
-              className="w-full border p-2 mb-2"
-            />
-
-            <textarea
-              value={selectedCastle.province || ""}
-              onChange={(e) =>
-                setSelectedCastle({ ...selectedCastle, province: e.target.value })
-              }
-              className="w-full border p-2 mb-2"
-            />
-
-            <div className="flex justify-end gap-2 mt-4">
-              <button
-                onClick={() => {
-                  setIsEditOpen(false);
-                  setSelectedCastle(null);
-                }}
-                className="px-4 py-2 border"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={handleUpdate}
-                className="px-4 py-2 bg-orange-600 text-white"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
+        <Modal
+          isOpen={true}
+          onOpenChange={(open) => {
+            if (!open) {
+              setIsEditOpen(false);
+              setSelectedCastle(null);
+            }
+          }}
+          size="2xl"
+          scrollBehavior="inside"
+          classNames={{ base: "rounded-[2rem]" }}
+          backdrop="opaque"
+          placement="center"
+        >
+          <ModalContent>
+            {() => (
+              <>
+                <ModalHeader className="text-2xl font-bold text-[#3E2723] pt-8">
+                  Edit Castle
+                </ModalHeader>
+                <ModalBody className="pb-4">
+                  <Form id="edit" className="w-full flex flex-col gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                      <div className="flex flex-col gap-1 w-full">
+                        <label className="text-sm font-bold text-stone-700">Castle Name</label>
+                        <Input
+                          className="font-bold"
+                          placeholder="Type Castle Name"
+                          startContent={<TextAlignJustify size={18} className="text-stone-400" />}
+                          variant="bordered"
+                          value={selectedCastle.castle_name}
+                          onChange={(e) =>
+                            setSelectedCastle({
+                              ...selectedCastle,
+                              castle_name: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1 w-full">
+                        <label className="text-sm font-bold text-stone-700">Era</label>
+                        <Input
+                          className="font-bold"
+                          placeholder="Type Era"
+                          startContent={<TextAlignJustify size={18} className="text-stone-400" />}
+                          variant="bordered"
+                          value={selectedCastle.era || ""}
+                          onChange={(e) =>
+                            setSelectedCastle({ ...selectedCastle, era: e.target.value })
+                          }
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1 w-full">
+                        <label className="text-sm font-bold text-stone-700">Architecture</label>
+                        <Input
+                          className="font-bold"
+                          placeholder="Type Architecture"
+                          startContent={<TextAlignJustify size={18} className="text-stone-400" />}
+                          variant="bordered"
+                          value={selectedCastle.architecture_detail || ""}
+                          onChange={(e) =>
+                            setSelectedCastle({
+                              ...selectedCastle,
+                              architecture_detail: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1 w-full">
+                        <label className="text-sm font-bold text-stone-700">Province</label>
+                        <Input
+                          className="font-bold"
+                          placeholder="Type Province"
+                          startContent={<TextAlignJustify size={18} className="text-stone-400" />}
+                          variant="bordered"
+                          value={selectedCastle.province || ""}
+                          onChange={(e) =>
+                            setSelectedCastle({
+                              ...selectedCastle,
+                              province: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1 w-full">
+                        <label className="text-sm font-bold text-stone-700">District</label>
+                        <Input
+                          className="font-bold"
+                          placeholder="Type District"
+                          startContent={<TextAlignJustify size={18} className="text-stone-400" />}
+                          variant="bordered"
+                          value={selectedCastle.district || ""}
+                          onChange={(e) =>
+                            setSelectedCastle({
+                              ...selectedCastle,
+                              district: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1 w-full">
+                        <label className="text-sm font-bold text-stone-700">Sub District</label>
+                        <Input
+                          className="font-bold"
+                          placeholder="Type Sub District"
+                          startContent={<TextAlignJustify size={18} className="text-stone-400" />}
+                          variant="bordered"
+                          value={selectedCastle.sub_district || ""}
+                          onChange={(e) =>
+                            setSelectedCastle({
+                              ...selectedCastle,
+                              sub_district: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1 w-full">
+                        <label className="text-sm font-bold text-stone-700">Latitude</label>
+                        <Input
+                          type="number"
+                          step="any"
+                          className="font-bold"
+                          placeholder="14.9685"
+                          startContent={<TextAlignJustify size={18} className="text-stone-400" />}
+                          variant="bordered"
+                          value={String(selectedCastle.latitude || "")}
+                          onChange={(e) =>
+                            setSelectedCastle({
+                              ...selectedCastle,
+                              latitude: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1 w-full">
+                        <label className="text-sm font-bold text-stone-700">Longitude</label>
+                        <Input
+                          type="number"
+                          step="any"
+                          className="font-bold"
+                          placeholder="102.4949"
+                          startContent={<TextAlignJustify size={18} className="text-stone-400" />}
+                          variant="bordered"
+                          value={String(selectedCastle.longitude || "")}
+                          onChange={(e) =>
+                            setSelectedCastle({
+                              ...selectedCastle,
+                              longitude: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="md:col-span-2 flex flex-col gap-1 w-full">
+                        <label className="text-sm font-bold text-stone-700">Description</label>
+                        <Textarea
+                          className="font-bold"
+                          placeholder="รายละเอียดโบราณสถาน..."
+                          variant="bordered"
+                          minRows={3}
+                          value={selectedCastle.castle_description || ""}
+                          onChange={(e) =>
+                            setSelectedCastle({
+                              ...selectedCastle,
+                              castle_description: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+                  </Form>
+                </ModalBody>
+                <ModalFooter className="pb-8">
+                  <Button
+                    variant="light"
+                    onClick={() => {
+                      setIsEditOpen(false);
+                      setSelectedCastle(null);
+                    }}
+                    className="text-stone-500 font-bold"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleUpdate}
+                    className="bg-tone-orange text-white font-bold"
+                  >
+                    Save Changes
+                  </Button>
+                </ModalFooter>
+              </>
+            )}
+          </ModalContent>
+        </Modal>
       )}
+
+      <ModalDelete
+        isOpen={isDeleteOpen}
+        onOpenChange={onDeleteOpenChange}
+        onEvent={handleDelete}
+        item={castleToDelete?.castle_name || ""}
+        label="CastleName"
+        size="md"
+      />
     </section>
   );
 }

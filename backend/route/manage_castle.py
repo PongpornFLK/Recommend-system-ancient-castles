@@ -62,6 +62,7 @@ def get_castles(db: Session = Depends(get_db)):
             .outerjoin(Architecture, Architecture.castle_id == Castle.castle_id)
             .outerjoin(LocationCastle, LocationCastle.castle_id == Castle.castle_id)
             .outerjoin(Location, Location.location_id == LocationCastle.location_id)
+            .order_by(Castle.castle_id.asc())
             .all()
         )
 

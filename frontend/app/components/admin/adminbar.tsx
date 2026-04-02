@@ -1,12 +1,10 @@
 "use client";
 import { usePathname } from "next/navigation";
-import { UserRound, Settings, Heart, LogOut } from "lucide-react";
+import { UserRound} from "lucide-react";
 import React, { useEffect } from "react";
 import api from "@/app/service/api";
-import { useRouter } from "next/navigation";
 
 export default function AdminBar() {
-  const router = useRouter();
   const pathname = usePathname();
   const [user, setUser] = React.useState<UserData | null>(null);
 

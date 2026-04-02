@@ -19,3 +19,4 @@ langchain-core==0.2.39
 langchain-groq==0.1.10
 Faker==22.6.0
 supabase
+PyPDF2==3.0.1

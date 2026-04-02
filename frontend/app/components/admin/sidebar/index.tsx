@@ -78,9 +78,9 @@ export default function Sidebar() {
   return (
     <div className="fixed top-0 left-0 h-screen w-64 bg-white z-10 p-4">
       <div className="flex flex-col space-y-10 w-full h-full">
-        <div className="flex flex-row gap-2">
-          <Image src="/assets/logo/logo-nav.png" width={35} />
-          <p className="font-bold text-inherit text-tone-orange text-2xl">
+        <div className="flex flex-row gap-2 items-center">
+          <img src="/assets/logo/logo-nav.png" width={35} height={35} alt="Logo" />
+          <p className="font-bold text-tone-orange text-2xl">
             Ancient Castles
           </p>
         </div>

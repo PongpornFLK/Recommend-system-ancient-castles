@@ -2,9 +2,25 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from db import get_db
+from authen.secur import *
+from sqlalchemy import asc
+from schemas.schemas import *
+from model.model import *
+from typing import Annotated
 
 router = APIRouter(prefix="/castles", tags=["castles"])
 
+# Admin get All CastleName in DB
+@router.get("/admin")
+async def readNameCastle(db : Session = Depends(get_db) , current_user: Annotated[dict, Depends(getCurrentUser)] = None) :
+    if current_user.get("roles") != "admin":
+        raise HTTPException(status_code=403,detail="You don't have permission")
+    
+    db_castle = db.query(Castle).order_by(asc(Castle.castle_id)).all()
+
+    return db_castle
+
+# Get CastleDetail
 @router.get("/{castle_id}")
 def get_castle_detail(castle_id: int, db: Session = Depends(get_db)):
     # 1) ดึงข้อมูลพื้นฐาน castles + type_detail

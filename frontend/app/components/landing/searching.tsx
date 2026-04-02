@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import Filter, { type FilterValues } from "./filter";
 import { getCastleGalleryByName } from "../../lib/castleImages";
+import { addToast } from "@heroui/react";
 
 type Castle = {
   castle_id: number;
@@ -102,7 +103,7 @@ export default function Searching() {
       setQaCastles(dedupeCastles(data.castles || []));
       setActiveMode("qa");
     } catch (err) {
-      alert("ค้นหาไม่สำเร็จ");
+      addToast({ title: "ค้นหาไม่สำเร็จ", color: "danger" });
       console.error(err)
     } finally {
       setLoading(false);
@@ -123,7 +124,7 @@ export default function Searching() {
       setActiveMode("filter");
       setAnswer("");
     } catch (err) {
-      alert("กรองข้อมูลไม่สำเร็จ");
+      addToast({ title: "กรองข้อมูลไม่สำเร็จ", color: "danger" });
       console.error(err)
     } finally {
       setLoading(false);

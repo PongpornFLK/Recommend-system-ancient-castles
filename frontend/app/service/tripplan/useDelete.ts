@@ -1,6 +1,7 @@
 "use client";
 import api from "@/app/service/api";
 import { useState } from "react";
+import { addToast } from "@heroui/react";
 
 export default function useDeleteTrip() {
   const [loadingDelete, setLoadingDelete] = useState(false);
@@ -14,7 +15,7 @@ export default function useDeleteTrip() {
 
     } catch (err) {
       console.error(err);
-      alert("เกิดข้อผิดพลาด ไม่สามารถลบทริปได้");
+      addToast({ title: "เกิดข้อผิดพลาด ไม่สามารถลบทริปได้", color: "danger" });
     } finally {
       setLoadingDelete(false);
     }

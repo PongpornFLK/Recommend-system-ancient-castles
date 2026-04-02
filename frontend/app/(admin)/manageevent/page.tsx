@@ -38,7 +38,6 @@ export default function ManageEvent() {
 
   // Form states
   const [eventName, setEventName] = useState("");
-  const [castleName, setCastleName] = useState("");
   const [starTime, setStartTime] = useState<Time | null>(null);
   const [endTime, setEndTime] = useState<Time | null>(null);
   const [startDate, setStartDate] = useState<Date>(new Date());
@@ -64,7 +63,7 @@ export default function ManageEvent() {
 
       addToast({
         hideIcon: true,
-        title: "Update Success",
+        title: "Add Event Success",
         classNames: {
           closeButton:
             "opacity-100 absolute right-4 top-1/2 -translate-y-1/2 font-bold",
@@ -75,7 +74,7 @@ export default function ManageEvent() {
     } catch (err) {
       console.error("Create Not success : ", err);
     }
-  }
+  };
 
   const deleteEvent = useCallback(
     async (id: string) => {
@@ -94,8 +93,8 @@ export default function ManageEvent() {
       await updateEventHook(eventId, {
         event_name: eventName,
         event_description: description,
-        event_start_date: startDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
-        event_end_date: endDate.toISOString().split('T')[0],  
+        event_start_date: startDate.toISOString().split("T")[0], // Format as YYYY-MM-DD
+        event_end_date: endDate.toISOString().split("T")[0],
         event_start_time: starTime?.toString(),
         event_end_time: endTime?.toString(),
         castle_id: parseInt(castleId),
@@ -123,11 +122,10 @@ export default function ManageEvent() {
   const handleEdit = (data: EventData) => {
     setEventId(data.event_id);
     setEventName(data.event_name);
-    setCastleName(data.castle_name);
     setDescription(data.event_description);
     setStartDate(new Date(data.event_start_date));
     setEndDate(new Date(data.event_end_date));
-    setCastleId(data.castle_id);
+    setCastleId(data.castle_id.toString());
 
     if (data.event_start_time) {
       const [startHour, startMinute] = data.event_start_time.split(":");
@@ -151,27 +149,29 @@ export default function ManageEvent() {
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-5">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
           <div className="p-4 sm:p-6 lg:p-8">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-              <div className="w-full sm:max-w-md flex flex-row">
-                <Searching
-                  items={events.map((event: EventData) => ({
-                    key: event.event_id,
-                    title: event.event_name,
-                  }))}
-                  placeholder="Search events name..."
-                  onInputChange={(value) => setSearchTerm(value)}
-                  onSelectionChange={(key) => {
-                    if (key) {
-                      const selectedEvent = events.find(
-                        (event) => event.event_id === key,
-                      );
-                      if (selectedEvent) {
-                        setSearchTerm(selectedEvent.event_name);
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 w-full">
+              <div className="w-full flex flex-row gap-4 justify-between">
+                <div className="flex-1">
+                  <Searching
+                    items={events.map((event: EventData) => ({
+                      key: event.event_id,
+                      title: event.event_name,
+                    }))}
+                    placeholder="Search events name..."
+                    onInputChange={(value) => setSearchTerm(value)}
+                    onSelectionChange={(key) => {
+                      if (key) {
+                        const selectedEvent = events.find(
+                          (event) => event.event_id === key,
+                        );
+                        if (selectedEvent) {
+                          setSearchTerm(selectedEvent.event_name);
+                        }
                       }
-                    }
-                  }}
-                />
-                <ModalAdd onSuccess={addEvent}/>
+                    }}
+                  />
+                </div>
+                <ModalAdd onSuccess={addEvent} />
               </div>
               <div className="font-bold text-xl text-gray-800">
                 Events Management
@@ -193,8 +193,8 @@ export default function ManageEvent() {
             onOpenChange={onDrawerOpenChange}
             eventName={eventName}
             setEventName={setEventName}
-            castleName={castleName}
-            setCastleName={setCastleName}
+            castleId={castleId}
+            setCastleId={setCastleId}
             startDate={startDate}
             setStartDate={setStartDate}
             endDate={endDate}
@@ -212,7 +212,8 @@ export default function ManageEvent() {
             isOpen={isModalOpen}
             onOpenChange={onModalOpenChange}
             onEvent={() => deleteEvent(eventId)}
-            item={eventId}
+            label="EventName"
+            item={events.find((e) => e.event_id === eventId)?.event_name || ""}
             size="md"
           />
         </div>

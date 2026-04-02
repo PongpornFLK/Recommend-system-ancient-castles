@@ -11,17 +11,21 @@ import {
   DatePicker,
   TimeInput,
   Textarea,
+  Select,
+  SelectItem,
 } from "@heroui/react";
 import { parseDate, Time, CalendarDate } from "@internationalized/date";
 import { Settings, Map, Timer, TextAlignJustify, Type, CheckCheck } from "lucide-react";
+import { useGetCastles } from "@/app/service/admin/manageevent/useGetCastles";
+import { CastleResponse } from "@/app/(admin)/manageevent/types";
 
 interface EditEventDrawerProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   eventName: string;
   setEventName: (name: string) => void;
-  castleName: string;
-  setCastleName: (name: string) => void;
+  castleId: string;
+  setCastleId: (id: string) => void;
   startDate: Date;
   setStartDate: (date: Date) => void;
   endDate: Date;
@@ -40,8 +44,8 @@ export default function EditEventDrawer({
   onOpenChange,
   eventName,
   setEventName,
-  castleName,
-  setCastleName,
+  castleId,
+  setCastleId,
   startDate,
   setStartDate,
   endDate,
@@ -54,6 +58,8 @@ export default function EditEventDrawer({
   setDescription,
   onUpdate,
 }: EditEventDrawerProps) {
+  const { castles } = useGetCastles();
+
   return (
     <Drawer isOpen={isOpen} onOpenChange={onOpenChange}>
       <DrawerContent>
@@ -78,16 +84,23 @@ export default function EditEventDrawer({
                     value={eventName}
                     onChange={(e) => setEventName(e.target.value)}
                   />
-                  <Input
-                    className="font-bold pb-5"
-                    label="Castle"
+                  <Select
                     labelPlacement="outside-top"
-                    placeholder="Castle Name"
-                    startContent={<Map size={16} />}
                     variant="bordered"
-                    value={castleName}
-                    onChange={(e) => setCastleName(e.target.value)}
-                  />
+                    className="pb-5 font-bold"
+                    label="Castle"
+                    placeholder="Select Castle"
+                    items={castles}
+                    startContent={<Map size={16} />}
+                    selectedKeys={castleId ? [castleId.toString()] : []}
+                    onChange={(e: any) => setCastleId(e.target.value)}
+                  >
+                    {castles.map((place: CastleResponse) => (
+                      <SelectItem key={place.castle_id}>
+                        {place.castle_name}
+                      </SelectItem>
+                    ))}
+                  </Select>
                   <div className="flex flex-col sm:flex-row gap-4 w-full">
                     <DatePicker
                       className="font-bold pb-5 w-full text-xs"
@@ -166,7 +179,7 @@ export default function EditEventDrawer({
             <DrawerFooter>
               <Button
                 onClick={onClose}
-                className="bg-white text-tone-red border-2 hover:bg-tone-red hover:text-white font-bold"
+                className="bg-white hover:bg-tone-red text-tone-red hover:text-white font-bold"
               >
                 Cancel
               </Button>

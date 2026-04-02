@@ -51,16 +51,29 @@ export default function UserTable({
         case "action":
           return (
             <div>
-              <Tooltip content="Delete">
-                <Button
-                  onPress={() => onDelete(data.user_id)}
-                  isIconOnly
-                  className="text-tone-red bg-white hover:bg-tone-red hover:text-white"
-                  size="sm"
-                >
-                  <Trash2 size={16} />
-                </Button>
-              </Tooltip>
+              {data.roles == "user" ? (
+                <Tooltip content="Delete">
+                  <Button
+                    onPress={() => onDelete(data.user_id)}
+                    isIconOnly
+                    className="text-tone-red bg-white hover:bg-tone-red hover:text-white"
+                    size="sm"
+                  >
+                    <Trash2 size={16} />
+                  </Button>
+                </Tooltip>
+              ) : (
+                <Tooltip content="Delete">
+                  <Button
+                    isDisabled 
+                    isIconOnly
+                    className="text-tone-red bg-white hover:bg-tone-red hover:text-white"
+                    size="sm"
+                  >
+                    <Trash2 size={16} />
+                  </Button>
+                </Tooltip>
+              )}
             </div>
           );
         default:
@@ -71,7 +84,7 @@ export default function UserTable({
           return cellValue as React.ReactNode;
       }
     },
-    [onDelete]
+    [onDelete],
   );
 
   return (

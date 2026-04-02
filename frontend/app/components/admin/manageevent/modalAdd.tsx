@@ -14,8 +14,9 @@ import {
   Textarea,
   Select,
   SelectItem,
+  ModalFooter,
 } from "@heroui/react";
-import { CirclePlus, TextAlignJustify, Timer, Type } from "lucide-react";
+import { CirclePlus, TextAlignJustify, Timer, Type, Map } from "lucide-react";
 import { useState } from "react";
 import { parseDate, Time, CalendarDate } from "@internationalized/date";
 import { useAddEvent } from "@/app/service/admin/manageevent/useAddEvent";
@@ -28,7 +29,7 @@ interface AddEventData {
 }
 
 export default function ModalAdd({ onSuccess }: AddEventData) {
-  const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
+  const { isOpen, onOpen, onOpenChange , onClose } = useDisclosure();
 
   // Input Data
   const [eventName, setEventName] = useState("");
@@ -91,143 +92,146 @@ export default function ModalAdd({ onSuccess }: AddEventData) {
         size="2xl"
       >
         <ModalContent>
-            <>
-              <ModalHeader className="flex flex-col gap-1 text-3xl">
-                Add Event
-              </ModalHeader>
-              <ModalBody>
-                <Form className="w-full" onSubmit={onSubmit}>
-                  <div className="flex flex-row gap-4 w-full">
-                    <Input
-                      isRequired
-                      className="font-bold"
-                      label="Event Name"
-                      labelPlacement="outside-top"
-                      placeholder="Event Name"
-                      startContent={<TextAlignJustify size={18} />}
-                      variant="bordered"
-                      value={eventName}
-                      onChange={(e) => setEventName(e.target.value)}
-                    />
-                    <Select
+          {(onClose) => (
+          <>
+            <ModalHeader className="flex flex-col gap-1 text-3xl">
+              Add Event
+            </ModalHeader>
+            <ModalBody>
+              <Form id="eventForm" className="w-full" onSubmit={onSubmit}>
+                <div className="flex flex-row gap-4 w-full">
+                  <Input
+                    isRequired
+                    className="font-bold"
+                    label="Event Name"
                     labelPlacement="outside-top"
-                      isRequired
-                      variant="bordered"
-                      className="max-w-xs font-bold"
-                      label="Select Castle"
-                      items={castles}
-                      selectedKeys={castleId}
-                      onChange={(e) => setCastleId(e.target.value)}
-                    >
-                      {castles.map((place: CastleResponse) => (
-                        <SelectItem key={place.castle_id}>
-                          {place.castle_name}
-                        </SelectItem>
-                      ))}
-                    </Select>
-                  </div>
-                  <div className="flex flex-row sm:flex-row gap-4 w-full">
-                    <DatePicker
-                      hideTimeZone
-                      isRequired
-                      showMonthAndYearPickers
-                      className="font-bold w-full w-full text-xs"
-                      label="Start Date"
-                      variant="bordered"
-                      labelPlacement="outside-top"
-                      selectorButtonPlacement="start"
-                      value={
-                        startDate
-                          ? parseDate(formatLocalDate(startDate))
-                          : undefined
+                    placeholder="Type Event Name"
+                    startContent={<TextAlignJustify size={18} />}
+                    variant="bordered"
+                    value={eventName}
+                    onChange={(e) => setEventName(e.target.value)}
+                  />
+                  <Select
+                    labelPlacement="outside-top"
+                    isRequired
+                    variant="bordered"
+                    className="max-w-xs font-bold"
+                    label="Select Castle"
+                    placeholder="Select Castle"
+                    items={castles}
+                    startContent={<Map size={18} />}
+                    selectedKeys={castleId}
+                    onChange={(e) => setCastleId(e.target.value)}
+                  >
+                    {castles.map((place: CastleResponse) => (
+                      <SelectItem key={place.castle_id}>
+                        {place.castle_name}
+                      </SelectItem>
+                    ))}
+                  </Select>
+                </div>
+                <div className="flex flex-row sm:flex-row gap-4 w-full">
+                  <DatePicker
+                    hideTimeZone
+                    isRequired
+                    showMonthAndYearPickers
+                    className="font-bold w-full w-full text-xs"
+                    label="Start Date"
+                    variant="bordered"
+                    labelPlacement="outside-top"
+                    selectorButtonPlacement="start"
+                    value={
+                      startDate
+                        ? parseDate(formatLocalDate(startDate))
+                        : undefined
+                    }
+                    onChange={(e: CalendarDate | null) => {
+                      if (e) {
+                        const localDate = new Date(e.year, e.month - 1, e.day);
+                        setStartDate(localDate);
                       }
-                      onChange={(e: CalendarDate | null) => {
-                        if (e) {
-                          const localDate = new Date(
-                            e.year,
-                            e.month - 1,
-                            e.day,
-                          );
-                          setStartDate(localDate);
-                        }
-                      }}
-                    />
-                    <DatePicker
-                      hideTimeZone
-                      isRequired
-                      showMonthAndYearPickers
-                      className="font-bold w-full w-full text-xs"
-                      label="End Date"
-                      variant="bordered"
-                      labelPlacement="outside-top"
-                      selectorButtonPlacement="start"
-                      value={
-                        endDate
-                          ? parseDate(formatLocalDate(endDate))
-                          : undefined
+                    }}
+                  />
+                  <DatePicker
+                    hideTimeZone
+                    isRequired
+                    showMonthAndYearPickers
+                    className="font-bold w-full w-full text-xs"
+                    label="End Date"
+                    variant="bordered"
+                    labelPlacement="outside-top"
+                    selectorButtonPlacement="start"
+                    value={
+                      endDate ? parseDate(formatLocalDate(endDate)) : undefined
+                    }
+                    onChange={(e: CalendarDate | null) => {
+                      if (e) {
+                        const localDate = new Date(e.year, e.month - 1, e.day);
+                        setEndDate(localDate);
                       }
-                      onChange={(e: CalendarDate | null) => {
-                        if (e) {
-                          const localDate = new Date(
-                            e.year,
-                            e.month - 1,
-                            e.day,
-                          );
-                          setEndDate(localDate);
-                        }
-                      }}
-                    />
-                  </div>
-                  <div className="flex flex-row sm:flex-row gap-4 w-full">
-                    <TimeInput
-                      isRequired
-                      defaultValue={new Time(0, 0)}
-                      label="Start Time"
-                      labelPlacement="outside-top"
-                      className="font-bold w-full"
-                      startContent={<Timer size={16} />}
-                      variant="bordered"
-                      value={starTime}
-                      onChange={(val: Time | null) => setStartTime(val)}
-                    />
-                    <TimeInput
-                      isRequired
-                      defaultValue={new Time(0, 0)}
-                      label="End Time"
-                      labelPlacement="outside-top"
-                      className="font-bold w-full"
-                      startContent={<Timer size={16} />}
-                      variant="bordered"
-                      value={endTime}
-                      onChange={(val: Time | null) => setEndTime(val)}
-                    />
-                  </div>
-                  <div className="w-full">
-                    <Textarea
-                      disableAnimation
-                      disableAutosize
-                      classNames={{
-                        base: "w-full",
-                        input: "resize-y min-h-[100px] mt-3",
-                      }}
-                      isClearable
-                      startContent={<Type size={18} className="mt-3" />}
-                      variant="bordered"
-                      labelPlacement="outside-top"
-                      className="w-full font-bold"
-                      label="Description"
-                      placeholder="Event Description"
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                    />
-                  </div>
-                  <Button type="submit" variant="bordered" className="bg-tone-orange text-white font-bold">
-                    Confirm
-                  </Button>
-                </Form>
-              </ModalBody>
-            
-            </>
+                    }}
+                  />
+                </div>
+                <div className="flex flex-row sm:flex-row gap-4 w-full">
+                  <TimeInput
+                    isRequired
+                    defaultValue={new Time(0, 0)}
+                    label="Start Time"
+                    labelPlacement="outside-top"
+                    className="font-bold w-full"
+                    startContent={<Timer size={16} />}
+                    variant="bordered"
+                    value={starTime}
+                    onChange={(val: Time | null) => setStartTime(val)}
+                  />
+                  <TimeInput
+                    isRequired
+                    defaultValue={new Time(0, 0)}
+                    label="End Time"
+                    labelPlacement="outside-top"
+                    className="font-bold w-full"
+                    startContent={<Timer size={16} />}
+                    variant="bordered"
+                    value={endTime}
+                    onChange={(val: Time | null) => setEndTime(val)}
+                  />
+                </div>
+                <div className="w-full">
+                  <Textarea
+                    disableAnimation
+                    disableAutosize
+                    classNames={{
+                      base: "w-full",
+                      input: "resize-y min-h-[100px] mt-3",
+                    }}
+                    isClearable
+                    startContent={<Type size={18} className="mt-3" />}
+                    variant="bordered"
+                    labelPlacement="outside-top"
+                    className="w-full font-bold"
+                    label="Description"
+                    placeholder="Event Description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                  />
+                </div>
+              </Form>
+            </ModalBody>
+            <ModalFooter>
+              <Button onPress={onClose} className="bg-white hover:bg-tone-red text-tone-red hover:text-white font-bold">
+                Close
+              </Button>
+              <Button
+                type="submit"
+                form="eventForm"
+                variant="bordered"
+                className="bg-tone-orange text-white font-bold"
+              >
+                Confirm
+              </Button>
+            </ModalFooter>
+          </>
+          )}
         </ModalContent>
       </Modal>
     </>

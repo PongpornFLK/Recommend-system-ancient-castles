@@ -53,25 +53,31 @@ export default function ManageUser() {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
           <div className="p-4 sm:p-6 lg:p-8">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-              <div className="w-full sm:max-w-md">
-                <Searching
-                  items={users.map((user) => ({
-                    key: user.user_id,
-                    title: user.username,
-                  }))}
-                  placeholder="Search username..."
-                  onInputChange={(value) => setSearchTerm(value)}
-                  onSelectionChange={(key) => {
-                    if (key) {
-                      const selectedUser = users.find((user) => user.user_id === key);
-                      if (selectedUser) {
-                        setSearchTerm(selectedUser.username);
+              <div className="w-full">
+                <div className="flex-1">
+                  <Searching
+                    items={users.map((user) => ({
+                      key: user.user_id,
+                      title: user.username,
+                    }))}
+                    placeholder="Search username..."
+                    onInputChange={(value) => setSearchTerm(value)}
+                    onSelectionChange={(key) => {
+                      if (key) {
+                        const selectedUser = users.find(
+                          (user) => user.user_id === key,
+                        );
+                        if (selectedUser) {
+                          setSearchTerm(selectedUser.username);
+                        }
                       }
-                    }
-                  }}
-                />
+                    }}
+                  />
+                </div>
               </div>
-              <div className="font-bold text-xl text-gray-800">Users Management</div>
+              <div className="font-bold text-xl text-gray-800">
+                Users Management
+              </div>
             </div>
 
             <UserTable

@@ -36,6 +36,8 @@ export default function useTracking(
         if (distance <= 0.5) {
           setIsArrived(true);
           console.log("Reached destination!");
+          localStorage.setItem("arrived", "success");
+          window.dispatchEvent(new CustomEvent("arrived"));
         }
       },
       (error) => {

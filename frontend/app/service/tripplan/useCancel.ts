@@ -10,6 +10,7 @@ export default function useCancel() {
     try {
       const response = await api.post(`/trip/${trip_id}/cancel`, {});
       console.log("Delete : ", response.data)
+      localStorage.setItem("arrived", "cancel");
       window.location.reload();
 
     } catch (err) {

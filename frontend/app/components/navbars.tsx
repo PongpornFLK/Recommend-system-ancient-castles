@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { UserRound, Settings, Heart, LogOut, House, Map, Info, ChessRook, MapPin, } from "lucide-react";
-import { Navbar, NavbarBrand, NavbarContent, NavbarItem, Button, Popover, PopoverTrigger, PopoverContent, NavbarMenuToggle, NavbarMenu, NavbarMenuItem, Divider, Image, } from "@heroui/react";
+import { UserRound, Settings, Heart, LogOut, House, Map, Info, ChessRook, MapPin, BellRing } from "lucide-react";
+import { Badge, Navbar, NavbarBrand, NavbarContent, NavbarItem, Button, Popover, PopoverTrigger, PopoverContent, NavbarMenuToggle, NavbarMenu, NavbarMenuItem, Divider, Image, } from "@heroui/react";
 import api from "@/app/service/api";
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -11,6 +11,7 @@ export default function Navbars() {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [user, setUser] = React.useState<UserData | null>(null);
+  const [arrived, setArrived] = React.useState<string | null>(null);
 
   interface UserData {
     user_id: string;
@@ -42,6 +43,24 @@ export default function Navbars() {
         console.log("User Data:", userData);
 
         setUser(userData);
+
+        // check status ของ tripplan
+        try {
+          const tripResponse = await api.get('/trip/user');
+          const trips = tripResponse.data;
+          const activeTrip = trips.find((t: any) => t.status === "travelling");
+
+          if (activeTrip) {
+            const currentStatus = localStorage.getItem("arrived");
+            if (currentStatus !== "success" && currentStatus !== "cancel") {
+              localStorage.setItem("arrived", "travelling");
+              setArrived("travelling");
+            }
+          }
+        } catch (tripErr) {
+          console.error("Error fetching trip status format", tripErr);
+        }
+
       } catch (err) {
         console.error("Error fetching user", err);
       }
@@ -62,13 +81,27 @@ export default function Navbars() {
     localStorage.removeItem("refresh_token");
     localStorage.removeItem("auth_provider");
     localStorage.removeItem("google_token");
+    localStorage.removeItem("arrived");
 
     setUser(null);
+    setArrived(null);
 
     window.dispatchEvent(new Event("auth-change"));
 
     router.push("/login");
   };
+
+  useEffect(() => {
+    const status = () => {
+      const isArrived = localStorage.getItem("arrived");
+      setArrived(isArrived);
+    }
+
+    status()
+    window.addEventListener("arrived", status)
+    return () => window.removeEventListener("arrived", status);
+
+  }, [])
 
   return (
     <Navbar
@@ -137,17 +170,25 @@ export default function Navbars() {
         </NavbarItem>
         <NavbarItem>
           <Popover placement="bottom-start">
-            <PopoverTrigger>
-              <Button
-                isIconOnly
-                radius="full"
-                aria-label="User profile"
-                className="bg-tone-orange text-white"
-                suppressHydrationWarning
-              >
-                <UserRound />
-              </Button>
-            </PopoverTrigger>
+            <Badge
+              color="danger"
+              content={""}
+              isInvisible={arrived !== "success"}
+              shape="circle"
+              placement="top-right"
+            >
+              <PopoverTrigger>
+                <Button
+                  isIconOnly
+                  radius="full"
+                  aria-label="User profile"
+                  className="bg-tone-orange text-white"
+                  suppressHydrationWarning
+                >
+                  <UserRound />
+                </Button>
+              </PopoverTrigger>
+            </Badge>
             <PopoverContent>
               <div className="px-1 py-2">
                 <div className="text-small font-bold flex flex-row gap-2 pl-4 pt-2">
@@ -176,6 +217,31 @@ export default function Navbars() {
                       Favorite
                     </Button>
                   </Link>
+
+                  <Link href="/tripplan" className="w-full">
+                    <Button
+                      color="default"
+                      variant="light"
+                      startContent={
+                        <Badge
+                          color="danger"
+                          content="!"
+                          isInvisible={arrived !== "success"}
+                          shape="circle"
+                          placement="top-right"
+                          classNames={{
+                            badge: "text-white",
+                          }}
+                        >
+                          <BellRing size={16} />
+                        </Badge>
+                      }
+                      className="justify-start pr-30 w-full"
+                    >
+                      Notification
+                    </Button>
+                  </Link>
+
                   <Button
                     // color="danger"
                     startContent={<LogOut size={16} />}

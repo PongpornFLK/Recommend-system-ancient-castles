@@ -4,10 +4,15 @@ import { useEffect, useState } from "react";
 interface UserProps {
   lat: number;
   lng: number;
+  radius: number;
 }
 
-export default function useNearUser({ lat, lng }: UserProps) {
+export default function useNearUser({ lat, lng, radius }: UserProps) {
   const [castle, setCastle] = useState<{ lat: 0; lng: 0; castle_name: "" }[]>(
+    [],
+  );
+
+  const [nearPlace, setNearPlace] = useState<{ lat: 0; lng: 0; place_name: "" }[]>(
     [],
   );
 
@@ -18,17 +23,23 @@ export default function useNearUser({ lat, lng }: UserProps) {
       }
 
       try {
-        const response = await api.get(
-          `/locationcastle/castle/nearby/user=${lat}&${lng}`,
+        const responseCastle = await api.get(
+          `/locationcastle/castle/nearby/user=${lat}&${lng}?radius=${radius}`,
         );
-        setCastle(response.data);
+        const responsePlace = await api.get(
+          `/nearplace/nearby/user=${lat}&${lng}?radius=${radius}`,
+        );
+
+        setCastle(responseCastle.data);
+        setNearPlace(responsePlace.data);
+
         // console.log("setCastle : " , response.data)
       } catch (err) {
         console.error(err);
       }
     };
     fetchNearUser();
-  }, [lat, lng]);
+  }, [lat, lng, radius]);
 
-  return { castle };
+  return { castle, nearPlace };
 }

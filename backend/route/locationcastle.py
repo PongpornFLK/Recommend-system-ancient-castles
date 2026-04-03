@@ -63,6 +63,7 @@ async def readLocation(
 async def readCastleNearMe(
     lat: float,
     lng: float,
+    radius: int = 10,
     current_user: User = Depends(getCurrentUser),
     db: Session = Depends(get_db),
 ):
@@ -86,7 +87,7 @@ async def readCastleNearMe(
         # หน่วยเป็น Km
         distance = haversine(lng, lat, castle.longitude, castle.latitude)
 
-        if distance <= 5:
+        if distance <= radius:
             near_castle.append(
                 {
                     "castle_name": castle.castle_name,

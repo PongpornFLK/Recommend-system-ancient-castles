@@ -11,11 +11,12 @@ export const useGetEvents = () => {
   const fetchEvents = useCallback(async (page: number = 1, size: number = 5) => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const response = await api.get<ApiResponse>(`/event/admin`, {
         params: { page, size },
       });
+      console.log(response.data);
       setEvents(response.data.items);
       setTotal(response.data.total);
     } catch (err: unknown) {

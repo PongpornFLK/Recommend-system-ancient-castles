@@ -49,7 +49,7 @@ export default function EventTable({
         case "event_name":
           return data.event_name;
         case "castle_name":
-          return data.castle_name || "";
+          return data.castle?.castle_name;
         case "event_description":
           return data.event_description;
         case "event_date":

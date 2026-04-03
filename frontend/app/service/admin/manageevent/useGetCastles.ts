@@ -10,7 +10,7 @@ export const useGetCastles = () => {
   const fetchCastles = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const data = await api.get<CastleArray>(`/castles/admin`);
       setCastles(data.data);

@@ -16,6 +16,8 @@ export default function Plan() {
     now(getLocalTimeZone()),
   );
   const [planName, setPlanName] = useState("");
+  const [eventId, setEventId] = useState<number | null>(null);
+  const [eventDescript, setEventDescript] = useState<string>("");
 
   const DatePicker = dynamic(
     () => import("@heroui/react").then((mod) => mod.DatePicker),
@@ -65,6 +67,9 @@ export default function Plan() {
             isLoading={loading}
             planName={planName}
             setPlanName={setPlanName}
+            selectedEventId={eventId}
+            setSelectedEventId={setEventId}
+            setEventDescript={setEventDescript}
           />
 
           {/* Right - Container */}
@@ -74,6 +79,8 @@ export default function Plan() {
             getGPS={getGPS}
             planName={planName}
             date={date}
+            eventId={eventId}
+            eventDescript={eventDescript}
           />
         </div>
       </section>

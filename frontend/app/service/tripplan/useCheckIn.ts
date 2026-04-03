@@ -40,6 +40,8 @@ export default function useCheckIn() {
       });
 
       console.log("Check-in and Confirmation complete");
+      localStorage.setItem("arrived", "null");
+      window.dispatchEvent(new CustomEvent("arrived"));
       router.push("/history");
     } catch (err) {
       console.log("Error during Check-in/Confirmation:", err);

@@ -92,7 +92,8 @@ export default function Routesum({
           place_name: box.placeName,
         };
       });
-
+    localStorage.setItem("arrived", "travelling");
+    window.dispatchEvent(new CustomEvent("arrived"));
     saveRoute(tripData, itinerary);
   };
 

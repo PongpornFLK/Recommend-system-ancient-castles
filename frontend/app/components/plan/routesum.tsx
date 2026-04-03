@@ -166,25 +166,29 @@ export default function Routesum({
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3">
-        <ButtonSave planName={planName} onSave={handleSaveTrip} />
-        <Button
-          startContent={<Route size={16} />}
-          className="flex-1 bg-tone-yellow text-white font-bold"
-          onClick={() => {
-            // Filter เช็ค waypoints
-            const validWaypoints = boxSelect.filter(
-              (box) =>
-                box.placeName &&
-                box.placeName !== "" &&
-                box.latitude !== 0 &&
-                box.longitude !== 0,
-            );
-            viewRoute(getGPS, validWaypoints, locationCastle, getNamePlace);
-          }}
-        >
-          ดูเส้นทางแผนที่
-        </Button>
+      <div className="flex flex-col sm:flex-row gap-3 w-full">
+        <div className="flex-1">
+          <ButtonSave planName={planName} onSave={handleSaveTrip} />
+        </div>
+        <div className="flex-1">
+          <Button
+            startContent={<Route size={16} />}
+            className="w-full bg-tone-yellow text-white font-bold"
+            onClick={() => {
+              // Filter เช็ค waypoints
+              const validWaypoints = boxSelect.filter(
+                (box) =>
+                  box.placeName &&
+                  box.placeName !== "" &&
+                  box.latitude !== 0 &&
+                  box.longitude !== 0,
+              );
+              viewRoute(getGPS, validWaypoints, locationCastle, getNamePlace);
+            }}
+          >
+            ดูเส้นทางแผนที่
+          </Button>
+        </div>
       </div>
     </div>
   );

@@ -27,6 +27,15 @@ export default function Navbars() {
     { label: "About", href: "/about", icon: <Info size={16} /> },
     { label: "Setting", href: "/setuser", icon: <Settings size={16} /> },
     { label: "Favorite", href: "/favorite", icon: <Heart size={16} /> },
+    {
+      label: "Notification",
+      href: "/tripplan",
+      icon: (
+        <Badge color="success" content="!" isInvisible={arrived !== "success"} shape="circle" size="sm">
+          <BellRing size={16} />
+        </Badge>
+      )
+    },
   ];
 
   useEffect(() => {
@@ -202,7 +211,7 @@ export default function Navbars() {
                       color="default"
                       variant="light"
                       startContent={<Settings size={16} />}
-                      className="justify-start pr-30"
+                      className="justify-start w-full"
                     >
                       Setting
                     </Button>
@@ -212,7 +221,7 @@ export default function Navbars() {
                       color="default"
                       variant="light"
                       startContent={<Heart size={16} />}
-                      className="justify-start pr-30 w-full"
+                      className="justify-start w-full"
                     >
                       Favorite
                     </Button>
@@ -224,7 +233,7 @@ export default function Navbars() {
                       variant="light"
                       startContent={
                         <Badge
-                          color="danger"
+                          color="success"
                           content="!"
                           isInvisible={arrived !== "success"}
                           shape="circle"
@@ -236,17 +245,15 @@ export default function Navbars() {
                           <BellRing size={16} />
                         </Badge>
                       }
-                      className="justify-start pr-30 w-full"
+                      className="justify-start w-full"
                     >
                       Notification
                     </Button>
                   </Link>
 
                   <Button
-                    // color="danger"
                     startContent={<LogOut size={16} />}
-                    className="justify-start pr-30 bg-white hover:bg-tone-red text-tone-red hover:text-white "
-                    // variant="ghost"
+                    className="justify-start bg-white hover:bg-tone-red text-tone-red hover:text-white w-full"
                     onClick={handleLogOut}
                   >
                     Log Out

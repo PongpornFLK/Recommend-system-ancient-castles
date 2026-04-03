@@ -1,8 +1,12 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import Routeplan from "@/app/components/plan/routeplan";
-import Routesum from "@/app/components/plan/routesum";
+const Routeplan = dynamic(() => import("@/app/components/plan/routeplan"), {
+  ssr: false,
+});
+const Routesum = dynamic(() => import("@/app/components/plan/routesum"), {
+  ssr: false,
+});
 import useLocation from "@/app/service/map/useLocation";
 import { useState, Suspense } from "react";
 import { now, getLocalTimeZone, ZonedDateTime } from "@internationalized/date";
@@ -34,24 +38,25 @@ export default function Plan() {
       <section>
         <div className="bg-white rounded-2xl mt-5 p-6 shadow-md border border-slate-100">
           {/* Top - Container */}
-          <div className="flex flex-row items-center justify-between gap-4">
-            <div className="flex flex-col gap-2">
-              <h1 className="text-xl md:text-3xl font-bold">My Plan</h1>
-              <h1 className="text-md md:text-md text-gray-500">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+            <div className="flex flex-col gap-1 md:gap-2">
+              <h1 className="text-2xl md:text-3xl font-bold">My Plan</h1>
+              <p className="text-sm md:text-base text-gray-500 max-w-sm">
                 สร้างและจัดการแผนการเดินทางสำหรับการเยี่ยมชมปราสาท
-              </h1>
+              </p>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <div className="w-full sm:w-auto">
               <div className="flex items-center gap-2">
                 <DatePicker
-                  hideTimeZone
-                  showMonthAndYearPickers
+                  hideTimeZone={true}
+                  showMonthAndYearPickers={true}
                   granularity="minute"
                   defaultValue={now(getLocalTimeZone())}
                   label="Event Date"
                   variant="bordered"
                   value={date}
                   onChange={(val) => setDate(val as ZonedDateTime | null)}
+                  className="w-full sm:min-w-[200px]"
                 />
               </div>
             </div>

@@ -13,6 +13,11 @@ export interface TripData {
   destination_name?: string,
   destination_lat?: number,
   destination_lng?: number,
+  event_name?: string,
+  event_start_date?: string,
+  event_end_date?: string,
+  event_start_time?: string,
+  event_end_time?: string,
 }
 
 export default function useTrip() {

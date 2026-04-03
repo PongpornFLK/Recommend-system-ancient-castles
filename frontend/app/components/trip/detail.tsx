@@ -74,9 +74,21 @@ const TripDetail = ({
             <h4 className="font-bold text-tone-orange uppercase mb-1.5">
               รายละเอียดเทศกาล
             </h4>
-            <p className="text-sm font-bold">
-              {place.event_description}
-            </p>
+            {place.event_name ? (
+              <div className="flex flex-col gap-1">
+                <p className="text-sm font-bold">{place.event_name}</p>
+                <div className="text-xs text-stone-500 flex flex-col sm:flex-row sm:gap-3">
+                  <span>วันที {place.event_start_date} ถึง {place.event_end_date}</span>
+                  {(place.event_start_time || place.event_end_time) && (
+                    <span>เวลา {place.event_start_time || "--:--"} - {place.event_end_time || "--:--"}</span>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm font-bold text-stone-500">
+                {place.event_description === "none" ? "ไม่ได้ระบุเทศกาล" : place.event_description || "ไม่ได้ระบุเทศกาล"}
+              </p>
+            )}
           </div>
         </div>
       </div>

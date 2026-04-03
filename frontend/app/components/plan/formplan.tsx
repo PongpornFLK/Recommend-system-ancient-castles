@@ -27,7 +27,6 @@ export default function FromPlan({ placeName, setPlaceName }: FromPlaceProps) {
           onChange={(e) => setPlaceName(e.target.value)}
           className="flex-1"
           startContent={<Map size={18} />}
-          suppressHydrationWarning
         />
       </div>
     </div>

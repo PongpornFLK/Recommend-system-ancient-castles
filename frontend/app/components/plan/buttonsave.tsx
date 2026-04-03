@@ -16,19 +16,17 @@ export default function ButtonSave({
   const isDisabled = !planName || planName.trim() === "";
 
   return (
-    <div className="flex-1 ">
-      <Button
-        startContent={<List size={16} />}
-        className={`w-full text-white font-bold ${
-          isDisabled ? "bg-gray-400 cursor-not-allowed" : "bg-tone-lightgreen"
-        }`}
-        isDisabled={isDisabled}
-        onClick={() => {
-          onSave(); 
-        }}
-      >
-        บันทึกแผนการเดินทาง
-      </Button>
-    </div>
+    <Button
+      startContent={<List size={16} />}
+      className={`w-full text-white font-bold ${
+        isDisabled ? "bg-gray-400 cursor-not-allowed" : "bg-tone-lightgreen"
+      }`}
+      isDisabled={isDisabled}
+      onClick={() => {
+        onSave(); 
+      }}
+    >
+      บันทึกแผนการเดินทาง
+    </Button>
   );
 }

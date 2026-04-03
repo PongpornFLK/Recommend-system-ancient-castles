@@ -15,15 +15,15 @@ export default function Map() {
   const radiusValues = [10, 25, 50, 100];
 
   return (
-    <div className="bg-white p-5 place-items-center rounded-xl">
+    <div className="bg-white p-3 md:p-5 place-items-center rounded-xl overflow-hidden shadow-sm">
       <div className="flex flex-col my-5 gap-5 items-center w-full">
-        <div className="text-3xl font-bold">Map user current location</div>
-        <div className="w-full flex flex-row gap-4">
-          <div className="basis-3/4 bg-white py-4 px-8 rounded-2xl border border-gray-200 shadow-inner flex items-center gap-3">
-            <div className="text-gray-500 font-bold">ตำแหน่งปัจจุบัน : </div>
-            <div className="truncate">{getNamePlace}</div>
+        <div className="text-2xl md:text-3xl font-bold text-center leading-tight">Map user current location</div>
+        <div className="w-full flex flex-col lg:flex-row gap-4">
+          <div className="w-full lg:basis-3/4 bg-white py-3 px-4 md:py-4 lg:px-8 rounded-2xl border border-gray-200 shadow-inner flex flex-col md:flex-row md:items-center gap-1 md:gap-3 overflow-hidden">
+            <div className="text-gray-500 font-bold whitespace-nowrap text-sm md:text-base">ตำแหน่งปัจจุบัน : </div>
+            <div className="truncate text-xs md:text-base">{getNamePlace || "กำลังระบุตำแหน่ง..."}</div>
           </div>
-          <div className="basis-1/4 p-4 rounded-2xl border border-gray-200">
+          <div className="w-full lg:basis-1/4 p-4 rounded-2xl border border-gray-200">
             <Slider
               label="รัศมีการค้นหา (กม.)"
               color="primary"
@@ -32,6 +32,9 @@ export default function Map() {
               maxValue={3}
               minValue={0}
               hideValue={true}
+              classNames={{
+                label: "text-xs md:text-sm font-medium",
+              }}
               marks={[
                 { value: 0, label: "10", },
                 { value: 1, label: "25" },
@@ -44,7 +47,7 @@ export default function Map() {
           </div>
         </div>
       </div>
-      <div className="w-full">
+      <div className="w-full mt-2">
         <MapCurrent key={radius} namePlace={setNamePlace} radius={radius} />
       </div>
     </div>

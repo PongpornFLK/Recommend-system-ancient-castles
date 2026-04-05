@@ -123,7 +123,8 @@ export const uploadDocumentVector = async (castleId: number, file: File) => {
 
 // ================== #TYPE Nearby Place ==================
 export type NearbyPlaceType = {
-  nearplace_id: number;
+  nearplace_id?: number;
+  id?: number;
   castle_id: number;
   castle_name?: string;
   place_name: string;
@@ -149,6 +150,11 @@ export type UpdateNearbyPlacePayload = {
   latitude: number;
   longitude: number;
 };
+
+// ================== #ดึง ID Nearby Place ==================
+export const getNearbyPlaceId = (
+  nearby: NearbyPlaceType
+): number | undefined => nearby.nearplace_id ?? nearby.id;
 
 // ================== #เพิ่ม Nearby Place ==================
 export const addNearbyPlace = async (payload: AddNearbyPlacePayload) => {

@@ -2,9 +2,12 @@
 
 import { Flag, MapPin, Plus } from "lucide-react";
 import SelectPlace from "@/app/components/plan/selectplace";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Spinner } from "@heroui/react";
 import useCreateroute from "@/app/service/plan/useCreateroute";
+import useEvents from "@/app/service/plan/useEvents";
+import SelectEvent from "@/app/components/plan/selectevent";
+import EventCard from "@/app/components/plan/eventcard";
 import FromPlan from "./formplan";
 
 interface RouteSelect {
@@ -31,6 +34,9 @@ interface RouteSelect {
   isLoading: boolean;
   planName: string;
   setPlanName: (name: string) => void;
+  selectedEventId: number | null;
+  setSelectedEventId: (id: number | null) => void;
+  setEventDescript: (desc: string) => void;
 }
 
 export default function Routeplan({
@@ -40,13 +46,41 @@ export default function Routeplan({
   isLoading,
   planName,
   setPlanName,
+  selectedEventId,
+  setSelectedEventId,
+  setEventDescript,
 }: RouteSelect) {
   const { locationCastle } = useCreateroute();
+  const { events, loading: eventsLoading } = useEvents();
+
+
+  const selectedEvent = selectedEventId !== null 
+    ? events.find((e) => e.event_id === selectedEventId) || null 
+    : null;
+
+  useEffect(() => {
+    if (selectedEvent) {
+      setEventDescript(selectedEvent.event_description || "");
+    } else {
+      setEventDescript("");
+    }
+  }, [selectedEvent, setEventDescript]);
 
   return (
     <div className="bg-white rounded-2xl mt-5 p-6 w-full lg:w-3/5 lg:h-fit shadow-md border border-slate-100">
       <div className="space-y-4">
         <FromPlan placeName={planName} setPlaceName={setPlanName} />
+
+        <div className="my-10 space-y-4">
+          <SelectEvent
+            events={events}
+            selectedEventId={selectedEventId}
+            onSelectionChange={setSelectedEventId}
+            isLoading={eventsLoading}
+          />
+          <EventCard event={selectedEvent} />
+        </div>
+
         <div className="flex items-start gap-3">
           <Flag size={24} className="text-tone-blue" />
           <div className="flex-1">

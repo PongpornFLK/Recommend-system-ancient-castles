@@ -14,17 +14,16 @@ router = APIRouter(
     tags = ['event']
 )
 
-@router.post("/users" , response_model= EventResponse)
+@router.post("/admin/create" , response_model= EventResponse)
 def createEvent(event : EventCreate , db : Session=Depends(get_db) , current_user : User=Depends(getCurrentUser)):
     db_event=Event(**event.model_dump(exclude={"password"}));
     
-    if(current_user.get("roles") != "user"):
+    if(current_user.get("roles") != "admin"):
         raise HTTPException(status_code=403 , detail="You don't have permission")
     
     db.add(db_event)
     db.commit()
     db.refresh(db_event)
-    logger.info(f"success- id : {db_event.event_id}")
     
     return db_event
 
@@ -35,21 +34,19 @@ def readEventAll(page: int = 1, size: int = 5,db : Session = Depends(get_db) , c
     if(current_user.get("roles") != "admin"):
         raise HTTPException(status_code=403 , detail="You don't have permission")
     
-    db_event = db.query(Event).order_by(asc(Event.event_id))
+    db_event = db.query(Event).join(Castle, Event.castle_id == Castle.castle_id).order_by(asc(Event.event_id))
+
     return paginate(db_event , Params(page=page, size=size))
 
 # get EventDescript หน้า Myplan
-@router.get("/event/description/{castle_id}")
-def readEventDescript( castle_id : int , db: Session = Depends(get_db) , current_user : User = Depends(getCurrentUser)):
+@router.get("/description/{castle_id}")
+def readEvents( castle_id : int , db: Session = Depends(get_db) , current_user : User = Depends(getCurrentUser)):
     if(current_user.get("roles") != "user"):
         raise HTTPException(status_code=403,detail="You don't have permission")
     
-    db_event = db.query(Event).filter(Event.castle_id == castle_id).first()
+    db_events = db.query(Event).filter(Event.castle_id == castle_id).all()
     
-    if db_event is None:
-        raise HTTPException(status_code=404,detail="Not Found")
-    
-    return db_event
+    return db_events
 
 
 @router.delete("/{event_id}")

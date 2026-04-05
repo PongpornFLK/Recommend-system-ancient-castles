@@ -13,6 +13,7 @@ C. สร้าง Custom Class ด้วย @apply (ใช้เมื่อจ
 @theme {
   --color-tone-orange: #D2691E;
   --color-tone-brown: #8B7D6B;
+  --color-tone-brownold: #8C5A3C;
   --color-tone-lightgray: #ebf0f0;
   --color-tone-oldgray: #2F2F2F;
   --color-tone-cream: #F7F3E9;

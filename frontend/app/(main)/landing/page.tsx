@@ -62,38 +62,42 @@ export default function Landing() {
             <SlideImg />
           </section>
 
-          {/* Section: ค้นหาปราสาท */}
-          <section className="my-5 px-4 md:px-10">
-            <div className="my-20">
-              <div className="mb-10">
-                <div className="flex flex-row gap-3 items-center">
-                  <ScanSearch size={38} className="text-tone-oldgray" />
-                  <h1 className="font-bold text-3xl text-tone-oldgray uppercase tracking-tight">
+          <section className="my-5 px-4 md:px-10 overflow-hidden">
+            <div className="my-8 md:my-20 max-w-7xl mx-auto">
+              <div className="mb-6 md:mb-10">
+                <div className="flex flex-row gap-2 md:gap-3 items-center">
+                  <ScanSearch size={28} className="text-tone-oldgray md:w-[38px] md:h-[38px]" />
+                  <h1 className="font-bold text-xl md:text-3xl text-tone-oldgray uppercase tracking-tight leading-tight">
                     Castle Similarity Search
                   </h1>
                 </div>
-                <p className="text-stone-500 mt-2">
+                <p className="text-stone-500 mt-2 text-xs md:text-base">
                   ค้นหาความคล้ายคลึงกันของปราสาทด้วยข้อความหรือรูปภาพ
                 </p>
               </div>
 
-              <div className="bg-white rounded-2xl shadow-sm border border-stone-100">
-                <div className="p-5">
+              <div className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
+                <div className="p-1 md:p-5 overflow-x-auto scrollbar-hide">
                   <Tabs
                     aria-label="Search Options"
                     variant="underlined"
                     color="warning"
+                    className="w-full"
+                    classNames={{
+                      tabList: "gap-4 md:gap-8 px-2 md:px-0",
+                      tab: "px-0 pb-1 h-10 md:h-12",
+                    }}
                   >
                     <Tab
                       key="text"
                       title={
                         <div className="flex items-center space-x-2">
-                          <FileText size={18} />
-                          <span>Search with Text & Filters</span>
+                          <FileText size={18} className="w-4 h-4 md:w-[18px] md:h-[18px]" />
+                          <span className="text-xs md:text-md">Search with Text & Filters</span>
                         </div>
                       }
                     >
-                      <div className="py-4">
+                      <div className="py-2 px-2 md:px-0">
                         <Search />
                       </div>
                     </Tab>
@@ -101,12 +105,12 @@ export default function Landing() {
                       key="image"
                       title={
                         <div className="flex items-center space-x-2">
-                          <Image size={18} />
-                          <span>Search by Image</span>
+                          <Image size={18} className="w-4 h-4 md:w-[18px] md:h-[18px]" />
+                          <span className="text-xs md:text-md">Search by Image</span>
                         </div>
                       }
                     >
-                      <div className="py-4">
+                      <div className="py-2 px-2 md:px-0">
                         <Dropzone />
                       </div>
                     </Tab>

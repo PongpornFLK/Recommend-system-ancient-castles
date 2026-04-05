@@ -149,7 +149,7 @@ def confirmTrip(
 
 
 # get trip ทั้งหมดของ user คนนั้น
-@router.get("/user", response_model=List[TripPlanResponse])
+@router.get("/user")
 def getUserTrips(
     db: Session = Depends(get_db), current_user: User = Depends(getCurrentUser)
 ):
@@ -157,16 +157,17 @@ def getUserTrips(
         raise HTTPException(status_code=403, detail="You don't have permission")
 
     trips = (
-        db.query(TripPlan, Castle.castle_name, Location.latitude, Location.longitude)
+        db.query(TripPlan, Castle.castle_name, Location.latitude, Location.longitude, Event)
         .join(Castle , TripPlan.castle_id == Castle.castle_id)
         .join(LocationCastle, Castle.castle_id == LocationCastle.castle_id)
         .join(Location, LocationCastle.location_id == Location.location_id)
+        .outerjoin(Event, TripPlan.event_id == Event.event_id)
         .filter(TripPlan.user_id == current_user.get("user_id")).all()
     )
     
     db_trip = []
     
-    for trip_data, castle_name, lat, lng in trips:
+    for trip_data, castle_name, lat, lng, event in trips:
         db_trip.append({
             "plan_id" : trip_data.plan_id,
             "user_id" : trip_data.user_id,
@@ -183,6 +184,11 @@ def getUserTrips(
             "destination_name" : castle_name,
             "destination_lat" : lat,
             "destination_lng" : lng,
+            "event_name": event.event_name if event else None,
+            "event_start_date": str(event.event_start_date) if event and event.event_start_date else None,
+            "event_end_date": str(event.event_end_date) if event and event.event_end_date else None,
+            "event_start_time": event.event_start_time if event else None,
+            "event_end_time": event.event_end_time if event else None,
         })
         
     return db_trip

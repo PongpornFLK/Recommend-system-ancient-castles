@@ -8,6 +8,7 @@ import {
   ImageIcon, Search, Loader2, Sparkles 
 } from "lucide-react";
 import { getCastleGalleryByName } from "../../lib/castleImages";
+import { addToast } from "@heroui/react";
 
 type Castle = {
   castle_id: number;
@@ -93,7 +94,7 @@ export default function Dropzone() {
       setFile(f);
       setCastles([]);
     } else if (f) {
-      alert("กรุณาเลือกไฟล์รูปภาพเท่านั้น");
+      addToast({ title: "กรุณาเลือกไฟล์รูปภาพเท่านั้น", color: "warning" });
     }
   };
 
@@ -107,7 +108,7 @@ export default function Dropzone() {
       const data = await res.json();
       setCastles(data.castles || []);
     } catch (err) {
-      alert("เกิดข้อผิดพลาดในการค้นหา");
+      addToast({ title: "เกิดข้อผิดพลาดในการค้นหา", color: "danger" });
       console.error(err)
     } finally {
       setLoading(false);

@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useEffect, useMemo, useState } from "react";
 import AdminBar from "@/app/components/admin/adminbar";
 import AddCastleForm from "@/app/components/admin/AddCastleForm";
@@ -21,9 +20,16 @@ import {
   uploadImageVector,
   uploadDocumentVector,
   addNearbyPlace,
+  getNearbyPlaces,
+  deleteNearbyPlace,
+  updateNearbyPlace,
+  NearbyPlaceType,
 } from "@/app/service/castle/managecastle";
 
 export default function ManageCastle() {
+  // =========================================================
+  // 1. STATE: ทั่วไป & จัดการปราสาท (Castles)
+  // =========================================================
   const [activeTab, setActiveTab] = useState<number | null>(null);
   const [castles, setCastles] = useState<CastleType[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -31,6 +37,9 @@ export default function ManageCastle() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedCastle, setSelectedCastle] = useState<CastleType | null>(null);
 
+  // =========================================================
+  // 2. STATE: จัดการข้อมูล Vector (รูปภาพ & เอกสาร)
+  // =========================================================
   const [selectedVectorCastleId, setSelectedVectorCastleId] = useState<string>("");
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [vectorLoading, setVectorLoading] = useState(false);
@@ -39,25 +48,34 @@ export default function ManageCastle() {
   const [selectedDocFile, setSelectedDocFile] = useState<File | null>(null);
   const [docLoading, setDocLoading] = useState(false);
 
+  // =========================================================
+  // 3. STATE: เพิ่มสถานที่ใกล้เคียง (Add Nearby Place)
+  // =========================================================
   const [nearbyCastleId, setNearbyCastleId] = useState<string>("");
   const [nearbyPlaceName, setNearbyPlaceName] = useState("");
   const [nearbyDetail, setNearbyDetail] = useState("");
   const [nearbyLatitude, setNearbyLatitude] = useState("");
   const [nearbyLongitude, setNearbyLongitude] = useState("");
   const [nearbyLoading, setNearbyLoading] = useState(false);
-  const resetNearbyModal = () => {
-    setNearbyCastleId("");
-    setNearbyPlaceName("");
-    setNearbyDetail("");
-    setNearbyLatitude("");
-    setNearbyLongitude("");
-  };
+
+  // =========================================================
+  // 4. STATE: แสดงและแก้ไขสถานที่ใกล้เคียง (Nearby Places Table & Edit)
+  // =========================================================
+  const [nearbyPlaces, setNearbyPlaces] = useState<NearbyPlaceType[]>([]);
+  const [nearbyTableLoading, setNearbyTableLoading] = useState(false);
+  const [isEditNearbyOpen, setIsEditNearbyOpen] = useState(false);
+  const [selectedNearby, setSelectedNearby] = useState<NearbyPlaceType | null>(null);
+  const [nearbySearchTerm, setNearbySearchTerm] = useState("");
+
   const menuButtons = [
     { id: 1, title: "Add New Castle", icon: PlusCircle, color: "bg-[#5D4037]" },
     { id: 2, title: "Add New Vector Data", icon: Database, color: "bg-[#8D6E63]" },
-    { id: 3, title: "Add Nearby Places", icon: MapPinned, color: "bg-[#A1887F]" },
   ];
 
+  // =========================================================
+  // ฟังก์ชัน API: โหลดข้อมูล
+  // =========================================================
+  
   const fetchCastles = async () => {
     try {
       setLoading(true);
@@ -70,10 +88,28 @@ export default function ManageCastle() {
     }
   };
 
+  const fetchNearbyPlaces = async () => {
+    try {
+      setNearbyTableLoading(true);
+      const data = await getNearbyPlaces();
+      setNearbyPlaces(data);
+    } catch (error) {
+      console.error("โหลด nearby ไม่สำเร็จ", error);
+    } finally {
+      setNearbyTableLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchCastles();
+    fetchNearbyPlaces();
   }, []);
 
+  // =========================================================
+  // ฟังก์ชันช่วยค้นหา (Search Filters)
+  // =========================================================
+  
+  // กรองปราสาท
   const filteredCastles = useMemo(() => {
     const keyword = searchTerm.trim().toLowerCase();
     if (!keyword) return castles;
@@ -90,6 +126,32 @@ export default function ManageCastle() {
         .some((value) => String(value).toLowerCase().includes(keyword))
     );
   }, [castles, searchTerm]);
+
+  // ⭐ เพิ่มฟังก์ชันกรอง Nearby Places
+  const filteredNearbyPlaces = useMemo(() => {
+    const keyword = nearbySearchTerm.trim().toLowerCase();
+    if (!keyword) return nearbyPlaces;
+
+    return nearbyPlaces.filter((item) =>
+      [
+        item.place_name,
+        item.castle_name,
+        String(item.castle_id),
+        item.nearby_detail
+      ]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(keyword))
+    );
+  }, [nearbyPlaces, nearbySearchTerm]);
+
+  // =========================================================
+  // ฟังก์ชันจัดการ: ปราสาท (Castles)
+  // =========================================================
+
+  const openEditModal = (castle: CastleType) => {
+    setSelectedCastle(castle);
+    setIsEditOpen(true);
+  };
 
   const handleDelete = async (castle: CastleType) => {
     const castleId = getCastleId(castle);
@@ -124,7 +186,6 @@ export default function ManageCastle() {
       };
 
       await updateCastle(castleId, payload);
-
       alert("แก้ไขสำเร็จ");
       setIsEditOpen(false);
       setSelectedCastle(null);
@@ -134,9 +195,57 @@ export default function ManageCastle() {
     }
   };
 
-  const openEditModal = (castle: CastleType) => {
-    setSelectedCastle(castle);
-    setIsEditOpen(true);
+  // =========================================================
+  // ฟังก์ชันจัดการ: สถานที่ใกล้เคียง (Nearby Places)
+  // =========================================================
+
+  const openEditNearby = (item: NearbyPlaceType) => {
+    setSelectedNearby(item);
+    setIsEditNearbyOpen(true);
+  };
+
+  const handleDeleteNearbyPlace = async (item: NearbyPlaceType) => {
+    if (!window.confirm(`ต้องการลบ "${item.place_name}"?`)) return;
+
+    try {
+      await deleteNearbyPlace(item.nearplace_id);
+      fetchNearbyPlaces();
+    } catch (error: any) {
+      alert("ลบไม่สำเร็จ: " + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const handleUpdateNearby = async () => {
+    if (!selectedNearby) return;
+
+    try {
+      await updateNearbyPlace(selectedNearby.nearplace_id, {
+        castle_id: Number(selectedNearby.castle_id),
+        place_name: selectedNearby.place_name,
+        nearby_detail: selectedNearby.nearby_detail || "",
+        latitude: Number(selectedNearby.latitude),
+        longitude: Number(selectedNearby.longitude),
+      });
+
+      alert("แก้ไข Nearby สำเร็จ");
+      setIsEditNearbyOpen(false);
+      setSelectedNearby(null);
+      fetchNearbyPlaces();
+    } catch (error: any) {
+      alert("แก้ไขไม่สำเร็จ: " + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  // =========================================================
+  // ฟังก์ชัน Reset Modal ค่าต่างๆ
+  // =========================================================
+
+  const resetNearbyModal = () => {
+    setNearbyCastleId("");
+    setNearbyPlaceName("");
+    setNearbyDetail("");
+    setNearbyLatitude("");
+    setNearbyLongitude("");
   };
 
   const resetVectorModal = () => {
@@ -146,6 +255,9 @@ export default function ManageCastle() {
     setSelectedDocFile(null);
   };
 
+  // =========================================================
+  // ส่วนแสดงผล UI (Render)
+  // =========================================================
   return (
     <section className="min-h-screen bg-stone-50 relative">
       <AdminBar />
@@ -155,6 +267,9 @@ export default function ManageCastle() {
           Manage Castle System
         </h1>
 
+        {/* ---------------------------------------------------------
+            SECTION: ตารางรายชื่อปราสาท (Castle Table)
+        ---------------------------------------------------------- */}
         <div className="bg-white rounded-[2rem] shadow-lg border border-stone-200 p-6 mb-10">
           <div className="relative mb-8">
             <Search
@@ -201,6 +316,7 @@ export default function ManageCastle() {
                   <th className="px-4 py-3 rounded-r-xl">Action</th>
                 </tr>
               </thead>
+
               <tbody>
                 {loading ? (
                   <tr>
@@ -253,8 +369,118 @@ export default function ManageCastle() {
             </table>
           </div>
         </div>
+
+        {/* ---------------------------------------------------------
+            SECTION: ตารางสถานที่ใกล้เคียง (Nearby Places Table)
+        ---------------------------------------------------------- */}
+        <div className="bg-white rounded-[2rem] shadow-lg border border-stone-200 p-6 mb-10">
+          
+          {/* ⭐ ช่องค้นหา Nearby Places */}
+          <div className="relative mb-8">
+            <Search
+              size={20}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400"
+            />
+            <input
+              type="text"
+              placeholder="Search nearby place name, detail, or castle..."
+              value={nearbySearchTerm}
+              onChange={(e) => setNearbySearchTerm(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 rounded-full border border-stone-300 outline-none focus:ring-2 focus:ring-[#A1887F]"
+            />
+          </div>
+
+          <div className="flex flex-col md:flex-row items-center relative mb-6">
+            <h2 className="text-2xl font-bold text-[#3E2723] mb-4 md:mb-0 md:absolute md:left-0">
+              Nearby Places Table
+            </h2>
+            
+            <div className="w-full flex justify-center">
+              <button
+                onClick={() => setActiveTab(3)}
+                className="flex items-center gap-2 py-2.5 px-5 rounded-xl text-white text-sm font-bold transition-all transform hover:scale-[1.03] shadow-md bg-[#A1887F]"
+              >
+                <MapPinned size={18} />
+                <span>Add Nearby Places</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-center border-separate border-spacing-y-2">
+              <thead className="bg-stone-100 text-stone-700">
+                <tr>
+                  <th className="px-4 py-3 rounded-l-xl">Nearby ID</th>
+                  <th className="px-4 py-3">Castle</th>
+                  <th className="px-4 py-3">Place Name</th>
+                  <th className="px-4 py-3">Detail</th>
+                  <th className="px-4 py-3">Latitude</th>
+                  <th className="px-4 py-3">Longitude</th>
+                  <th className="px-4 py-3 rounded-r-xl">Action</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {nearbyTableLoading ? (
+                  <tr>
+                    <td colSpan={7} className="py-8 text-stone-400">
+                      กำลังโหลด...
+                    </td>
+                  </tr>
+                ) : filteredNearbyPlaces.length === 0 ? ( // ⭐ เปลี่ยนเป็น mapped จาก filteredNearbyPlaces
+                  <tr>
+                    <td colSpan={7} className="py-8 text-stone-400">
+                      ไม่พบข้อมูลสถานที่ใกล้เคียง
+                    </td>
+                  </tr>
+                ) : (
+                  filteredNearbyPlaces.map((item) => ( // ⭐ เปลี่ยนเป็น mapped จาก filteredNearbyPlaces
+                    <tr
+                      key={item.nearplace_id}
+                      className="bg-white shadow-sm border border-stone-100"
+                    >
+                      <td className="px-4 py-3">{item.nearplace_id}</td>
+                      <td className="px-4 py-3">
+                        {item.castle_name || item.castle_id}
+                      </td>
+                      <td className="px-4 py-3 font-semibold text-[#3E2723]">
+                        {item.place_name}
+                      </td>
+                      <td className="px-4 py-3">
+                        {item.nearby_detail || "-"}
+                      </td>
+                      <td className="px-4 py-3">{item.latitude || "-"}</td>
+                      <td className="px-4 py-3">{item.longitude || "-"}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-center gap-3">
+                          <button
+                            onClick={() => openEditNearby(item)}
+                            className="text-stone-600 hover:text-orange-600"
+                          >
+                            <Pencil size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteNearbyPlace(item)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
+      {/* ---------------------------------------------------------
+          MODALS / POPUPS ส่วนต่างๆ
+      ---------------------------------------------------------- */}
+      {/* (โค้ด Modal ส่วนนี้เหมือนเดิมทุกประการ) */}
+      
       {activeTab === 1 && (
         <AddCastleForm
           onClose={() => {
@@ -339,12 +565,10 @@ export default function ManageCastle() {
 
                       try {
                         setVectorLoading(true);
-
                         const res = await uploadImageVector(
                           Number(selectedVectorCastleId),
                           selectedImageFile
                         );
-
                         alert(`${res.message}\nimg_id: ${res.img_id}`);
                         setSelectedVectorCastleId("");
                         setSelectedImageFile(null);
@@ -423,12 +647,10 @@ export default function ManageCastle() {
 
                       try {
                         setDocLoading(true);
-
                         const res = await uploadDocumentVector(
                           Number(selectedDocCastleId),
                           selectedDocFile
                         );
-
                         alert(
                           `${res.message || "เพิ่ม document vector สำเร็จ"}\nChunks inserted: ${res.chunks_inserted ?? res.inserted ?? 0}`
                         );
@@ -457,7 +679,7 @@ export default function ManageCastle() {
         </div>
       )}
 
-            {activeTab === 3 && (
+      {activeTab === 3 && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <div className="bg-white p-8 rounded-[2rem] shadow-2xl max-w-2xl w-full relative max-h-[90vh] overflow-y-auto">
             <button
@@ -576,7 +798,6 @@ export default function ManageCastle() {
 
                   try {
                     setNearbyLoading(true);
-
                     const res = await addNearbyPlace({
                       castle_id: Number(nearbyCastleId),
                       place_name: nearbyPlaceName.trim(),
@@ -584,10 +805,10 @@ export default function ManageCastle() {
                       latitude: lat,
                       longitude: lng,
                     });
-
                     alert(res.message || "เพิ่มสถานที่ใกล้เคียงสำเร็จ");
                     resetNearbyModal();
                     setActiveTab(null);
+                    fetchNearbyPlaces();
                   } catch (error: any) {
                     alert(
                       "เพิ่มสถานที่ใกล้เคียงไม่สำเร็จ: " +
@@ -609,58 +830,275 @@ export default function ManageCastle() {
 
       {isEditOpen && selectedCastle && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-2xl rounded-2xl p-6">
-            <h2 className="text-xl font-bold mb-4">Edit Castle</h2>
-
-            <textarea
-              value={selectedCastle.castle_name}
-              onChange={(e) =>
-                setSelectedCastle({ ...selectedCastle, castle_name: e.target.value })
-              }
-              className="w-full border p-2 mb-2"
-            />
-
-            <textarea
-              value={selectedCastle.era || ""}
-              onChange={(e) =>
-                setSelectedCastle({ ...selectedCastle, era: e.target.value })
-              }
-              className="w-full border p-2 mb-2"
-            />
-
-            <textarea
-              value={selectedCastle.architecture_detail || ""}
-              onChange={(e) =>
-                setSelectedCastle({
-                  ...selectedCastle,
-                  architecture_detail: e.target.value,
-                })
-              }
-              className="w-full border p-2 mb-2"
-            />
-
-            <textarea
-              value={selectedCastle.province || ""}
-              onChange={(e) =>
-                setSelectedCastle({ ...selectedCastle, province: e.target.value })
-              }
-              className="w-full border p-2 mb-2"
-            />
-
-            <div className="flex justify-end gap-2 mt-4">
+          <div className="bg-white w-full max-w-3xl rounded-[2rem] p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-[#3E2723]">Edit Castle</h2>
               <button
                 onClick={() => {
                   setIsEditOpen(false);
                   setSelectedCastle(null);
                 }}
-                className="px-4 py-2 border"
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div className="md:col-span-2">
+                <label className="block text-sm font-bold text-stone-700 mb-2">
+                  Castle Name
+                </label>
+                <textarea
+                  value={selectedCastle.castle_name || ""}
+                  onChange={(e) =>
+                    setSelectedCastle({
+                      ...selectedCastle,
+                      castle_name: e.target.value,
+                    })
+                  }
+                  rows={2}
+                  className="w-full border border-stone-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-400 resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-stone-700 mb-2">
+                  Era
+                </label>
+                <textarea
+                  value={selectedCastle.era || ""}
+                  onChange={(e) =>
+                    setSelectedCastle({
+                      ...selectedCastle,
+                      era: e.target.value,
+                    })
+                  }
+                  rows={2}
+                  className="w-full border border-stone-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-400 resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-stone-700 mb-2">
+                  Type ID
+                </label>
+                <input
+                  type="number"
+                  value={selectedCastle.type_id || ""}
+                  onChange={(e) =>
+                    setSelectedCastle({
+                      ...selectedCastle,
+                      type_id: e.target.value,
+                    })
+                  }
+                  className="w-full border border-stone-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-400"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-bold text-stone-700 mb-2">
+                  Architecture Detail
+                </label>
+                <textarea
+                  value={selectedCastle.architecture_detail || ""}
+                  onChange={(e) =>
+                    setSelectedCastle({
+                      ...selectedCastle,
+                      architecture_detail: e.target.value,
+                    })
+                  }
+                  rows={3}
+                  className="w-full border border-stone-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-400 resize-none"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-bold text-stone-700 mb-2">
+                  Description
+                </label>
+                <textarea
+                  value={selectedCastle.castle_description || ""}
+                  onChange={(e) =>
+                    setSelectedCastle({
+                      ...selectedCastle,
+                      castle_description: e.target.value,
+                    })
+                  }
+                  rows={4}
+                  className="w-full border border-stone-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-400 resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-stone-700 mb-2">
+                  Province
+                </label>
+                <textarea
+                  value={selectedCastle.province || ""}
+                  onChange={(e) =>
+                    setSelectedCastle({
+                      ...selectedCastle,
+                      province: e.target.value,
+                    })
+                  }
+                  rows={2}
+                  className="w-full border border-stone-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-400 resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-stone-700 mb-2">
+                  District
+                </label>
+                <textarea
+                  value={selectedCastle.district || ""}
+                  onChange={(e) =>
+                    setSelectedCastle({
+                      ...selectedCastle,
+                      district: e.target.value,
+                    })
+                  }
+                  rows={2}
+                  className="w-full border border-stone-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-400 resize-none"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-bold text-stone-700 mb-2">
+                  Sub District
+                </label>
+                <textarea
+                  value={selectedCastle.sub_district || ""}
+                  onChange={(e) =>
+                    setSelectedCastle({
+                      ...selectedCastle,
+                      sub_district: e.target.value,
+                    })
+                  }
+                  rows={2}
+                  className="w-full border border-stone-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-400 resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-stone-700 mb-2">
+                  Latitude
+                </label>
+                <input
+                  type="number"
+                  step="any"
+                  value={selectedCastle.latitude || ""}
+                  onChange={(e) =>
+                    setSelectedCastle({
+                      ...selectedCastle,
+                      latitude: e.target.value,
+                    })
+                  }
+                  className="w-full border border-stone-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-stone-700 mb-2">
+                  Longitude
+                </label>
+                <input
+                  type="number"
+                  step="any"
+                  value={selectedCastle.longitude || ""}
+                  onChange={(e) =>
+                    setSelectedCastle({
+                      ...selectedCastle,
+                      longitude: e.target.value,
+                    })
+                  }
+                  className="w-full border border-stone-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-400"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setIsEditOpen(false);
+                  setSelectedCastle(null);
+                }}
+                className="px-6 py-2 border border-orange-500 text-orange-500 rounded-xl font-bold hover:bg-orange-50"
               >
                 Cancel
               </button>
 
               <button
                 onClick={handleUpdate}
-                className="px-4 py-2 bg-orange-600 text-white"
+                className="px-6 py-2 bg-orange-600 text-white rounded-xl font-bold hover:bg-orange-700"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isEditNearbyOpen && selectedNearby && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-2xl rounded-[2rem] p-6 shadow-2xl">
+            <h2 className="text-xl font-bold mb-4">Edit Nearby Place</h2>
+
+            <input
+              value={selectedNearby.place_name || ""}
+              onChange={(e) =>
+                setSelectedNearby({ ...selectedNearby, place_name: e.target.value })
+              }
+              className="w-full border border-stone-300 rounded-xl p-3 mb-3 outline-none focus:ring-2 focus:ring-orange-400"
+              placeholder="Place Name"
+            />
+
+            <textarea
+              value={selectedNearby.nearby_detail || ""}
+              onChange={(e) =>
+                setSelectedNearby({ ...selectedNearby, nearby_detail: e.target.value })
+              }
+              className="w-full border border-stone-300 rounded-xl p-3 mb-3 outline-none focus:ring-2 focus:ring-orange-400 resize-none"
+              placeholder="Nearby Detail"
+              rows={3}
+            />
+
+            <div className="grid grid-cols-2 gap-4 mb-3">
+              <input
+                type="number"
+                value={selectedNearby.latitude || ""}
+                onChange={(e) =>
+                  setSelectedNearby({ ...selectedNearby, latitude: e.target.value })
+                }
+                className="w-full border border-stone-300 rounded-xl p-3 outline-none focus:ring-2 focus:ring-orange-400"
+                placeholder="Latitude"
+              />
+
+              <input
+                type="number"
+                value={selectedNearby.longitude}
+                onChange={(e) =>
+                  setSelectedNearby({ ...selectedNearby, longitude: e.target.value })
+                }
+                className="w-full border border-stone-300 rounded-xl p-3 outline-none focus:ring-2 focus:ring-orange-400"
+                placeholder="Longitude"
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 mt-4">
+              <button
+                onClick={() => {
+                  setIsEditNearbyOpen(false);
+                  setSelectedNearby(null);
+                }}
+                className="px-6 py-2 border border-orange-500 text-orange-500 rounded-xl font-bold hover:bg-orange-50"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleUpdateNearby}
+                className="px-6 py-2 bg-orange-600 text-white rounded-xl font-bold hover:bg-orange-700"
               >
                 Save
               </button>

@@ -39,10 +39,7 @@ class QAReq(BaseModel):
     k: int = 5
     castle_id: Optional[int] = None
 
-
-# =========================
-# Logic
-# =========================
+# connect_zilliz
 def connect_zilliz():
     uri = os.getenv("ZILLIZ_URI")
     token = os.getenv("ZILLIZ_TOKEN")
@@ -50,8 +47,7 @@ def connect_zilliz():
         raise ValueError("Missing ZILLIZ_URI / ZILLIZ_TOKEN (check .env)")
     if not connections.has_connection("default"):
         connections.connect(alias="default", uri=uri, token=token, secure=True)
-
-
+#โหลด Collection จาก Vector Database
 def get_collection(name: str) -> Collection:
     col = Collection(name)
     col.load()
@@ -754,9 +750,7 @@ def qa(req: QAReq, db: Session = Depends(get_db)):
                 }
             }
 
-        # =========================
         # GENERAL QUESTION -> VECTOR SEARCH
-        # =========================
         connect_zilliz()
         col = get_collection("document_vectors")
 

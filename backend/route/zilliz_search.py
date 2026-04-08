@@ -24,13 +24,24 @@ load_dotenv()
 
 router = APIRouter(prefix="/zilliz", tags=["zilliz"])
 
+# =========================
 # Embedders
+# =========================
 doc_embedder = SentenceTransformer("sentence-transformers/paraphrase-multilingual-mpnet-base-v2")
 img_embedder = SentenceTransformer("sentence-transformers/clip-ViT-B-32")
 
 
 # =========================
-# Helpers
+# Request Models
+# =========================
+class QAReq(BaseModel):
+    query: str
+    k: int = 5
+    castle_id: Optional[int] = None
+
+
+# =========================
+# Logic
 # =========================
 def connect_zilliz():
     uri = os.getenv("ZILLIZ_URI")
@@ -152,46 +163,6 @@ def detect_intents(query: str) -> Dict[str, bool]:
     }
 
 
-def fetch_castles_map(db: Session, castle_ids: List[int]) -> Dict[int, Dict[str, Any]]:
-    if not castle_ids:
-        return {}
-
-    ids = list(set(castle_ids))
-    if not ids:
-        return {}
-
-    placeholders = ", ".join([str(int(cid)) for cid in ids])
-
-    sql = text(f"""
-        SELECT
-            c.castle_id,
-            c.castle_name,
-            c.castle_description,
-            c.era,
-            c.type_id,
-            ct.type_detail,
-            (
-                SELECT a.architec_detail
-                FROM architectures a
-                WHERE a.castle_id = c.castle_id
-                  AND a.architec_detail IS NOT NULL
-                  AND a.architec_detail <> ''
-                LIMIT 1
-            ) AS architecture,
-            (
-                SELECT STRING_AGG(e.event_name || ': ' || e.event_description, ' | ')
-                FROM events e
-                WHERE e.castle_id = c.castle_id
-            ) AS festivals_info
-        FROM castles c
-        LEFT JOIN castle_types ct ON ct.type_id = c.type_id
-        WHERE c.castle_id IN ({placeholders})
-    """)
-
-    rows = db.execute(sql).mappings().all()
-    return {r["castle_id"]: dict(r) for r in rows}
-
-
 def pick_vector_field(col: Collection) -> Tuple[str, int]:
     for f in col.schema.fields:
         if str(getattr(f, "dtype", "")) == "101" or "FLOAT_VECTOR" in str(getattr(f, "dtype", "")):
@@ -264,6 +235,49 @@ def detect_castle_from_query(db: Session, query: str) -> Optional[Dict[str, Any]
             }
 
     return None
+
+
+# =========================
+# DB Helpers
+# =========================
+def fetch_castles_map(db: Session, castle_ids: List[int]) -> Dict[int, Dict[str, Any]]:
+    if not castle_ids:
+        return {}
+
+    ids = list(set(castle_ids))
+    if not ids:
+        return {}
+
+    placeholders = ", ".join([str(int(cid)) for cid in ids])
+
+    sql = text(f"""
+        SELECT
+            c.castle_id,
+            c.castle_name,
+            c.castle_description,
+            c.era,
+            c.type_id,
+            ct.type_detail,
+            (
+                SELECT a.architec_detail
+                FROM architectures a
+                WHERE a.castle_id = c.castle_id
+                  AND a.architec_detail IS NOT NULL
+                  AND a.architec_detail <> ''
+                LIMIT 1
+            ) AS architecture,
+            (
+                SELECT STRING_AGG(e.event_name || ': ' || e.event_description, ' | ')
+                FROM events e
+                WHERE e.castle_id = c.castle_id
+            ) AS festivals_info
+        FROM castles c
+        LEFT JOIN castle_types ct ON ct.type_id = c.type_id
+        WHERE c.castle_id IN ({placeholders})
+    """)
+
+    rows = db.execute(sql).mappings().all()
+    return {r["castle_id"]: dict(r) for r in rows}
 
 
 def get_castle_location(db: Session, castle_id: int) -> Optional[Dict[str, Any]]:
@@ -382,6 +396,9 @@ def get_events_by_castle(
     return [dict(r) for r in rows]
 
 
+# =========================
+# Builder Helpers
+# =========================
 def build_travel_highlights(
     nearby_places: List[Dict[str, Any]],
     events: List[Dict[str, Any]],
@@ -514,7 +531,6 @@ def build_nearby_answer(castle_info: Dict[str, Any], nearby_places: List[Dict[st
         if latitude is not None and longitude is not None:
             lines.append(f"   - พิกัด: {latitude}, {longitude}")
 
-
     lines.append("")
     lines.append("### สถานที่ที่เกี่ยวข้อง")
     lines.append(f"- {castle_name}")
@@ -575,14 +591,10 @@ def build_event_answer(
 
 
 # =========================
-# QA (Text Search)
+# API Endpoints
 # =========================
-class QAReq(BaseModel):
-    query: str
-    k: int = 5
-    castle_id: Optional[int] = None
 
-
+# ---------- QA (Text Search) ----------
 @router.post("/qa")
 def qa(req: QAReq, db: Session = Depends(get_db)):
     try:
@@ -748,7 +760,10 @@ def qa(req: QAReq, db: Session = Depends(get_db)):
         connect_zilliz()
         col = get_collection("document_vectors")
 
-        qvec = doc_embedder.encode(query_text, normalize_embeddings=True).tolist()
+        qvec = doc_embedder.encode(
+            query_text,
+            normalize_embeddings=True
+        ).tolist()
 
         expr = None
         if matched_castle_id is not None:
@@ -956,9 +971,7 @@ def qa(req: QAReq, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# =========================
-# Image Search
-# =========================
+# ---------- Image Search ----------
 @router.post("/images")
 def search_images(
     k: int = Query(5, ge=1, le=20),

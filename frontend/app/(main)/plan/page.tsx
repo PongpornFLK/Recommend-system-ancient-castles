@@ -7,21 +7,14 @@ const Routeplan = dynamic(() => import("@/app/components/plan/routeplan"), {
 const Routesum = dynamic(() => import("@/app/components/plan/routesum"), {
   ssr: false,
 });
-
 import useLocation from "@/app/service/map/useLocation";
-import { useEffect, useState, Suspense } from "react";
+import { useState, Suspense } from "react";
 import { now, getLocalTimeZone, ZonedDateTime } from "@internationalized/date";
-import { useSearchParams } from "next/navigation";
 
 export default function Plan() {
-  const searchParams = useSearchParams();
-  const castleIdFromQuery = searchParams.get("castle_id");
-  const eventIdFromQuery = searchParams.get("event_id");
-
   const [boxSelect, setBoxSelect] = useState([
     { id: 1, placeId: "", placeName: "", latitude: 0, longitude: 0 },
   ]);
-
   const { getNamePlace, loading, getGPS } = useLocation();
   const [date, setDate] = useState<ZonedDateTime | null>(
     now(getLocalTimeZone()),
@@ -40,42 +33,18 @@ export default function Plan() {
     },
   );
 
-  useEffect(() => {
-    if (!castleIdFromQuery) return;
-
-    setBoxSelect([
-      {
-        id: 1,
-        placeId: castleIdFromQuery,
-        placeName: "",
-        latitude: 0,
-        longitude: 0,
-      },
-    ]);
-  }, [castleIdFromQuery]);
-
-  useEffect(() => {
-    if (!eventIdFromQuery) return;
-    const parsedEventId = Number(eventIdFromQuery);
-    if (!Number.isNaN(parsedEventId)) {
-      setEventId(parsedEventId);
-    }
-  }, [eventIdFromQuery]);
-
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <section>
         <div className="bg-white rounded-2xl mt-5 p-6 shadow-md border border-slate-100">
+          {/* Top - Container */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
             <div className="flex flex-col gap-1 md:gap-2">
               <h1 className="text-2xl md:text-3xl font-bold">My Plan</h1>
               <p className="text-sm md:text-base text-gray-500 max-w-sm">
                 สร้างและจัดการแผนการเดินทางสำหรับการเยี่ยมชมปราสาท
               </p>
-
-              
             </div>
-
             <div className="w-full sm:w-auto">
               <div className="flex items-center gap-2">
                 <DatePicker
@@ -95,6 +64,7 @@ export default function Plan() {
         </div>
 
         <div className="flex flex-col lg:flex-row gap-5 lg:items-start">
+          {/* Left - Container */}
           <Routeplan
             boxSelect={boxSelect}
             setBoxSelect={setBoxSelect}
@@ -107,6 +77,7 @@ export default function Plan() {
             setEventDescript={setEventDescript}
           />
 
+          {/* Right - Container */}
           <Routesum
             boxSelect={boxSelect}
             currentPlace={getNamePlace}

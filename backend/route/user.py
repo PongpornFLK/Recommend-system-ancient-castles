@@ -55,11 +55,12 @@ async def createUserWithGoogle(
             username=db_user_email.username,
             user_id=db_user_email.user_id,
             roles=db_user_email.roles,
+            token_version=db_user_email.token_version, # เพิ่มตรงนี้
             auth_provider="google",
         )
         
         # สร้าง-เก็บ refresh token
-        refresh_token = createRefreshToken(db_user_email.user_id)
+        refresh_token = createRefreshToken(db_user_email.user_id, db_user_email.token_version)
         db_user_email.refresh_token = refresh_token
         db.commit()
         
@@ -185,27 +186,28 @@ async def changePassword(
         raise HTTPException(status_code=401, detail="Invalid Authentication")
 
     db_user.password = pwd_context.hash(password.new_pass)
+    
+    # พีคตรงนี้: สั่งให้ Token เก่าทุุกใบตายทันที
+    db_user.token_version += 1
+    
     db.commit()
-    return {"message": "You change password success"}
+    return {"message": "You change password success. All other sessions have been logged out."}
 
 
-### Set Password for Google Users
-@router.post("/set_google_pwd")
-async def setGooglePassword(
-    password: SetGooglePwdRequest,
+@router.post("/logout-all")
+async def logoutAllDevices(
     current_user: Annotated[dict, Depends(getCurrentUser)],
     db: Session = Depends(get_db),
 ):
-    if current_user.get("auth_provider") != "google":
-        raise HTTPException(status_code=403, detail="You don't have permission")
-
-    user_id = current_user["user_id"]
-    db_user = db.query(User).filter(User.user_id == user_id).first()
-
-    if db_user is None:
-        raise HTTPException(status_code=404, detail="Not Found")
-
-    db_user.password = pwd_context.hash(password.new_pass)
+    db_user = db.query(User).filter(User.user_id == current_user["user_id"]).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # อัปเกรด Version เพื่อเตะทุกเครื่องออก
+    db_user.token_version += 1
     db.commit()
+    
+    return {"message": "Logged out from all devices successfully"}
 
-    return {"message": "Successfully set your new password"}
+
+

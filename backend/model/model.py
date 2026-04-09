@@ -18,6 +18,7 @@ class User(Base):
     roles = Column(String, default="user") # 'admin' / 'user'
     refresh_token = Column(String, nullable=True)
     auth_provider = Column(String, default="local")
+    token_version = Column(Integer, default=1, nullable=False)
     
     # Relationships
     search_histories = relationship("SearchHistory", back_populates="user")

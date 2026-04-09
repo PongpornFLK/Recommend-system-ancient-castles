@@ -5,11 +5,19 @@ from db import get_db
 from model.model import Castle, NearbyPlace
 from schemas.schemas import NearbyPlaceCreate, NearbyPlaceUpdate
 
+from authen.secur import getCurrentUser
+
 router = APIRouter(prefix="/manage-nearby-place", tags=["manage-nearby-place"])
 
 
 @router.post("/add")
-def add_nearby_place(req: NearbyPlaceCreate, db: Session = Depends(get_db)):
+def add_nearby_place(
+    req: NearbyPlaceCreate, 
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(getCurrentUser)
+):
+    if current_user.get("roles") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
     try:
         castle = db.query(Castle).filter(Castle.castle_id == req.castle_id).first()
         if not castle:
@@ -44,11 +52,17 @@ def add_nearby_place(req: NearbyPlaceCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/list")
-def get_nearby_places(db: Session = Depends(get_db)):
+def get_nearby_places(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(getCurrentUser)
+):
+    if current_user.get("roles") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
     try:
         results = (
             db.query(NearbyPlace, Castle)
             .outerjoin(Castle, Castle.castle_id == NearbyPlace.castle_id)
+            .order_by(NearbyPlace.nearplace_id.asc())
             .all()
         )
 
@@ -74,8 +88,11 @@ def get_nearby_places(db: Session = Depends(get_db)):
 def update_nearby_place(
     nearplace_id: int,
     req: NearbyPlaceUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(getCurrentUser)
 ):
+    if current_user.get("roles") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
     try:
         nearby_place = (
             db.query(NearbyPlace)
@@ -110,7 +127,13 @@ def update_nearby_place(
 
 
 @router.delete("/delete/{nearplace_id}")
-def delete_nearby_place(nearplace_id: int, db: Session = Depends(get_db)):
+def delete_nearby_place(
+    nearplace_id: int, 
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(getCurrentUser)
+):
+    if current_user.get("roles") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
     try:
         nearby_place = (
             db.query(NearbyPlace)

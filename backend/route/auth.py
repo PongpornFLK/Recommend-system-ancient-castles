@@ -21,10 +21,12 @@ def loginAccessToken( user : Annotated[OAuth2PasswordRequestForm , Depends()] , 
         username = userAuth.username,  
         user_id = userAuth.user_id,
         roles = userAuth.roles,
-        expires_delta = timedelta(minutes=60) # อายุ token สำหรับใช้งานจริง
+        token_version = userAuth.token_version, # ส่งเลข Version เข้าไป
+        expires_delta = timedelta(minutes=60)
     )
     refresh_token = createRefreshToken(
-        user_id = userAuth.user_id
+        user_id = userAuth.user_id,
+        token_version = userAuth.token_version # ส่งเลข Version เข้าไปใน Refresh Token ด้วย
     )
     
     userAuth.refresh_token=refresh_token
@@ -45,19 +47,22 @@ async def refreshToken(request : RefreshTokenRequest , db : Session=Depends(get_
     try:
         payload = jwt.decode(request.refresh_token ,SECRET_KEY,algorithms=[ALGORITHM])
         user_id : int = payload.get("user_id")
+        token_version : int = payload.get("token_version")
         
-        if payload.get("type") != "refresh" or user_id is None :
-            raise HTTPException(status_code=401,detail="Invalid token type")
+        if payload.get("type") != "refresh" or user_id is None or token_version is None:
+            raise HTTPException(status_code=401,detail="Invalid token type or payload")
 
         db_user = db.query(User).filter(User.user_id == user_id).first()
         
-        if db_user is None or db_user.refresh_token != request.refresh_token:
-            raise HTTPException(status_code=401,detail="Refresh token invalid")
+        # เช็ค Version ใน Refresh Token กับใน DB ด้วย!
+        if db_user is None or db_user.refresh_token != request.refresh_token or db_user.token_version != token_version:
+            raise HTTPException(status_code=401,detail="Refresh token invalid or revoked")
         
         new_token = createAccessToken(
             username = db_user.username,  
             user_id = db_user.user_id,
             roles = db_user.roles,
+            token_version = db_user.token_version, # ส่งเลข Version เข้าไป
             auth_provider = getattr(db_user , "auth_provider" , "local")
         )
         

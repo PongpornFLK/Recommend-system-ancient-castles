@@ -620,9 +620,8 @@ def qa(req: QAReq, db: Session = Depends(get_db)):
         castle_map = fetch_castles_map(db, [matched_castle_id] if matched_castle_id else [])
         current_castle_info = castle_map.get(matched_castle_id) if matched_castle_id else None
 
-        # =========================
+
         # TRAVEL QUERY
-        # =========================
         if intents["is_travel_query"]:
             if matched_castle_id is None:
                 return {
@@ -684,9 +683,7 @@ def qa(req: QAReq, db: Session = Depends(get_db)):
                 }
             }
 
-        # =========================
         # NEARBY QUERY
-        # =========================
         if intents["is_nearby_query"] and matched_castle_id:
             nearby_places = get_nearby_places(db, matched_castle_id, limit=10)
 
@@ -713,9 +710,8 @@ def qa(req: QAReq, db: Session = Depends(get_db)):
                 }
             }
 
-        # =========================
+
         # EVENT QUERY
-        # =========================
         if intents["is_event_query"] and matched_castle_id:
             events = get_events_by_castle(
                 db=db,

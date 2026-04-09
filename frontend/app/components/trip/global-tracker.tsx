@@ -28,7 +28,7 @@ export default function GlobalTracker() {
   const handleArrival = useCallback(async (name: string) => {
     localStorage.setItem("arrived", "success");
     window.dispatchEvent(new CustomEvent("arrived"));
-    
+
     // โหลด Toast แบบ Dynamic เพื่อไม่ให้หนักแอปตอนเริ่มต้น
     const { addToast } = await import("@heroui/react");
     addToast({
@@ -42,7 +42,7 @@ export default function GlobalTracker() {
         icon: "text-white",
       }
     });
-    
+
     if (watchIdRef.current) {
       navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
@@ -62,14 +62,14 @@ export default function GlobalTracker() {
         if (localStorage.getItem("arrived") === "success") return;
 
         if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
-        
+
         const checkDistance = (pos: GeolocationPosition) => {
           const dist = getDistanceInKm(
             pos.coords.latitude, pos.coords.longitude,
             activeTrip.destination_lat, activeTrip.destination_lng
           );
-          
-          if (dist <= 500) { // 500 km ตามที่คุณตั้งไว้
+
+          if (dist <= 0.5) { // 500 km ตามที่คุณตั้งไว้
             handleArrival(activeTrip.destination_name);
           }
         };
@@ -88,7 +88,7 @@ export default function GlobalTracker() {
 
   useEffect(() => {
     startTracking();
-    
+
     // ดักฟังเหตุการณ์ต่างๆ เพื่อเริ่มแทร็กใหม่
     window.addEventListener("auth-change", startTracking);
     window.addEventListener("trip-status-changed", startTracking);

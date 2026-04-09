@@ -7,12 +7,15 @@ import PasswordTab from "@/app/components/setuser/password-tab";
 
 export default function Setuser() {
   const [isMobile, setIsMobile] = useState(false);
+  const [authProvider, setAuthProvider] = useState("local");
 
   useEffect(() => {
     // Check screen size on mount
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
+    
+    setAuthProvider(localStorage.getItem("auth_provider") || "local");
     
     checkMobile(); // Initial check
     window.addEventListener("resize", checkMobile);

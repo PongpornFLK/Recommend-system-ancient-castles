@@ -5,6 +5,8 @@ import { HeartOff, Eye, Heart } from "lucide-react";
 import Link from "next/link";
 import { getCastleGalleryByName } from "../../lib/castleImages";
 
+import api from "@/app/service/api";
+
 interface FavoriteItem {
   interest_id: number;
   castle_id: number;
@@ -17,16 +19,14 @@ export default function FavoritePage() {
   const [isLoading, setIsLoading] = useState(true);
   
   const userId = typeof window !== "undefined" ? localStorage.getItem("user_id") : null;
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
   const loadFav = async () => {
     if (!userId) return;
     setIsLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/interests/${userId}`);
-      if (!res.ok) throw new Error("Failed to fetch favorites");
-      const data = await res.json();
-      setFavList(data);
+      // ใช้ api แทน fetch เพื่อให้แนบ Token อัตโนมัติ
+      const res = await api.get(`/interests/${userId}`);
+      setFavList(res.data);
     } catch (err) {
       console.error("Error loading favorites:", err);
     } finally {
@@ -36,10 +36,9 @@ export default function FavoritePage() {
 
   const removeFav = async (interestId: number) => {
     try {
-      const res = await fetch(`${API_BASE}/interests/${interestId}`, { 
-        method: "DELETE" 
-      });
-      if (res.ok) loadFav();
+      // ใช้ api.delete เพื่อความปลอดภัยและมี Token
+      const res = await api.delete(`/interests/${interestId}`);
+      if (res.status === 200) loadFav();
     } catch (err) {
       console.error("Delete favorite error:", err);
     }

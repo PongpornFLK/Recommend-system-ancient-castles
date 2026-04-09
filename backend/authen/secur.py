@@ -5,11 +5,13 @@ from fastapi.security import OAuth2PasswordBearer
 from typing import Annotated, Optional
 from passlib.context import CryptContext
 from datetime import datetime, timedelta, timezone
-import jwt
 from jwt.exceptions import DecodeError, ExpiredSignatureError
-import os
 from dotenv import load_dotenv
 from supabase import create_client, Client
+from db import get_db
+from sqlalchemy.orm import Session
+import os
+import jwt
 
 load_dotenv()
 
@@ -61,13 +63,15 @@ def createAccessToken(
     username: str,
     user_id: int,
     roles: str,
+    token_version: int,
     expires_delta: Optional[timedelta] = None,
     auth_provider: str = "local",
 ):
     encode = {
-        "sub": username,
+        "sub": str(user_id),
         "user_id": user_id,
         "roles": roles,
+        "token_version": token_version,
         "auth_provider": auth_provider,
     }
     if expires_delta:
@@ -81,22 +85,32 @@ def createAccessToken(
     return encode_jwt
 
 
-async def getCurrentUser(token: Annotated[str, Depends(oauth2_scheme)]):
+async def getCurrentUser(
+    token: Annotated[str, Depends(oauth2_scheme)],
+    db: Session = Depends(get_db)  # เพิ่ม DB เพื่อเช็ค Version
+):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
         user_id: int = payload.get("user_id")
-        roles: str = payload.get("roles")
-        auth_provider: str = payload.get("auth_provider")
+        token_version: int = payload.get("token_version")
 
-        if username is None or user_id is None:
-            raise HTTPException(status_code=401, detail="Not Validate")
+        if user_id is None or token_version is None:
+            raise HTTPException(status_code=401, detail="Invalid token payload")
+
+        # ตรวจสอบกับ Database
+        db_user = db.query(User).filter(User.user_id == user_id).first()
+        if not db_user:
+            raise HTTPException(status_code=401, detail="User not found")
+        
+        # ตรวจสอบ Version ถ้าไม่ตรงกัน = Token นี้ถูก Revoke แล้ว (เตะออก)
+        if db_user.token_version != token_version:
+            raise HTTPException(status_code=401, detail="Token has been revoked")
 
         return {
-            "username": username,
-            "user_id": user_id,
-            "roles": roles,
-            "auth_provider": auth_provider,
+            "username": db_user.username,
+            "user_id": db_user.user_id,
+            "roles": db_user.roles,
+            "auth_provider": db_user.auth_provider,
         }
 
     except (DecodeError, ExpiredSignatureError):
@@ -116,9 +130,10 @@ async def getOptionalUser(token: Annotated[Optional[str], Depends(optional_oauth
     except:
         return None
     
-def createRefreshToken(user_id:int):
+def createRefreshToken(user_id:int, token_version: int):
     encode = {
         "user_id" : user_id,
+        "token_version": token_version,
         "type" : "refresh",
     }
     expire = datetime.now(timezone.utc) + timedelta(days=7)

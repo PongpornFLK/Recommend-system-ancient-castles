@@ -108,7 +108,7 @@ class VisitHistoryBase(BaseModel):
     visit_date: Optional[datetime] = None
 
 class VisitHistoryCreate(VisitHistoryBase):
-    user_id: int
+    user_id: Optional[int] = None
     castle_id: int
 
 class VisitHistoryResponse(VisitHistoryBase):

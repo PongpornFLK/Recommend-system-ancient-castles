@@ -7,6 +7,8 @@ from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from PIL import Image
 
 from route.zilliz_search import connect_zilliz, get_collection, img_embedder
+from fastapi import Depends
+from authen.secur import getCurrentUser
 
 router = APIRouter(prefix="/manage-vector", tags=["manage-vector"])
 
@@ -21,7 +23,10 @@ def stable_int64_from_text(s: str) -> int:
 async def upload_image_vector(
     castle_id: int = Form(...),
     file: UploadFile = File(...),
+    current_user: dict = Depends(getCurrentUser)
 ):
+    if current_user.get("roles") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
     try:
         if not file:
             raise HTTPException(status_code=400, detail="กรุณาอัปโหลดรูปภาพ")

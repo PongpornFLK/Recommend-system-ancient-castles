@@ -7,6 +7,8 @@ from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from PyPDF2 import PdfReader
 
 from route.zilliz_search import connect_zilliz, get_collection, doc_embedder
+from fastapi import Depends
+from authen.secur import getCurrentUser
 
 router = APIRouter(prefix="/manage-doc-vector", tags=["manage-doc-vector"])
 
@@ -35,8 +37,11 @@ def extract_text_pdf(content: bytes):
 @router.post("/upload-document-vector")
 async def upload_doc_vector(
     castle_id: int = Form(...),
-    file: UploadFile = File(...)
+    file: UploadFile = File(...),
+    current_user: dict = Depends(getCurrentUser)
 ):
+    if current_user.get("roles") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
     try:
         content = await file.read()
 

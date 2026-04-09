@@ -17,7 +17,7 @@ export default function useCheckIn() {
     destLng: number,
   ) => {
     const user_id = localStorage.getItem("user_id");
-    const mapImg = MapStaticImg(
+    const mapImg = await MapStaticImg(
       currentLat,
       currentLng,
       destLat,

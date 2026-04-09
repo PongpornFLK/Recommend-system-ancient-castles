@@ -22,8 +22,8 @@ export default function Buttonview({ plan_id }: ButtonProps) {
   const { routeSeq, mapUrl } = useRoute(plan_id);
 
   // Split routeSeq
-  const text = routeSeq;
-  const seq = text.split(" -> ");
+  const text = routeSeq || "";
+  const seq = text.split(/->|\s->\s/).map(s => s.trim()).filter(s => s !== "");
   const seqMax = seq.length;
 
   return (
@@ -40,7 +40,7 @@ export default function Buttonview({ plan_id }: ButtonProps) {
         isOpen={isOpen}
         onOpenChange={onOpenChange}
         scrollBehavior="inside"
-        size="4xl"
+        size="5xl"
       >
         <ModalContent>
           {(onClose) => (
@@ -58,7 +58,7 @@ export default function Buttonview({ plan_id }: ButtonProps) {
               <ModalBody>
                 <div className="flex flex-col lg:flex-row gap-6">
                   {/* Left Side */}
-                  <div className="flex-1 px-6 py-4 max-h-[60vh] overflow-y-auto bg-gray-100 rounded-2xl">
+                  <div className="flex-[0.8] px-6 py-4 max-h-[60vh] overflow-y-auto bg-gray-100 rounded-2xl">
                     <div className="flex items-center gap-4 bg-white border border-slate-100 rounded-2xl p-5 shadow-sm mb-6">
                       <div className="w-12 h-12 bg-tone-lightgray rounded-full flex items-center justify-center text-tone-orange">
                         <MapPinned size={24} />
@@ -113,20 +113,20 @@ export default function Buttonview({ plan_id }: ButtonProps) {
                   </div>
 
                   {/* Right Side */}
-                  <div className="flex-1 flex flex-col min-w-0">
+                  <div className="flex-[1.2] flex flex-col min-w-0 h-fit self-center">
                     <div className="flex items-center justify-between mb-4 px-2">
                       <h1 className="font-bold text-slate-700 flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-orange-500"></span>
                         Route Visualization
                       </h1>
                     </div>
-                    <div className="w-full aspect-video sm:aspect-square lg:aspect-auto lg:flex-1 relative rounded-3xl overflow-hidden bg-slate-100 border-4 border-slate-50 shadow-inner">
+                    <div className="w-full h-fit relative rounded-3xl overflow-hidden bg-white border-4 border-slate-50 shadow-sm">
                       {mapUrl ? (
                         <Image
                           removeWrapper
                           alt="Route Map"
                           src={mapUrl}
-                          className="w-full h-full object-cover"
+                          className="w-full h-auto object-contain"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">

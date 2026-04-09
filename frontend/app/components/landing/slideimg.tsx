@@ -39,7 +39,7 @@ export default function SlideImg() {
         className="h-96"
       >
         {castles.map((castle, index) => (
-          <SwiperSlide key={index} className="relative group overflow-hidden rounded-2xl">
+          <SwiperSlide key={index} className="relative group overflow-hidden">
             <Image
               removeWrapper
               src={castle.img}

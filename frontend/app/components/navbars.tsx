@@ -1,11 +1,42 @@
 "use client";
 
 import Link from "next/link";
-import { UserRound, Settings, Heart, LogOut, House, Map, Info, ChessRook, MapPin, BellRing } from "lucide-react";
-import { Badge, Navbar, NavbarBrand, NavbarContent, NavbarItem, Button, Popover, PopoverTrigger, PopoverContent, NavbarMenuToggle, NavbarMenu, NavbarMenuItem, Divider, Image, } from "@heroui/react";
+import {
+  UserRound,
+  Settings,
+  Heart,
+  LogOut,
+  House,
+  Map,
+  Info,
+  ChessRook,
+  MapPin,
+  BellRing,
+} from "lucide-react";
+import {
+  Badge,
+  Navbar,
+  NavbarBrand,
+  NavbarContent,
+  NavbarItem,
+  Button,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  NavbarMenuToggle,
+  NavbarMenu,
+  NavbarMenuItem,
+  Divider,
+  Image,
+} from "@heroui/react";
 import api from "@/app/service/api";
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import GlobalTracker from "./trip/global-tracker";
+
+interface Trip {
+  status: string;
+}
 
 export default function Navbars() {
   const router = useRouter();
@@ -31,86 +62,71 @@ export default function Navbars() {
       label: "Notification",
       href: "/tripplan",
       icon: (
-        <Badge color="success" content="!" isInvisible={arrived !== "success"} shape="circle" size="sm">
+        <Badge
+          color="success"
+          content="!"
+          isInvisible={arrived !== "success"}
+          shape="circle"
+          size="sm"
+        >
           <BellRing size={16} />
         </Badge>
-      )
+      ),
     },
   ];
 
+  const fetchUser = React.useCallback(async () => {
+    const userId = localStorage.getItem("user_id");
+    if (!userId || userId === "null" || userId === "") return;
+
+    try {
+      const response = await api.get(`/users/${userId}`);
+      setUser(response.data);
+
+      const tripResponse = await api.get("/trip/user");
+      const activeTrip = tripResponse.data.find((t: Trip) => t.status === "travelling");
+
+      if (activeTrip) {
+        const currentStatus = localStorage.getItem("arrived");
+        setArrived(currentStatus === "success" ? "success" : "travelling");
+      } else {
+        setArrived(null);
+      }
+    } catch (err) {
+      console.error("Error fetching user/trip data", err);
+    }
+  }, []);
+
   useEffect(() => {
-    const fetchUser = async () => {
-      const userId = localStorage.getItem("user_id");
-
-      if (!userId || userId === "null" || userId === "") {
-        return;
-      }
-
-      try {
-        const response = await api.get(`/users/${userId}`);
-        const userData = response.data;
-        console.log("User Data:", userData);
-
-        setUser(userData);
-
-        // check status ของ tripplan
-        try {
-          const tripResponse = await api.get('/trip/user');
-          const trips = tripResponse.data;
-          const activeTrip = trips.find((t: any) => t.status === "travelling");
-
-          if (activeTrip) {
-            const currentStatus = localStorage.getItem("arrived");
-            if (currentStatus !== "success" && currentStatus !== "cancel") {
-              localStorage.setItem("arrived", "travelling");
-              setArrived("travelling");
-            }
-          }
-        } catch (tripErr) {
-          console.error("Error fetching trip status format", tripErr);
-        }
-
-      } catch (err) {
-        console.error("Error fetching user", err);
-      }
+    // ฟังก์ชันสำหรับ Sync ข้อมูลทั้งหมด
+    const syncAll = () => {
+      fetchUser();
+      const localStatus = localStorage.getItem("arrived");
+      setArrived(localStatus);
     };
 
-    fetchUser();
+    // รันครั้งแรกตอนโหลด
+    syncAll();
 
-    window.addEventListener("auth-change", fetchUser); // รอการทำ GoogleLogin
+    // ดักฟังเหตุการณ์ต่างๆ
+    window.addEventListener("auth-change", fetchUser);
+    window.addEventListener("trip-status-changed", fetchUser);
+    window.addEventListener("arrived", syncAll);
 
     return () => {
       window.removeEventListener("auth-change", fetchUser);
+      window.removeEventListener("trip-status-changed", fetchUser);
+      window.removeEventListener("arrived", syncAll);
     };
-  }, []);
+  }, [fetchUser]);
 
   const handleLogOut = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user_id");
-    localStorage.removeItem("refresh_token");
-    localStorage.removeItem("auth_provider");
-    localStorage.removeItem("google_token");
-    localStorage.removeItem("arrived");
-
+    localStorage.clear();
     setUser(null);
     setArrived(null);
-
     window.dispatchEvent(new Event("auth-change"));
-
     router.push("/login");
   };
-
-  useEffect(() => {
-    const status = () => {
-      const isArrived = localStorage.getItem("arrived");
-      setArrived(isArrived);
-    }
-
-    status()
-    window.addEventListener("arrived", status)
-    return () => window.removeEventListener("arrived", status);
-
-  }, [])
 
   return (
     <Navbar
@@ -119,6 +135,7 @@ export default function Navbars() {
       className=""
       maxWidth="full"
     >
+      <GlobalTracker />
       <NavbarContent justify="start">
         <NavbarMenuToggle
           aria-label={isMenuOpen ? "Close menu" : "Open menu"}

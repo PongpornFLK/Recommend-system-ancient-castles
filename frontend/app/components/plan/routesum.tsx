@@ -85,7 +85,7 @@ export default function Routesum({
       .filter((box) => box.placeName && box.placeName !== "")
       .map((box) => {
         return {
-          castle_id: Number(box.placeId) || 0,
+          castle_id: locationCastle.castle_id,
           event_id: eventId || null,
           start_time: startDate.toISOString(),
           end_time: endDate.toISOString(),
@@ -94,6 +94,7 @@ export default function Routesum({
       });
     localStorage.setItem("arrived", "travelling");
     window.dispatchEvent(new CustomEvent("arrived"));
+    window.dispatchEvent(new CustomEvent("trip-status-changed")); // เพิ่มการแจ้งให้ Navbar เริ่มแทร็กทันที
     saveRoute(tripData, itinerary);
   };
 

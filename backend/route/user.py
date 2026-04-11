@@ -19,24 +19,26 @@ router = APIRouter(prefix="/users", tags=["users"])
 async def createUserWithGoogle(
     request: GoogleTokenRequest, db: Session = Depends(get_db)
 ):
-    supabase_token = request.access_token
+    supabase_token = request.access_token # รับ token จาก frontend
 
     try:
+        # ยืนยันตัวตนที่ supabase
         user_response = supabase_client.auth.get_user(supabase_token)
         email = user_response.user.email
         user_metadata = user_response.user.user_metadata or {}
-        google_name = user_metadata.get("full_name")
+        google_name = user_metadata.get("full_name") # รับชื่อ
 
         if email is None:
             raise HTTPException(status_code=400, detail="Not found email")
 
+        # ดึงข้อมูล email นี้ในระบบไหม
         db_user_email = db.query(User).filter(User.email == email).first()
 
         if db_user_email is None:
-            import secrets
-            import string
-
             # random pwd ถ้า login Google กัน Error
+            import secrets 
+            import string  
+
             alphabet = string.ascii_letters + string.digits
             random_pass = "".join(secrets.choice(alphabet) for i in range(20))
 
@@ -51,6 +53,7 @@ async def createUserWithGoogle(
             db.refresh(db_user)
             db_user_email = db_user
 
+        # สร้าง access token
         create_token = createAccessToken (
             username=db_user_email.username,
             user_id=db_user_email.user_id,
@@ -73,27 +76,30 @@ async def createUserWithGoogle(
 ### Register
 @router.post("", response_model=UserResponse)
 def createUser(user: UserCreate, db: Session = Depends(get_db)):
-    existing_user = db.query(User).filter(User.username == user.username).first() # Username ซ้ำ
+    # Check Username ซ้ำ
+    existing_user = db.query(User).filter(User.username == user.username).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Username already registered")
 
-    existing_email = db.query(User).filter(User.email == user.email).first() # Email ซ้ำ
+    # Check Email ซ้ำ
+    existing_email = db.query(User).filter(User.email == user.email).first()
     if existing_email:
         raise HTTPException(status_code=400, detail="Email already registered")
 
+    # Hashing รหัสผ่านก่อนบันทึก
     db_user = User(
         **user.model_dump(exclude={"password"}),
-        password=pwd_context.hash(user.password), # Hash รหัสผ่าน
+        password=pwd_context.hash(user.password), 
     )
 
     try:
-        db.add(db_user)
-        db.commit()
-        db.refresh(db_user)
+        db.add(db_user) # บันทึกลงฐานข้อมูล
+        db.commit() # ยืนยันการบันทึก
+        db.refresh(db_user) # ดึงข้อมูลล่าสุด
         logger.info(f"User created - ID: {db_user.user_id}")
         return db_user
     except Exception as e:
-        db.rollback()
+        db.rollback() # ยกเลิกการบันทึก
         logger.error(f"Register database error: {e}")
         raise HTTPException(
             status_code=500, detail="Database error during registration"

@@ -10,7 +10,7 @@ export default function useRegister() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
-  async function handleRegister(
+  async function handleRegister( // ส่งข้อมูลไปยัง API
     e: React.FormEvent,
     username: string,
     email: string,
@@ -22,7 +22,7 @@ export default function useRegister() {
 
     if (password === confirmpwd) {
       setIsLoading(true);
-      try {
+      try { // ส่ง HTTP POST Request ไปยัง Endpoint
         const res = await api.post("/users", {
           username: username,
           email: email,

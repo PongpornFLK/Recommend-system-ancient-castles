@@ -27,9 +27,9 @@ export default function GlobalTracker() {
 
   const handleArrival = useCallback(async (name: string) => {
     localStorage.setItem("arrived", "success");
-    window.dispatchEvent(new CustomEvent("arrived"));
+    window.dispatchEvent(new CustomEvent("arrived")); // ส่ง event ไปให้ component อื่นรู้ว่าถึงแล้ว
 
-    // โหลด Toast แบบ Dynamic เพื่อไม่ให้หนักแอปตอนเริ่มต้น
+    // โหลด Toast
     const { addToast } = await import("@heroui/react");
     addToast({
       title: `ถึงที่หมาย: ${name} แล้ว!`,
@@ -43,6 +43,7 @@ export default function GlobalTracker() {
       }
     });
 
+    // หยุดดักฟังตำแหน่ง 
     if (watchIdRef.current) {
       navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
@@ -63,22 +64,24 @@ export default function GlobalTracker() {
 
         if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
 
+        // เช็คระยะทาง
         const checkDistance = (pos: GeolocationPosition) => {
           const dist = getDistanceInKm(
             pos.coords.latitude, pos.coords.longitude,
             activeTrip.destination_lat, activeTrip.destination_lng
           );
 
-          if (dist <= 0.5) { // 500 km ตามที่คุณตั้งไว้
+          if (dist <= 0.5) { // 500 เมตร
             handleArrival(activeTrip.destination_name);
           }
         };
 
         navigator.geolocation.getCurrentPosition(checkDistance);
+        // ดักฟังตำแหน่งแบบเรียลไทม์
         watchIdRef.current = navigator.geolocation.watchPosition(
           checkDistance,
           (err) => console.log("[GlobalTracker] GPS Error:", err),
-          { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
+          { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 } // ใช้ GPS, เก็บไว้ไม่เกิน 10 วินาที, รอไม่เกิน 15 วินาที
         );
       }
     } catch (err) {
@@ -93,6 +96,7 @@ export default function GlobalTracker() {
     window.addEventListener("auth-change", startTracking);
     window.addEventListener("trip-status-changed", startTracking);
 
+    // ลบ Event Listener เมื่อ Component ถูกทำลาย
     return () => {
       window.removeEventListener("auth-change", startTracking);
       window.removeEventListener("trip-status-changed", startTracking);

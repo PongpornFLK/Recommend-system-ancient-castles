@@ -39,15 +39,15 @@ export default function SelectPlace({ boxSelect, setBoxSelect }: SelectPlaceProp
     fetchNearPlace();
   }, [castle_id]);
 
-  const addBox = () => {
+  const addBox = () => { // เพิ่มกล่องเลือกสถานที่
     const findMax =
-      boxSelect.length > 0 ? Math.max(...boxSelect.map((item) => item.id)) : 0;
-    setBoxSelect([...boxSelect, { id: findMax + 1, placeId: "", placeName: "", latitude: 0, longitude: 0 }]);
+      boxSelect.length > 0 ? Math.max(...boxSelect.map((item) => item.id)) : 0; // หาค่ามากสุดของ id เพื่อให้ไม่ซ้ำกัน
+    setBoxSelect([...boxSelect, { id: findMax + 1, placeId: "", placeName: "", latitude: 0, longitude: 0 }]); // เพิ่มกล่องใหม่
     // console.log(findMax)
   };
 
   const deleteBox = (removeId: number) => {
-    setBoxSelect(boxSelect.filter((item) => removeId !== item.id));
+    setBoxSelect(boxSelect.filter((item) => removeId !== item.id)); //
     // console.log(boxSelect.length)
   };
 

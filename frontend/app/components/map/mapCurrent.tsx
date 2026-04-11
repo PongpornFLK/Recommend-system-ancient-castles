@@ -20,7 +20,7 @@ interface MapProps {
 }
 
 export default function MapCurrent({ namePlace, radius }: MapProps) {
-  const reCircle = useRef<google.maps.Circle | null>(null);
+  // const reCircle = useRef<google.maps.Circle | null>(null);
 
   const { location, errPosition } = useCurrentuser(namePlace);
   const { isLoaded } = useJsApiLoader({
@@ -39,14 +39,14 @@ export default function MapCurrent({ namePlace, radius }: MapProps) {
 
 
   // load วงใหม่
-  useEffect(() => {
-    return () => {
-      if (reCircle.current) {
-        reCircle.current.setMap(null);
-        reCircle.current = null;
-      }
-    };
-  }, [location, radius])
+  // useEffect(() => {
+  //   return () => {
+  //     if (reCircle.current) {
+  //       reCircle.current.setMap(null);
+  //       reCircle.current = null;
+  //     }
+  //   };
+  // }, [location, radius])
 
   return (
     <div>
@@ -67,8 +67,8 @@ export default function MapCurrent({ namePlace, radius }: MapProps) {
 
             <Circle
               key="radius-circle"
-              onLoad={(circle) => { reCircle.current = circle }}
-              onUnmount={() => { reCircle.current = null }}
+              // onLoad={(circle) => { reCircle.current = circle }}
+              // onUnmount={() => { reCircle.current = null }}
               center={location}
               radius={radius * 1000}
               options={{

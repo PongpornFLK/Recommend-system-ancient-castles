@@ -13,13 +13,16 @@ export const MapStaticImg = async (
 
     // สร้างเส้นตรงแบบปกติ (กรณีหาเส้นถนนไม่ได้)
     const waypointsCoord = waypoints.map(wp => `${wp.lat},${wp.lng}`).join("|");
-    const waypointsStr = waypointsCoord ? `|${waypointsCoord}` : "";
+    const waypointsStr = waypointsCoord ? `|${waypointsCoord}` : ""; // ถ้ามี waypoint ให้เพิ่ม |
+
+    // กำหนดเส้นทาง
     let path = `path=color:blue|weight:5|${currentLat},${currentLng}${waypointsStr}|${desLat},${desLng}`;
 
     // หาเส้นถนนจริงๆ
     try {
+        // เช็คว่ามี maps ไหม
         if (typeof window !== "undefined" && window.google?.maps) {
-            const directions = new window.google.maps.DirectionsService();
+            const directions = new window.google.maps.DirectionsService(); // เรียกใช้ API
             const result = await directions.route({
                 origin: { lat: currentLat, lng: currentLng },
                 destination: { lat: desLat, lng: desLng },
@@ -28,9 +31,11 @@ export const MapStaticImg = async (
             });
 
             // ใช้รหัสวาดเส้นถนนที่ได้จาก Google (Encoded Polyline)
-            const polyline = result.routes[0]?.overview_polyline;
+            const polyline = result.routes[0]?.overview_polyline; // [0] คือเส้นทางหลัก
+            console.log("Main Route", polyline);
             if (polyline) {
                 path = `path=color:blue|weight:5|enc:${encodeURIComponent(polyline)}`;
+                // encodeURIComponent คือการเข้ารหัส URL
             }
         }
     } catch {

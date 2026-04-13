@@ -89,6 +89,7 @@ export default function Dropzone() {
     return () => URL.revokeObjectURL(url);
   }, [file]);
 
+  //ตรวจสอบไฟล์และส่งคำขอวิเคราะห์ภาพ
   const handleFileChange = (f: File | null) => {
     if (f && f.type.startsWith("image/")) {
       setFile(f);

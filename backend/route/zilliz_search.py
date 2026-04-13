@@ -769,7 +769,8 @@ def qa(req: QAReq, db: Session = Depends(get_db)):
         )
 
         MIN_SCORE = 0.50 if matched_castle_id is not None else 0.55
-
+        
+        #กรองผลลัพธ์ข้อความและเชื่อมกับฐานข้อมูลหลัก
         raw_hits = []
         filtered_hits = []
         castle_ids = []
@@ -1012,6 +1013,8 @@ def search_images(
             }
 
         castle_map = fetch_castles_map(db, list(set(castle_ids)))
+        
+        #จัดกลุ่มผลลัพธ์ภาพและส่งกลับสู่ Front-end
         best_by_castle = {}
 
         for h in hits:

@@ -549,11 +549,11 @@ def build_event_answer(
         title_text = "### กิจกรรมและเทศกาลที่กำลังจะมาถึง"
 
     if not events:
-        empty_text = "ขออภัย ไม่พบข้อมูลกิจกรรมในฐานข้อมูล"
+        empty_text = "ขออภัย ไม่พบข้อมูล"
         if is_current_query:
-            empty_text = "ขออภัย ตอนนี้ไม่พบกิจกรรมที่กำลังจัดอยู่ในฐานข้อมูล"
+            empty_text = "ขออภัย ตอนนี้ไม่พบกิจกรรมที่กำลังจัดอยู่"
         elif is_upcoming_query:
-            empty_text = "ขออภัย ไม่พบกิจกรรมที่กำลังจะมาถึงในฐานข้อมูล"
+            empty_text = "ขออภัย ไม่พบกิจกรรมที่กำลังจะมาถึง"
 
         return (
             f"{title_text}\n"

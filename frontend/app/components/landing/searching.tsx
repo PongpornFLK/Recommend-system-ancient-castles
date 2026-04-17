@@ -246,7 +246,7 @@ export default function Searching() {
 
             <input
               className="w-full pl-12 pr-4 h-12 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 transition-all text-slate-700 placeholder:text-slate-400"
-              placeholder="ค้นหาหรือถามคำถาม เช่น เทศกาลที่พิมายตอนนี้ / สถานที่ใกล้พิมาย / แนะนำการเดินทางพิมาย"
+              placeholder="ค้นหาหรือถามคำถาม เช่น เทศกาลที่พิมาย / สถานที่ใกล้พิมาย / แนะนำการเดินทางพิมาย"
               value={q}
               onChange={(e) => setQ(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && onSearchQA()}

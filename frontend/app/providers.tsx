@@ -15,6 +15,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           classNames: {
             base: "w-auto min-w-[300px] max-w-sm absolute right-4 flex-none ",
             title: "text-white font-bold text-sm",
+            description: "text-white/90",
             icon: "text-white mt-1"
           }
         }}

@@ -31,7 +31,7 @@ import ModalDelete from "@/app/components/admin/modal";
 
 export default function ManageCastle() {
   const [activeTab, setActiveTab] = useState<number | null>(null);
-  
+
   // State สำหรับสลับหน้าจอระหว่าง 2 ตาราง
   const [activeTable, setActiveTable] = useState<"castle" | "nearby">("castle");
 
@@ -46,7 +46,7 @@ export default function ManageCastle() {
   const [nearbySearch, setNearbySearch] = useState("");
   const [selectedNearby, setSelectedNearby] = useState<any | null>(null);
   const [isEditNearbyOpen, setIsEditNearbyOpen] = useState(false);
-  
+
   // Delete modal state (สำหรับ Castle)
   const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onOpenChange: onDeleteOpenChange } = useDisclosure();
   const [castleToDelete, setCastleToDelete] = useState<CastleType | null>(null);
@@ -249,8 +249,8 @@ export default function ManageCastle() {
     <section className="min-h-screen bg-stone-50 relative pb-10">
       <AdminBar />
 
-      <div className="p-8 max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+      <div className="p-8 w-full">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 px-2">
           <h1 className="text-4xl font-black text-[#3E2723] tracking-tight">
             Castle Management System
           </h1>
@@ -259,21 +259,19 @@ export default function ManageCastle() {
           <div className="flex bg-stone-200/60 p-1.5 rounded-2xl">
             <button
               onClick={() => setActiveTable("castle")}
-              className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 ${
-                activeTable === "castle"
+              className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 ${activeTable === "castle"
                   ? "bg-white text-[#3E2723] shadow-sm"
                   : "text-stone-500 hover:text-[#3E2723]"
-              }`}
+                }`}
             >
               Castle Table
             </button>
             <button
               onClick={() => setActiveTable("nearby")}
-              className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 ${
-                activeTable === "nearby"
+              className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 ${activeTable === "nearby"
                   ? "bg-white text-[#3E2723] shadow-sm"
                   : "text-stone-500 hover:text-[#3E2723]"
-              }`}
+                }`}
             >
               Nearby Places
             </button>
@@ -287,9 +285,8 @@ export default function ManageCastle() {
               key={btn.id}
               onClick={() => setActiveTab(btn.id)}
               variant={btn.title === "Export Data Vector" ? "bordered" : "solid"}
-              className={`flex items-center gap-2 py-2.5 px-5 rounded-xl text-sm font-bold transition-all transform hover:scale-[1.03] shadow-md ${
-                btn.title !== "Export Data Vector" ? "text-white " + btn.color : btn.color
-              }`}
+              className={`flex items-center gap-2 py-2.5 px-5 rounded-xl text-sm font-bold transition-all transform hover:scale-[1.03] shadow-md ${btn.title !== "Export Data Vector" ? "text-white " + btn.color : btn.color
+                }`}
             >
               <btn.icon size={18} />
               <span>{btn.title}</span>
@@ -301,7 +298,7 @@ export default function ManageCastle() {
             ตารางจัดการปราสาท (Castle Table)
         ========================================= */}
         {activeTable === "castle" && (
-          <div className="bg-white rounded-[2rem] shadow-lg border border-stone-200 p-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="bg-white rounded-[2rem] shadow-lg border border-stone-200 p-6 overflow-hidden">
             <div className="flex items-center justify-between w-full mb-6">
               <h2 className="text-2xl font-bold text-[#3E2723]">Castle Table</h2>
             </div>
@@ -320,19 +317,19 @@ export default function ManageCastle() {
               />
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-center border-separate border-spacing-y-2">
+            <div className="overflow-x-auto w-full">
+              <table className="w-full min-w-[900px] table-fixed text-sm text-center border-separate border-spacing-y-2">
                 <thead className="bg-stone-100 text-stone-700">
                   <tr>
-                    <th className="px-4 py-3 rounded-l-xl">Castle ID</th>
+                    <th className="w-[80px] px-2 py-3 rounded-l-xl">ID</th>
                     <th className="px-4 py-3">Castle Name</th>
-                    <th className="px-4 py-3">Era</th>
-                    <th className="px-4 py-3">Province</th>
-                    <th className="px-4 py-3">District</th>
-                    <th className="px-4 py-3">Sub District</th>
-                    <th className="px-4 py-3">Latitude</th>
-                    <th className="px-4 py-3">Longitude</th>
-                    <th className="px-4 py-3 rounded-r-xl">Action</th>
+                    <th className="w-[120px] px-2 py-3">Era</th>
+                    <th className="w-[120px] px-2 py-3">Province</th>
+                    <th className="w-[120px] px-2 py-3">District</th>
+                    <th className="w-[120px] px-2 py-3">Sub District</th>
+                    <th className="w-[110px] px-2 py-3">Latitude</th>
+                    <th className="w-[110px] px-2 py-3">Longitude</th>
+                    <th className="w-[100px] px-2 py-3 rounded-r-xl">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -354,33 +351,33 @@ export default function ManageCastle() {
                         key={getCastleId(castle)}
                         className="bg-white shadow-sm border border-stone-100 hover:bg-stone-50 transition-colors"
                       >
-                        <td className="px-4 py-3">{getCastleId(castle)}</td>
-                        <td className="px-4 py-3 font-semibold text-[#3E2723]">
+                        <td className="px-2 py-3">{getCastleId(castle)}</td>
+                        <td className="px-4 py-3 font-semibold text-[#3E2723] truncate">
                           {castle.castle_name}
                         </td>
-                        <td className="px-4 py-3">{castle.era || "-"}</td>
-                        <td className="px-4 py-3">{castle.province || "-"}</td>
-                        <td className="px-4 py-3">{castle.district || "-"}</td>
-                        <td className="px-4 py-3">
-                          {castle.sub_district || "-"}
-                        </td>
-                        <td className="px-4 py-3">{castle.latitude || "-"}</td>
-                        <td className="px-4 py-3">{castle.longitude || "-"}</td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center justify-center gap-3">
+                        <td className="px-2 py-3 truncate">{castle.era || "-"}</td>
+                        <td className="px-2 py-3 truncate">{castle.province || "-"}</td>
+                        <td className="px-2 py-3 truncate">{castle.district || "-"}</td>
+                        <td className="px-2 py-3 truncate">{castle.sub_district || "-"}</td>
+                        <td className="px-2 py-3 truncate">{castle.latitude || "-"}</td>
+                        <td className="px-2 py-3 truncate">{castle.longitude || "-"}</td>
+                        <td className="px-2 py-3">
+                          <div className="flex items-center justify-center gap-2">
                             <Button
                               isIconOnly
+                              size="sm"
                               onClick={() => openEditModal(castle)}
-                              className="text-stone-600 hover:text-orange-600 bg-white shadow-sm"
+                              className="text-stone-600 hover:text-orange-600 bg-white shadow-sm border border-stone-100"
                             >
-                              <Pencil size={18} />
+                              <Pencil size={16} />
                             </Button>
                             <Button
                               isIconOnly
+                              size="sm"
                               onClick={() => handleDeleteClick(castle)}
-                              className="text-red-500 hover:text-red-700 bg-white shadow-sm"
+                              className="text-red-500 hover:text-red-700 bg-white shadow-sm border border-stone-100"
                             >
-                              <Trash2 size={18} />
+                              <Trash2 size={16} />
                             </Button>
                           </div>
                         </td>
@@ -397,7 +394,7 @@ export default function ManageCastle() {
             ตารางจัดการสถานที่ใกล้เคียง (Nearby Places Table)
         ========================================= */}
         {activeTable === "nearby" && (
-          <div className="bg-white rounded-[2rem] shadow-lg border border-stone-200 p-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="bg-white rounded-[2rem] shadow-lg border border-stone-200 p-6 overflow-hidden">
             <div className="flex items-center justify-between w-full mb-6">
               <h2 className="text-2xl font-bold text-[#3E2723]">Nearby Places Table</h2>
             </div>
@@ -416,17 +413,17 @@ export default function ManageCastle() {
               />
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-center border-separate border-spacing-y-2">
+            <div className="overflow-x-auto w-full">
+              <table className="w-full min-w-[900px] table-fixed text-sm text-center border-separate border-spacing-y-2">
                 <thead className="bg-stone-100 text-stone-700">
                   <tr>
-                    <th className="px-4 py-3 rounded-l-xl">ID</th>
-                    <th className="px-4 py-3 text-left">Place Name</th>
-                    <th className="px-4 py-3">Castle ID</th>
+                    <th className="w-[60px] px-2 py-3 rounded-l-xl">ID</th>
+                    <th className="w-[200px] px-4 py-3 text-left">Place Name</th>
+                    <th className="w-[100px] px-2 py-3">Castle ID</th>
                     <th className="px-4 py-3 text-left">Detail</th>
-                    <th className="px-4 py-3">Latitude</th>
-                    <th className="px-4 py-3">Longitude</th>
-                    <th className="px-4 py-3 rounded-r-xl">Action</th>
+                    <th className="w-[120px] px-2 py-3">Latitude</th>
+                    <th className="w-[120px] px-2 py-3">Longitude</th>
+                    <th className="w-[100px] px-2 py-3 rounded-r-xl">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -442,34 +439,36 @@ export default function ManageCastle() {
                         key={place.nearplace_id ?? place.id ?? index}
                         className="bg-white shadow-sm border border-stone-100 hover:bg-stone-50 transition-colors"
                       >
-                        <td className="px-4 py-3">{place.nearplace_id ?? place.id}</td>
-                        <td className="px-4 py-3 font-semibold text-[#3E2723] text-left">
+                        <td className="px-2 py-3">{place.nearplace_id ?? place.id}</td>
+                        <td className="px-4 py-3 font-semibold text-[#3E2723] text-left truncate">
                           {place.place_name}
                         </td>
-                        <td className="px-4 py-3">{place.castle_id}</td>
-                        <td className="px-4 py-3 text-left max-w-xs truncate" title={place.nearby_detail}>
+                        <td className="px-2 py-3">{place.castle_id}</td>
+                        <td className="px-4 py-3 text-left truncate" title={place.nearby_detail}>
                           {place.nearby_detail || "-"}
                         </td>
-                        <td className="px-4 py-3">{place.latitude || "-"}</td>
-                        <td className="px-4 py-3">{place.longitude || "-"}</td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center justify-center gap-3">
+                        <td className="px-2 py-3 truncate">{place.latitude || "-"}</td>
+                        <td className="px-2 py-3 truncate">{place.longitude || "-"}</td>
+                        <td className="px-2 py-3">
+                          <div className="flex items-center justify-center gap-2">
                             <Button
                               isIconOnly
+                              size="sm"
                               onClick={() => {
                                 setSelectedNearby(place);
                                 setIsEditNearbyOpen(true);
                               }}
-                              className="text-stone-600 hover:text-orange-600 bg-white shadow-sm"
+                              className="text-stone-600 hover:text-orange-600 bg-white shadow-sm border border-stone-100"
                             >
-                              <Pencil size={18} />
+                              <Pencil size={16} />
                             </Button>
                             <Button
                               isIconOnly
+                              size="sm"
                               onClick={() => handleDeleteNearby(place)}
-                              className="text-red-500 hover:text-red-700 bg-white shadow-sm"
+                              className="text-red-500 hover:text-red-700 bg-white shadow-sm border border-stone-100"
                             >
-                              <Trash2 size={18} />
+                              <Trash2 size={16} />
                             </Button>
                           </div>
                         </td>
@@ -484,7 +483,7 @@ export default function ManageCastle() {
       </div>
 
       {/* --- Modals --- */}
-      
+
       {/* 1. Modal Add Castle */}
       {activeTab === 1 && (
         <AddCastleForm
@@ -1009,9 +1008,8 @@ export default function ManageCastle() {
                         >
                           {castles.map((castle) => (
                             <SelectItem key={String(getCastleId(castle))}>
-                              {`${getCastleId(castle)} - ${castle.castle_name}${
-                                castle.province ? ` (${castle.province})` : ""
-                              }`}
+                              {`${getCastleId(castle)} - ${castle.castle_name}${castle.province ? ` (${castle.province})` : ""
+                                }`}
                             </SelectItem>
                           ))}
                         </Select>

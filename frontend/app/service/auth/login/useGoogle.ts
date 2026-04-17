@@ -18,44 +18,46 @@ export default function useGoogle() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    let isProcessing = false; // กันโหลดซ้ำ
+    let isProcessing = false;
 
+    // เช็คว่ามี Token อยู่แล้วไหม
     const { data: listener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
 
         const existingToken = localStorage.getItem("token");
         let isTokenValid = false;
 
+        // Token ยังใช้ได้ไหม
         if (existingToken) {
           try {
-            const decoded = jwtDecode<CustomToken>(existingToken);
+            const decoded = jwtDecode<CustomToken>(existingToken); // ถอดรหัส Token
             const currentUserId = localStorage.getItem("user_id");
 
-            if (decoded.exp * 1000 > Date.now() && decoded.user_id.toString() === currentUserId) { // เช็คว่า exp && user_id
+            // เช็คว่า exp && user_id
+            if (decoded.exp * 1000 > Date.now() && decoded.user_id.toString() === currentUserId) {
               isTokenValid = true;
             }
-          } catch (e) {
-            isTokenValid = false;
-          }
+          } catch (e) { isTokenValid = false; }
         }
 
+        // ถ้า login ได้,Token ใช้ได้ และยังไม่เคย process จะทำงาน
         if (event == "SIGNED_IN" && session && !isTokenValid && !isProcessing) {
           isProcessing = true;
           setIsLoading(true);
           const supabaseToken = session.access_token;
 
           try {
-            const response = await axios.post(
-              `${API_URL}/users/auth/google_login`,
-              {
-                access_token: supabaseToken,
-              }
-            );
+            // ส่งไป backend เพื่อยืนยันตัวตนที่ supabase
+            const response = await axios.post(`${API_URL}/users/auth/google_login`, {
+              access_token: supabaseToken,
+            });
 
+            // รับข้อมูลจาก backend
             const token = response.data.access_token;
             const refreshToken = response.data.refresh_token;
             const decode = jwtDecode<CustomToken>(token);
 
+            // เก็บข้อมูลลง Local Storage
             localStorage.setItem("token", token);
             localStorage.setItem("refresh_token", refreshToken);
             localStorage.setItem("user_id", decode.user_id.toString());
@@ -65,7 +67,8 @@ export default function useGoogle() {
 
             console.log("Login Success!");
 
-            window.dispatchEvent(new Event("auth-change")); // login success to navbar
+            // ส่ง event ไปยัง navbar
+            window.dispatchEvent(new Event("auth-change"));
             router.replace("/landing");
           } catch (err) {
             console.error("Login Error :", err);

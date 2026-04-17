@@ -33,7 +33,7 @@ export default function useTracking(
         const distance = getDistanceInKm(userLat, userLng, destLat, destLng);
         setCurrentDistance(distance);
 
-        if (distance <= 0.5) {
+        if (distance <= 0.5) { // 500 เมตร
           setIsArrived(true);
           console.log("Reached destination!");
           localStorage.setItem("arrived", "success");

@@ -58,7 +58,8 @@ export default function Landing() {
         </div>
       ) : (
         <>
-          <section className="p-0 m-0">
+          {/* Full Bleed Slider Section */}
+          <section className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] -mt-4">
             <SlideImg />
           </section>
 

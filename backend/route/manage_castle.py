@@ -4,11 +4,19 @@ from db import get_db
 from model.model import Castle, Location, Architecture, LocationCastle
 from schemas.schemas import CastleFullCreate
 
+from authen.secur import getCurrentUser
+
 router = APIRouter(prefix="/manage-castle", tags=["manage-castle"])
 
 
 @router.post("/add")
-async def add_new_castle(req: CastleFullCreate, db: Session = Depends(get_db)):
+async def add_new_castle(
+    req: CastleFullCreate, 
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(getCurrentUser)
+):
+    if current_user.get("roles") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
     try:
         new_location = Location(
             latitude=req.latitude,
@@ -55,7 +63,12 @@ async def add_new_castle(req: CastleFullCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/list")
-def get_castles(db: Session = Depends(get_db)):
+def get_castles(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(getCurrentUser)
+):
+    if current_user.get("roles") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
     try:
         results = (
             db.query(Castle, Architecture, Location, LocationCastle)
@@ -89,7 +102,14 @@ def get_castles(db: Session = Depends(get_db)):
 
 
 @router.put("/update/{castle_id}")
-def update_castle(castle_id: int, req: CastleFullCreate, db: Session = Depends(get_db)):
+def update_castle(
+    castle_id: int, 
+    req: CastleFullCreate, 
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(getCurrentUser)
+):
+    if current_user.get("roles") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
     try:
         castle = db.query(Castle).filter(Castle.castle_id == castle_id).first()
         if not castle:
@@ -158,7 +178,13 @@ def update_castle(castle_id: int, req: CastleFullCreate, db: Session = Depends(g
 
 
 @router.delete("/delete/{castle_id}")
-def delete_castle(castle_id: int, db: Session = Depends(get_db)):
+def delete_castle(
+    castle_id: int, 
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(getCurrentUser)
+):
+    if current_user.get("roles") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
     try:
         castle = db.query(Castle).filter(Castle.castle_id == castle_id).first()
         if not castle:

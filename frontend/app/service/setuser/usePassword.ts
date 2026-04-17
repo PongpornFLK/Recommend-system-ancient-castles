@@ -8,37 +8,12 @@ export function usePassword() {
   const [newpwd, setNewPwd] = useState("");
   const [confirmnewpwd, setConfirmNewPwd] = useState("");
 
-  // Google
-  const [googleNewPwd, setGoogleNewPwd] = useState("");
-  const [confirmGoogleNewPwd, setConfirmGoogleNewPwd] = useState("");
 
-  const [authProvider] = useState<string>(() => {
-    const provider = localStorage.getItem("auth_provider");
-    return provider || "local";
-  });
 
   const handleChangePassword = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
     try {
-      if (authProvider === "google") {
-        // ฝั่ง Google
-        if (!googleNewPwd || !confirmGoogleNewPwd) {
-          addToast({ title: "Please input all fields", color: "danger" });
-          return;
-        }
-        if (googleNewPwd !== confirmGoogleNewPwd) {
-          addToast({ title: "Passwords do not match", color: "danger" });
-          return;
-        }
-
-        await api.post("/users/set_google_pwd", {
-          new_pass: googleNewPwd,
-        });
-
-        setGoogleNewPwd("");
-        setConfirmGoogleNewPwd("");
-      } else {
         // Local
         if (!oldpwd || !newpwd || !confirmnewpwd) {
           addToast({ title: "Please input all fields", color: "danger" });
@@ -57,7 +32,6 @@ export function usePassword() {
         setOldPwd("");
         setNewPwd("");
         setConfirmNewPwd("");
-      }
 
       addToast({
         title: "Password updated successfully!",
@@ -73,13 +47,28 @@ export function usePassword() {
     }
   };
 
+  const handleLogoutAll = async () => {
+    try {
+      await api.post("/users/logout-all");
+      addToast({
+        title: "All other sessions logged out!",
+        description: "Your current session is still active, but all others are gone.",
+        color: "success",
+      });
+    } catch (err) {
+      console.log("Logout All Error:", err);
+      addToast({
+        title: "Logout All Failed",
+        color: "danger",
+      });
+    }
+  };
+
   return {
     oldpwd, setOldPwd,
     newpwd, setNewPwd,
     confirmnewpwd, setConfirmNewPwd,
-    googleNewPwd, setGoogleNewPwd,
-    confirmGoogleNewPwd, setConfirmGoogleNewPwd,
-    authProvider,
     handleChangePassword,
+    handleLogoutAll,
   };
 }

@@ -20,7 +20,7 @@ interface MapProps {
 }
 
 export default function MapCurrent({ namePlace, radius }: MapProps) {
-  // const reCircle = useRef<google.maps.Circle | null>(null);
+  const reCircle = useRef<google.maps.Circle | null>(null);
 
   const { location, errPosition } = useCurrentuser(namePlace);
   const { isLoaded } = useJsApiLoader({
@@ -36,17 +36,12 @@ export default function MapCurrent({ namePlace, radius }: MapProps) {
     radius: radius
   });
 
-
-
   // load วงใหม่
-  // useEffect(() => {
-  //   return () => {
-  //     if (reCircle.current) {
-  //       reCircle.current.setMap(null);
-  //       reCircle.current = null;
-  //     }
-  //   };
-  // }, [location, radius])
+  useEffect(() => {
+    if (reCircle.current) {
+      reCircle.current.setRadius(radius * 1000); // setRadius
+    }
+  }, [radius]);
 
   return (
     <div>
@@ -66,15 +61,19 @@ export default function MapCurrent({ namePlace, radius }: MapProps) {
             ></Marker>
 
             <Circle
-              key="radius-circle"
-              // onLoad={(circle) => { reCircle.current = circle }}
-              // onUnmount={() => { reCircle.current = null }}
               center={location}
-              radius={radius * 1000}
               options={{
                 fillOpacity: 0.1,
                 fillColor: "#82b3ff",
                 strokeColor: "blue",
+                clickable: false,
+              }}
+              onLoad={(circle) => {
+                reCircle.current = circle;
+                circle.setRadius(radius * 1000);
+              }}
+              onUnmount={() => {
+                reCircle.current = null;
               }}
             ></Circle>
 

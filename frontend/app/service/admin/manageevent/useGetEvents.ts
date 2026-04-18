@@ -8,7 +8,7 @@ export const useGetEvents = () => {
   const [error, setError] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
 
-  const fetchEvents = useCallback(async (page: number = 1, size: number = 5) => {
+  const fetchEvents = useCallback(async (page: number = 1, size: number = 20) => {
     setLoading(true);
     setError(null);
 

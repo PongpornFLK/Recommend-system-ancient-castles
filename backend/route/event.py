@@ -29,7 +29,7 @@ def createEvent(event : EventCreate , db : Session=Depends(get_db) , current_use
 
 # get ฝั่ง Admin
 @router.get("/admin")
-def readEventAll(page: int = 1, size: int = 5,db : Session = Depends(get_db) , current_user : User = Depends(getCurrentUser)) -> Page[EventResponse]:
+def readEventAll(page: int = 1, size: int = 20,db : Session = Depends(get_db) , current_user : User = Depends(getCurrentUser)) -> Page[EventResponse]:
     
     if(current_user.get("roles") != "admin"):
         raise HTTPException(status_code=403 , detail="You don't have permission")

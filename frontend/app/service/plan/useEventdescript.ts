@@ -26,7 +26,7 @@ export default function useEventdescript() {
     fetchEvent();
   }, [castle_id]);
 
-  // [castle_id]
+  // re-useEffect เมื่อ castle_id เปลี่ยน
 
   return { eventDescript, eventId };
 }

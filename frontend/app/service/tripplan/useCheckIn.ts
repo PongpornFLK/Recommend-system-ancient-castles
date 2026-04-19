@@ -25,8 +25,8 @@ export default function useCheckIn() {
       waypoint,
     );
 
-    // console.log("Gen Map ", mapImg);
-    // console.log("USER ID", user_id, "CASTLE ID", castle_id, "TRIP ID", trip_id)
+    console.log("Gen Map ", mapImg);
+    console.log("USER ID", user_id, "CASTLE ID", castle_id, "TRIP ID", trip_id)
     try {
       // VisitHistory
       await api.post(`/history/checkin/${user_id}`, {

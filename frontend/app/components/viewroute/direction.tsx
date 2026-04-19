@@ -8,7 +8,7 @@ interface DirecProps {
   direction: google.maps.DirectionsResult | null;
   setDirection: React.Dispatch<
     React.SetStateAction<google.maps.DirectionsResult | null>
-  >;
+  >; // เก็บข้อมูลทิศทางและส่งต่อ
 }
 
 export default function Direction({ direction, setDirection }: DirecProps) {
@@ -33,22 +33,23 @@ export default function Direction({ direction, setDirection }: DirecProps) {
             waypoints:
               routeData.nearbyplace && routeData.nearbyplace.length > 0
                 ? routeData.nearbyplace.map((place) => ({
-                    location: {
-                      lat: place.latitude,
-                      lng: place.longitude,
-                    },
-                    stopover: true,
-                  }))
-                : [],
+                  location: {
+                    lat: place.latitude,
+                    lng: place.longitude,
+                  },
+                  stopover: true,
+                }))
+                : [], // [] คือ ถ้าไม่มี nearbyplace ให้ส่ง [] ไป
             destination: {
               lat: routeData.destination?.location.latitude,
               lng: routeData.destination?.location.longitude,
             },
-            travelMode: window.google.maps.TravelMode.DRIVING,
+            travelMode: window.google.maps.TravelMode.DRIVING, // โหมดการเดินทาง
           }}
-          callback={(result, status) => {
+          callback={(result, status) => { // จะทำงานเมื่อได้ผลลัพธ์จาก API
             if (status === "OK" && result) {
-              setDirection(result);
+              console.log("Get Directions Result :", result);
+              setDirection(result); // เก็บข้อมูลทิศทาง
             }
           }}
         ></DirectionsService>

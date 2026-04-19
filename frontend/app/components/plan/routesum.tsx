@@ -67,8 +67,8 @@ export default function Routesum({
       return;
     }
 
-    const minutes = hours * 60 + minute;
-    const endDate = new Date(startDate.getTime() + minutes * 60000);
+    const minutes = hours * 60 + minute; // แปลงเวลาเป็นนาที
+    const endDate = new Date(startDate.getTime() + minutes * 60000); // แปลงเวลาเป็นนาที
 
     const tripData = {
       plan_name: planName,
@@ -92,9 +92,9 @@ export default function Routesum({
           place_name: box.placeName,
         };
       });
-    localStorage.setItem("arrived", "travelling");
-    window.dispatchEvent(new CustomEvent("arrived"));
-    window.dispatchEvent(new CustomEvent("trip-status-changed")); // เพิ่มการแจ้งให้ Navbar เริ่มแทร็กทันที
+    localStorage.setItem("arrived", "travelling"); // เก็บสถานะการเดินทาง
+    window.dispatchEvent(new CustomEvent("arrived")); // ส่งให้ Navbar Track ทันที
+    window.dispatchEvent(new CustomEvent("trip-status-changed")); // ส่งให้ Navbar Track ทันที
     saveRoute(tripData, itinerary);
   };
 

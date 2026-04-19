@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 
 export default function useLocation() {
   const [getNamePlace, setNamePlace] = useState("กำลังหาสถานที่ปัจจุบันของคุณ");
-  const [getGPS , setGPS] = useState({lat : 0 , lng : 0});
+  const [getGPS, setGPS] = useState({ lat: 0, lng: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -16,10 +16,10 @@ export default function useLocation() {
         const response = await axios.get(
           `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&language=th&key=${api}`,
         );
-        // console.log("CurrentUser : " , response.data.results)
-        // console.log("lat : " , lat , "Long : " , lng)
+        console.log("CurrentUser : ", response.data.results)
+        console.log("lat : ", lat, "Long : ", lng)
 
-        setGPS({lat : lat , lng : lng});
+        setGPS({ lat: lat, lng: lng });
 
         const name = response.data.results[0].formatted_address;
 
@@ -43,5 +43,5 @@ export default function useLocation() {
     navigator.geolocation.getCurrentPosition(fetchCurrentPlace, error);
   }, []);
 
-  return { getNamePlace, loading ,getGPS};
+  return { getNamePlace, loading, getGPS };
 }

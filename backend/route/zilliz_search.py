@@ -1061,24 +1061,24 @@ def search_images(
                     best_by_castle.get(h["castle_id"], 0.0),
                     h["score"]
                 )
-
+                sorted_castles = sorted(best_by_castle.items(), key=lambda x: x[1], reverse=True)
         castles = []
-        for cid, best in sorted(best_by_castle.items(), key=lambda x: x[1], reverse=True):
-            c = castle_map.get(cid)
-            if not c:
-                continue
+        if sorted_castles:
+            cid, best = sorted_castles[0]
 
-            castles.append({
-                "castle_id": c["castle_id"],
-                "castle_name": sanitize_text(c["castle_name"] or ""),
-                "castle_description": sanitize_text(c["castle_description"] or ""),
-                "era": c["era"] or "ไม่ระบุ",
-                "type_detail": c["type_detail"] or "ไม่ระบุ",
-                "architecture": c["architecture"] or "ไม่มีข้อมูล",
-                "festivals": c.get("festivals_info") or "ไม่มีข้อมูลกิจกรรม",
-                "best_score": float(best),
-                "cover_image": cover_map.get(cid),
-            })
+            c = castle_map.get(cid)
+            if c:
+                castles.append({
+                    "castle_id": c["castle_id"],
+                    "castle_name": sanitize_text(c["castle_name"] or ""),
+                    "castle_description": sanitize_text(c["castle_description"] or ""),
+                    "era": c["era"] or "ไม่ระบุ",
+                    "type_detail": c["type_detail"] or "ไม่ระบุ",
+                    "architecture": c["architecture"] or "ไม่มีข้อมูล",
+                    "festivals": c.get("festivals_info") or "ไม่มีข้อมูลกิจกรรม",
+                    "best_score": float(best),
+                    "cover_image": cover_map.get(cid),
+                })
         return {"hits": hits, "castles": castles}
 
     except Exception as e:

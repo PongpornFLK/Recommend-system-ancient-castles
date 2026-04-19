@@ -105,7 +105,7 @@ export default function Dropzone() {
     try {
       const fd = new FormData();
       fd.append("file", file);
-      const res = await fetch(`${API_BASE}/zilliz/images?k=6`, { method: "POST", body: fd });
+      const res = await fetch(`${API_BASE}/zilliz/images?k=1`, { method: "POST", body: fd });
       const data = await res.json();
       setCastles(data.castles || []);
     } catch (err) {

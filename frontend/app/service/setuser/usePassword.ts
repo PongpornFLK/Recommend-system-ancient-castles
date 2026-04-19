@@ -14,24 +14,24 @@ export function usePassword() {
     if (e) e.preventDefault();
 
     try {
-        // Local
-        if (!oldpwd || !newpwd || !confirmnewpwd) {
-          addToast({ title: "Please input all fields", color: "danger" });
-          return;
-        }
-        if (newpwd !== confirmnewpwd) {
-          addToast({ title: "New passwords do not match", color: "danger" });
-          return;
-        }
+      // Local
+      if (!oldpwd || !newpwd || !confirmnewpwd) {
+        addToast({ title: "Please input all fields", color: "danger" });
+        return;
+      }
+      if (newpwd !== confirmnewpwd) {
+        addToast({ title: "New passwords do not match", color: "danger" });
+        return;
+      }
 
-        await api.post("/users/changepwd", {
-          old_pass: oldpwd,
-          new_pass: newpwd,
-        });
+      await api.post("/users/changepwd", {
+        old_pass: oldpwd,
+        new_pass: newpwd,
+      });
 
-        setOldPwd("");
-        setNewPwd("");
-        setConfirmNewPwd("");
+      setOldPwd("");
+      setNewPwd("");
+      setConfirmNewPwd("");
 
       addToast({
         title: "Password updated successfully!",
@@ -47,7 +47,7 @@ export function usePassword() {
     }
   };
 
-  const handleLogoutAll = async () => {
+  const handleLogoutAll = async () => { // Logout all sessions
     try {
       await api.post("/users/logout-all");
       addToast({

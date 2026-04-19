@@ -16,14 +16,14 @@ export default function useHistory() {
   const [historyData, setHistoryData] = useState<HistoryData[]>([]);
   useEffect(() => {
     const fetchHistory = async () => {
-      const userId = localStorage.getItem("user_id");
+      const userId = localStorage.getItem("user_id"); // ดึง user_id จาก local storage
       // console.log("User_id:", userId);
 
       try {
-        const response = await api.get(`/history/${userId}?page=1&size=20`);
+        const response = await api.get(`/history/${userId}?page=1&size=20`); // ดึงข้อมูลทีละ 20 รายการ
 
-        // console.log("API Response:", response.data);
-        // console.log("Items:", response.data.items);
+        console.log("API Response:", response.data);
+        console.log("Items:", response.data.items);
 
         const historyData = response.data.items.map((item: HistoryData) => ({
           plan_id: item.plan_id?.toString(),
@@ -42,7 +42,7 @@ export default function useHistory() {
           map_url: item.map_url || "",
         }));
 
-        // console.log("Transformed Data:", historyData);
+        console.log("Transformed Data:", historyData);
 
         setHistoryData(historyData);
       } catch (err) {

@@ -17,13 +17,13 @@ export default function useViewroute() {
     const routeData = {
       current: getGPS,
       currentname: currentname,
-      destination: destination,  
-      nearbyplace: nearbyplace,  
+      destination: destination,
+      nearbyplace: nearbyplace,
     };
 
     // save ทั้งหมดลง local
-    localStorage.setItem("my_route" , JSON.stringify(routeData));
-
+    localStorage.setItem("my_route", JSON.stringify(routeData));
+    console.log("Save Route Data :", routeData);
     router.push("/viewroute");
   };
   return { viewRoute };

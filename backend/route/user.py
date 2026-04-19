@@ -200,8 +200,8 @@ async def changePassword(
     db.commit()
     return {"message": "You change password success. All other sessions have been logged out."}
 
-
-@router.post("/logout-all")
+# Logout all devices
+@router.post("/logout-all") 
 async def logoutAllDevices(
     current_user: Annotated[dict, Depends(getCurrentUser)],
     db: Session = Depends(get_db),

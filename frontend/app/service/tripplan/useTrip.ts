@@ -31,6 +31,7 @@ export default function useTrip() {
       try {
         const response = await api.get(`/trip/user`);
 
+        console.log("Trip Data", response.data);
         setTripData(response.data);
       } catch (err) {
         setError(true);

@@ -14,6 +14,7 @@ router = APIRouter(
     tags = ['event']
 )
 
+# Create Event ฝั่ง Admin
 @router.post("/admin/create" , response_model= EventResponse)
 def createEvent(event : EventCreate , db : Session=Depends(get_db) , current_user : User=Depends(getCurrentUser)):
     db_event=Event(**event.model_dump(exclude={"password"}));
@@ -48,13 +49,13 @@ def readEvents( castle_id : int , db: Session = Depends(get_db) , current_user :
     
     return db_events
 
-
+# Delete Event ฝั่ง Admin
 @router.delete("/{event_id}")
 async def deleteEvent(event_id:int , current_user : User = Depends(getCurrentUser) , db : Session=Depends(get_db)):
     if(current_user.get("roles") != "admin"):
         raise HTTPException(status_code=403 , detail="Only Admin can Delete!!")
     
-    db_event = db.query(Event).filter(Event.event_id == event_id).first()
+    db_event = db.query(Event).filter(Event.event_id == event_id).first() # ดึง event ที่ต้องการจะลบ
     
     if db_event is None:
         raise HTTPException(status_code=404, detail="Not Found")
@@ -64,7 +65,7 @@ async def deleteEvent(event_id:int , current_user : User = Depends(getCurrentUse
     
     return {"message": "Delete Success"}
 
-
+# Update Event ฝั่ง Admin
 @router.put("/{event_id}" , response_model = EventResponse)
 async def updateEvent(event_id : int , event : EventUpdate , db : Session=Depends(get_db) , current_user : User = Depends(getCurrentUser)):
     db_event = db.query(Event).filter(Event.event_id == event_id).first()
@@ -74,10 +75,10 @@ async def updateEvent(event_id : int , event : EventUpdate , db : Session=Depend
     if db_event is None:
         raise HTTPException(status_code=404 , detail = "Not Found")
     
-    for key , value in event.model_dump(exclude_unset=True).items():
+    for key , value in event.model_dump(exclude_unset=True).items(): # ดึงข้อมูลที่ต้องการจะอัพเดท
         if key == "castle" and value is not None:
-            setattr(db_event, "castle_id", int(value.get("castle_id", 0)))
-            if value.get("castle_name"):
+            setattr(db_event, "castle_id", int(value.get("castle_id", 0))) # อัพเดท castle_id
+            if value.get("castle_name"): # อัพเดท castle_name
                 from model.model import Castle
                 castle = db.query(Castle).filter(Castle.castle_id == int(value.get("castle_id", 0))).first()
                 if castle:

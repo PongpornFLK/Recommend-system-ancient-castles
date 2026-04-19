@@ -33,7 +33,8 @@ export default function useNearUser({ lat, lng, radius }: UserProps) {
         setCastle(responseCastle.data);
         setNearPlace(responsePlace.data);
 
-        // console.log("setCastle : " , response.data)
+        console.log("setCastle : ", responseCastle.data)
+        console.log("setNearPlace : ", responsePlace.data)
       } catch (err) {
         console.error(err);
       }

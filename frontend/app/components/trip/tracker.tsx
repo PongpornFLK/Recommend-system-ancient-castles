@@ -25,13 +25,13 @@ export default function Tracker({
   const { routeData } = useRoutedata();
 
   const handleCheckIn = () => {
-    const currentLat = routeData?.current.lat;
-    const currentLng = routeData?.current.lng;
+    const currentLat = routeData?.current?.lat ?? destLat;
+    const currentLng = routeData?.current?.lng ?? destLng;
     const waypoint = routeData?.nearbyplace
       ? routeData.nearbyplace.map((place) => ({
-          lat: place.latitude,
-          lng: place.longitude,
-        }))
+        lat: place.latitude,
+        lng: place.longitude,
+      }))
       : [];
 
     if (currentLat === undefined || currentLng === undefined) {
@@ -69,11 +69,10 @@ export default function Tracker({
         </Button>
         <Button
           color={isArrived ? "success" : "default"}
-          className={`font-bold h-10 px-8 rounded-xl text-white shadow-md transition-all ${
-            !isArrived
-              ? " cursor-not-allowed shadow-none"
-              : "shadow-green-100 hover:scale-105"
-          }`}
+          className={`font-bold h-10 px-8 rounded-xl text-white shadow-md transition-all ${!isArrived
+            ? " cursor-not-allowed shadow-none"
+            : "shadow-green-100 hover:scale-105"
+            }`}
           disabled={!isArrived}
           onClick={() => isArrived && handleCheckIn()}
         >

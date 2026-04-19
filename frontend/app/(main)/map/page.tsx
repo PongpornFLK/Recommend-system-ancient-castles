@@ -48,7 +48,7 @@ export default function Map() {
         </div>
       </div>
       <div className="w-full mt-2">
-        <MapCurrent key={radius} namePlace={setNamePlace} radius={radius} />
+        <MapCurrent namePlace={setNamePlace} radius={radius} />
       </div>
     </div>
   );

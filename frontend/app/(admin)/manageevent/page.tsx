@@ -16,7 +16,7 @@ import ModalAdd from "@/app/components/admin/manageevent/modalAdd";
 
 export default function ManageEvent() {
   const [page, setPage] = useState(1);
-  const rowSize = 5;
+  const rowSize = 20;
 
   // Custom hooks
   const { events, loading, error, total, fetchEvents } = useGetEvents();
@@ -48,9 +48,13 @@ export default function ManageEvent() {
   const [searchTerm, setSearchTerm] = useState<string>("");
 
   const filteredEvents = events.filter(
-    (event) =>
-      event.event_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      event.castle_name.toLowerCase().includes(searchTerm.toLowerCase()),
+    (event) => {
+      const searchLower = (searchTerm || "").toLowerCase();
+      const eventNameLower = (event?.event_name || "").toLowerCase();
+      const castleNameLower = (event?.castle_name || "").toLowerCase();
+
+      return eventNameLower.includes(searchLower) || castleNameLower.includes(searchLower);
+    }
   );
 
   useEffect(() => {

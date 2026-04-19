@@ -66,11 +66,14 @@ export default function useCurrentuser(namePlace: (address: string) => void) {
       }
     }
 
-    const closer = navigator.geolocation.watchPosition(success, error);
-
-    return () => {
-      navigator.geolocation.clearWatch(closer);
+    const options = {
+      enableHighAccuracy: true,
+      timeout: 10000, // ให้รอข้อมูลไม่เกิน 10 วินาที
+      maximumAge: 60000, // ให้ใช้ข้อมูล cache ได้ไม่เกิน 1 นาที
     };
+
+    // ขอ GPS ปัจจุบันเพียงครั้งเดียว ไม่ต้องคอยดึงใหม่ให้แผนที่เด้งกลับ
+    navigator.geolocation.getCurrentPosition(success, error, options);
   }, [namePlace, isLoaded]);
 
   return { location, errPosition };

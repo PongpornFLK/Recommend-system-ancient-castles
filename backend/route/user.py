@@ -47,6 +47,7 @@ async def createUserWithGoogle(
                 username=google_name,
                 password=pwd_context.hash(random_pass),
                 roles="user",
+                auth_provider="google"
             )
             db.add(db_user)
             db.commit()

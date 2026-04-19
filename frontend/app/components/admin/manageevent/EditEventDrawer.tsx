@@ -60,6 +60,12 @@ export default function EditEventDrawer({
 }: EditEventDrawerProps) {
   const { castles } = useGetCastles();
 
+  const formatLocalDate = (date: Date) => {
+    const offset = date.getTimezoneOffset();
+    const adjustedDate = new Date(date.getTime() - offset * 60 * 1000);
+    return adjustedDate.toISOString().split("T")[0];
+  };
+
   return (
     <Drawer isOpen={isOpen} onOpenChange={onOpenChange}>
       <DrawerContent>
@@ -108,7 +114,7 @@ export default function EditEventDrawer({
                       variant="bordered"
                       labelPlacement="outside-top"
                       selectorButtonPlacement="start"
-                      value={startDate ? parseDate(startDate.toISOString().split("T")[0]) : undefined}
+                      value={startDate ? parseDate(formatLocalDate(startDate)) : undefined}
                       onChange={(e: CalendarDate | null) => {
                         if (e) {
                           const localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -123,7 +129,7 @@ export default function EditEventDrawer({
                       variant="bordered"
                       labelPlacement="outside-top"
                       selectorButtonPlacement="start"
-                      value={endDate ? parseDate(endDate.toISOString().split("T")[0]) : undefined}
+                      value={endDate ? parseDate(formatLocalDate(endDate)) : undefined}
                       onChange={(e: CalendarDate | null) => {
                         if (e) {
                           const localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;

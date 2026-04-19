@@ -10,7 +10,7 @@ import { useDeleteUser } from "@/app/service/admin/manageuser/useDeleteUser";
 
 export default function ManageUser() {
   const [page, setPage] = useState(1);
-  const rowSize = 10;
+  const rowSize = 20;
 
   // Custom hooks
   const { users, loading, error, total, fetchUsers } = useGetUsers();
@@ -29,8 +29,8 @@ export default function ManageUser() {
   );
 
   useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+    fetchUsers(page, rowSize);
+  }, [fetchUsers, page, rowSize]);
 
   const handleDeleteClick = (id: string) => {
     setUserId(id);
@@ -40,7 +40,7 @@ export default function ManageUser() {
   const deleteUserHandler = async (id: string) => {
     try {
       await deleteUser(id);
-      fetchUsers();
+      fetchUsers(page, rowSize);
     } catch (err) {
       console.error("Delete Not success : ", err);
     }

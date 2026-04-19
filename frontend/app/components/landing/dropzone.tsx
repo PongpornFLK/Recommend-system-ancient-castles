@@ -7,7 +7,7 @@ import {
   ArrowRight, Upload, X, 
   ImageIcon, Search, Loader2, Sparkles 
 } from "lucide-react";
-import { getCastleGalleryByName } from "../../lib/castleImages";
+
 import { addToast } from "@heroui/react";
 
 type Castle = {
@@ -17,6 +17,7 @@ type Castle = {
   era?: string;
   type_id?: number;
   best_score?: number;
+  cover_image?: string | null;
 };
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -28,8 +29,7 @@ function truncate(s: string, n = 160) {
 }
 
 function ResultCard({ c, idx }: { c: Castle; idx: number }) {
-  const g = getCastleGalleryByName(c.castle_name);
-  const cover = g.cover || "/assets/card/placeholder.jpg";
+const cover = c.cover_image || "/assets/card/placeholder.jpg";
 
   return (
     <div className="group relative bg-white border border-slate-200 rounded-3xl overflow-hidden hover:shadow-2xl hover:shadow-indigo-100 transition-all duration-300 hover:-translate-y-1">

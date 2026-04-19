@@ -21,7 +21,7 @@ import {
 import { addToast } from "@heroui/react";
 
 import Filter, { type FilterValues } from "./filter";
-import { getCastleGalleryByName } from "../../lib/castleImages";
+
 import api from "@/app/service/api";
 
 type Castle = {
@@ -34,6 +34,7 @@ type Castle = {
   type_detail?: string;
   architecture?: string;
   festivals?: string;
+  cover_image?: string | null;
 };
 
 type NearbyPlace = {
@@ -105,8 +106,7 @@ function dedupeCastles(list: Castle[]) {
 }
 
 function ResultCard({ c, idx }: { c: Castle; idx: number }) {
-  const g = getCastleGalleryByName(c.castle_name);
-  const cover = g.cover || "/assets/card/placeholder.jpg";
+  const cover = c.cover_image || "/assets/card/placeholder.jpg";
 
   return (
     <div className="group bg-white border border-slate-200 rounded-3xl overflow-hidden hover:shadow-xl hover:shadow-slate-200 transition-all duration-300">

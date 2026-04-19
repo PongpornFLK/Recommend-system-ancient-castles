@@ -247,16 +247,31 @@ class CastleResponse(CastleBase):
         from_attributes = True
 
 ##### Image 
+##### Image
 class ImageBase(BaseModel):
     img_description: Optional[str] = None
+    img_url: str
+    is_cover: Optional[bool] = False
+    sort_order: Optional[int] = 0
     # image_vector: Optional[List[float]] = None
+
 
 class ImageCreate(ImageBase):
     castle_id: int
 
+
+class ImageUpdate(BaseModel):
+    img_description: Optional[str] = None
+    img_url: Optional[str] = None
+    is_cover: Optional[bool] = None
+    sort_order: Optional[int] = None
+
+
 class ImageResponse(ImageBase):
     img_id: int
     castle_id: int
+    created_at: datetime
+
     class Config:
         from_attributes = True
 

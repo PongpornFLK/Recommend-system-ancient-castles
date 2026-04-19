@@ -16,15 +16,23 @@ import {
   RefreshCw,
   ChevronLeft,
 } from "lucide-react";
-import { getCastleGalleryByName } from "../../lib/castleImages";
 import api from "@/app/service/api";
 import { Chip, Button, addToast } from "@heroui/react";
 import Navbars from "@/app/components/navbars";
 
-// --- Types ---
 type NearbyPlace = {
   place_name: string;
   nearby_detail?: string;
+};
+
+type CastleImage = {
+  img_id: number;
+  castle_id: number;
+  img_url: string;
+  img_description?: string;
+  is_cover: boolean;
+  sort_order: number;
+  created_at?: string;
 };
 
 type CastleDetail = {
@@ -66,16 +74,12 @@ export default function CastleDetailPage() {
   }, [params]);
 
   const [fav, setFav] = useState(false);
-  const [interestId, setInterestId] = useState<number | null>(null); // เก็บ ID สำหรับใช้ลบ
+  const [interestId, setInterestId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<{ message: string; url: string } | null>(
-    null,
-  );
+  const [error, setError] = useState<{ message: string; url: string } | null>(null);
   const [data, setData] = useState<CastleDetail | null>(null);
+  const [images, setImages] = useState<CastleImage[]>([]);
 
-  {
-    /* ดึง user_id จาก localStorage เพื่อใช้จัดการรายการโปรด */
-  }
   const userId =
     typeof window !== "undefined" ? localStorage.getItem("user_id") : null;
 
@@ -84,28 +88,43 @@ export default function CastleDetailPage() {
 
     setLoading(true);
     setError(null);
-    const targetUrl = `${API_BASE}/castles/${id}`;
+
+    const detailUrl = `${API_BASE}/castles/${id}`;
+    const imageUrl = `${API_BASE}/manage-castle/${id}/images`;
 
     try {
-      const res = await fetch(targetUrl, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        next: { revalidate: 0 },
-      } as RequestInit);
+      const [detailRes, imageRes] = await Promise.all([
+        fetch(detailUrl, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          next: { revalidate: 0 },
+        } as RequestInit),
+        fetch(imageUrl, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          next: { revalidate: 0 },
+        } as RequestInit),
+      ]);
 
-      if (!res.ok) {
-        throw new Error(`Server error: ${res.status} ${res.statusText}`);
+      if (!detailRes.ok) {
+        throw new Error(`Server error: ${detailRes.status} ${detailRes.statusText}`);
       }
 
-      const d = await res.json();
+      const d = await detailRes.json();
       setData(d);
 
-      {
-        /* ตรวจสอบสถานะการกดถูกใจและดึง ID จากฐานข้อมูล */
+      if (imageRes.ok) {
+        const imgJson = await imageRes.json();
+        setImages(Array.isArray(imgJson?.data) ? imgJson.data : []);
+      } else {
+        setImages([]);
       }
+
       if (userId) {
         try {
-          const favCheck = await api.get(`/interests/check?user_id=${userId}&castle_id=${d.castle_id}`);
+          const favCheck = await api.get(
+            `/interests/check?user_id=${userId}&castle_id=${d.castle_id}`
+          );
           setFav(favCheck.data.is_favorite);
           if (favCheck.data.interest_id) {
             setInterestId(favCheck.data.interest_id);
@@ -118,7 +137,7 @@ export default function CastleDetailPage() {
       console.error("Fetch failure:", err);
       setError({
         message: "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ Backend ได้",
-        url: targetUrl,
+        url: detailUrl,
       });
     } finally {
       setLoading(false);
@@ -129,9 +148,6 @@ export default function CastleDetailPage() {
     fetchData();
   }, [id]);
 
-  {
-    /* ฟังก์ชันจัดการการเพิ่มและลบ รายการโปรดแบบ Toggle */
-  }
   const toggleFavorite = async () => {
     if (!userId) {
       addToast({ title: "กรุณาเข้าสู่ระบบก่อนทำรายการ", color: "warning" });
@@ -140,9 +156,6 @@ export default function CastleDetailPage() {
 
     try {
       if (!fav) {
-        {
-          /* กรณี: ยังไม่เป็นรายการโปรด -> ให้เพิ่ม (POST) */
-        }
         const res = await api.post("/interests", {
           user_id: parseInt(userId),
           castle_id: data?.castle_id,
@@ -154,15 +167,11 @@ export default function CastleDetailPage() {
         }
         setFav(true);
       } else {
-        {
-          /* กรณี: เป็นรายการโปรดอยู่แล้ว -> ให้ลบออก (DELETE) */
-        }
         if (interestId) {
           await api.delete(`/interests/${interestId}`);
           setFav(false);
           setInterestId(null);
         } else {
-          // ถ้าไม่มี ID ให้ลองดึงข้อมูลใหม่อีกครั้ง
           fetchData();
         }
       }
@@ -171,26 +180,39 @@ export default function CastleDetailPage() {
     }
   };
 
-  const gallery = useMemo(
-    () => getCastleGalleryByName(data?.castle_name || ""),
-    [data?.castle_name],
-  );
-  const hero = gallery.cover || "/assets/card/placeholder.jpg";
-  const side = gallery.others?.length ? gallery.others : [hero, hero, hero];
+const displayImages = useMemo(() => {
+  const ordered = [...images].sort((a, b) => {
+    if (a.is_cover === b.is_cover) return a.sort_order - b.sort_order;
+    return a.is_cover ? -1 : 1;
+  });
+
+  const urls = ordered.map((img) => img.img_url).filter(Boolean);
+  const placeholder = "/assets/card/placeholder.jpg";
+
+  if (urls.length === 0) return [placeholder, placeholder, placeholder];
+  if (urls.length === 1) return [urls[0], urls[0], urls[0]];
+  if (urls.length === 2) return [urls[0], urls[1], urls[1]];
+  return urls.slice(0, 3);
+}, [images]);
+
+const hero = displayImages[0];
+const sideImages = [displayImages[1], displayImages[2]];
+
   const locationText =
     [data?.subdistrict, data?.district, data?.province]
       .filter(Boolean)
       .join(" • ") || "ไม่ระบุตำแหน่ง";
 
-  if (loading)
+  if (loading) {
     return (
       <div className="mx-auto max-w-7xl p-8 space-y-6 animate-pulse">
         <div className="h-10 w-32 bg-stone-200 rounded-lg" />
         <div className="h-[500px] bg-stone-200 rounded-3xl" />
       </div>
     );
+  }
 
-  if (error)
+  if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh] p-6 text-center">
         <div className="bg-rose-50 p-8 rounded-[2.5rem] border border-rose-100 max-w-lg shadow-xl shadow-rose-100/50">
@@ -224,6 +246,7 @@ export default function CastleDetailPage() {
         </div>
       </div>
     );
+  }
 
   if (!data) return null;
 
@@ -231,7 +254,6 @@ export default function CastleDetailPage() {
     <div>
       <Navbars />
       <div className="mx-auto max-w-7xl pb-12 space-y-8 p-4 md:p-8">
-        {/* 1. Back Button - บนสุด */}
         <div className="flex">
           <Button
             as={Link}
@@ -247,7 +269,6 @@ export default function CastleDetailPage() {
           </Button>
         </div>
 
-        {/* 2. Title & Chips - อยู่ใต้ปุ่มย้อนกลับ */}
         <div className="space-y-4">
           <h1 className="text-4xl md:text-5xl font-black tracking-tight text-[#3E2723]">
             {data.castle_name}
@@ -271,19 +292,18 @@ export default function CastleDetailPage() {
           </div>
         </div>
 
-        {/* 3. Main Content Grid - รูปภาพและ Sidebar เริ่มต้นระดับเดียวกัน */}
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
           <div className="lg:col-span-8 space-y-8">
-            {/* Image Display */}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-4 sm:grid-rows-2 h-[450px]">
               <div className="sm:col-span-3 sm:row-span-2 overflow-hidden rounded-2xl border-4 border-white shadow-2xl shadow-stone-200/50">
                 <img
                   src={hero}
                   className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
-                  alt="Hero"
+                  alt={data.castle_name}
                 />
               </div>
-              {side.slice(0, 2).map((src, i) => (
+
+              {sideImages.map((src, i) => (
                 <div
                   key={i}
                   className="hidden sm:block overflow-hidden rounded-2xl border-4 border-white shadow-xl shadow-stone-200/40"
@@ -291,13 +311,12 @@ export default function CastleDetailPage() {
                   <img
                     src={src}
                     className="h-full w-full object-cover transition-transform duration-500 hover:scale-110"
-                    alt="Sub"
+                    alt={`${data.castle_name}-${i + 1}`}
                   />
                 </div>
               ))}
             </div>
 
-            {/* Description Sections */}
             <div className="space-y-8">
               <section className="relative overflow-hidden rounded-2xl bg-white p-8 ring-1 ring-stone-200 shadow-sm shadow-stone-100">
                 <div className="flex items-center gap-3 mb-6 text-[#8B4513]">
@@ -344,7 +363,6 @@ export default function CastleDetailPage() {
             </div>
           </div>
 
-          {/* Sidebar Actions */}
           <aside className="lg:col-span-4 space-y-6">
             <div className="sticky top-8 space-y-6">
               <div className="rounded-2xl bg-white p-6 shadow-[0_20px_50px_rgba(0,0,0,0.05)] ring-1 ring-stone-100">
@@ -352,7 +370,6 @@ export default function CastleDetailPage() {
                   วางแผนการเดินทาง
                 </h3>
                 <div className="flex flex-col gap-3">
-                  {/* ปุ่ม Favorite ที่รองรับทั้งการเพิ่มและลบรายการ */}
                   <Button
                     fullWidth
                     size="md"
@@ -361,13 +378,13 @@ export default function CastleDetailPage() {
                       <Heart
                         className={cn(
                           "h-5 w-5",
-                          fav ? "fill-current text-rose-500" : "text-white",
+                          fav ? "fill-current text-rose-500" : "text-white"
                         )}
                       />
                     }
                     className={cn(
                       "bg-[#5D4037] text-white font-bold transition-all justify-start px-6",
-                      fav && "ring-4 ring-[#D2B48C]/30",
+                      fav && "ring-4 ring-[#D2B48C]/30"
                     )}
                   >
                     {fav ? "บันทึกแล้ว" : "เพิ่มในรายการโปรด"}

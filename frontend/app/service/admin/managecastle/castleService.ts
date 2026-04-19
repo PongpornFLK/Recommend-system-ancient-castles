@@ -34,6 +34,17 @@ export type CastleType = {
   longitude?: number | string;
 };
 
+// ================== #TYPE รูป ==================
+export type CastleImageType = {
+  img_id: number;
+  castle_id: number;
+  img_url: string;
+  img_description?: string;
+  is_cover: boolean;
+  sort_order: number;
+  created_at?: string;
+};
+
 // ================== #PAYLOAD เพิ่มปราสาท ==================
 export type AddCastlePayload = {
   castle_name: string;
@@ -80,6 +91,56 @@ export const updateCastle = async (
 // ================== #ลบปราสาท ==================
 export const deleteCastle = async (castleId: number) => {
   const response = await api.delete(`/manage-castle/delete/${castleId}`);
+  return response.data;
+};
+
+// ================== #อัปโหลดรูปจริงของปราสาท ==================
+export const uploadCastleImages = async (
+  castleId: number,
+  files: File[],
+  descriptions: string[] = [],
+  coverIndex: number = 0
+) => {
+  const formData = new FormData();
+
+  files.forEach((file) => {
+    formData.append("files", file);
+  });
+
+  formData.append("descriptions", descriptions.join("|||"));
+  formData.append("cover_index", String(coverIndex));
+
+  const response = await api.post(
+    `/manage-castle/upload-images/${castleId}`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+
+  return response.data;
+};
+
+// ================== #ดึงรูปตามปราสาท ==================
+export const getCastleImages = async (
+  castleId: number
+): Promise<CastleImageType[]> => {
+  const response = await api.get(`/manage-castle/${castleId}/images`);
+  const data = response.data?.data || [];
+  return Array.isArray(data) ? data : [];
+};
+
+// ================== #ลบรูป ==================
+export const deleteCastleImage = async (imgId: number) => {
+  const response = await api.delete(`/manage-castle/image/${imgId}`);
+  return response.data;
+};
+
+// ================== #ตั้งรูปปก ==================
+export const setCoverImage = async (imgId: number) => {
+  const response = await api.put(`/manage-castle/image/${imgId}/cover`);
   return response.data;
 };
 

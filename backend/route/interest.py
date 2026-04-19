@@ -1,13 +1,34 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from db import get_db
-from model.model import Interest, Castle # มั่นใจว่ามี Model เหล่านี้ใน model.py
-from schemas.schemas import InterestCreate, InterestResponse # สร้าง Schema รองรับ
+from model.model import Interest, Castle
+from schemas.schemas import InterestCreate, InterestResponse
 from typing import List, Annotated
 from loguru import logger
 router = APIRouter(prefix="/interests", tags=["interests"])
 from authen.secur import *
+def fetch_cover_images_map(db: Session, castle_ids: list[int]) -> dict[int, str]:
+    if not castle_ids:
+        return {}
 
+    ids = list(set([int(cid) for cid in castle_ids if cid is not None]))
+    if not ids:
+        return {}
+
+    placeholders = ", ".join([str(cid) for cid in ids])
+
+    sql = text(f"""
+        SELECT DISTINCT ON (i.castle_id)
+            i.castle_id,
+            i.img_url
+        FROM images i
+        WHERE i.castle_id IN ({placeholders})
+        ORDER BY i.castle_id, i.is_cover DESC, i.sort_order ASC, i.img_id ASC
+    """)
+
+    rows = db.execute(sql).mappings().all()
+    return {r["castle_id"]: r["img_url"] for r in rows}
 
 # ตรวจสอบว่า User คนนี้กดใจสถานที่นี้ไปหรือยัง
 @router.get("/check")
@@ -54,7 +75,7 @@ def add_favorite(
 # ดึงรายการโปรดทั้งหมดของ User
 @router.get("/{user_id}")
 def get_user_favorites(
-    user_id: int, 
+    user_id: int,
     db: Session = Depends(get_db),
     current_user: dict = Depends(getCurrentUser)
 ):
@@ -63,18 +84,26 @@ def get_user_favorites(
         raise HTTPException(status_code=403, detail="Not authorized")
 
     try:
-        results = db.query(Interest, Castle).join(
-            Castle, Interest.castle_id == Castle.castle_id
-        ).filter(Interest.user_id == user_id).all()
-        
+        results = (
+            db.query(Interest, Castle)
+            .join(Castle, Interest.castle_id == Castle.castle_id)
+            .filter(Interest.user_id == user_id)
+            .all()
+        )
+
+        castle_ids = [row.Castle.castle_id for row in results]
+        cover_map = fetch_cover_images_map(db, castle_ids)
+
         output = []
         for row in results:
             output.append({
                 "interest_id": row.Interest.interest_id,
                 "castle_id": row.Castle.castle_id,
                 "castle_name": row.Castle.castle_name,
-                "user_id": row.Interest.user_id
+                "user_id": row.Interest.user_id,
+                "cover_image": cover_map.get(row.Castle.castle_id),
             })
+
         return output
     except Exception as e:
         logger.error(f"Error fetching favorites: {e}")

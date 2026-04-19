@@ -3,7 +3,6 @@
 import React, { useMemo } from "react";
 import { Landmark, History, Info, ArrowRight, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { getCastleGalleryByName } from "@/app/lib/castleImages";
 
 interface Castle {
   castle_id: number;
@@ -11,14 +10,17 @@ interface Castle {
   era: string;
   type_detail: string;
   architecture: string;
-  festivals?: string; 
-  is_recommended?: boolean; 
+  festivals?: string;
+  is_recommended?: boolean;
+  cover_image?: string | null;
 }
 
 export default function CardLanding({ castle }: { castle: Castle }) {
   // ค้นหารูปภาพที่ตรงกับชื่อปราสาทโดยใช้ useMemo เพื่อประสิทธิภาพ
-  const gallery = useMemo(() => getCastleGalleryByName(castle.castle_name), [castle.castle_name]);
-  const imageUrl = gallery.cover || "/assets/card/placeholder.jpg";
+  const imageUrl = useMemo(
+    () => castle.cover_image || "/assets/card/placeholder.jpg",
+    [castle.cover_image]
+  );
 
   return (
     <div className="group relative overflow-hidden rounded-[2.5rem] border border-stone-200 bg-white shadow-sm transition-all hover:-translate-y-2 hover:shadow-2xl hover:ring-2 hover:ring-[#D2B48C]/30">

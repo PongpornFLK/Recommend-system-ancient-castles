@@ -19,6 +19,8 @@ import {
   getCastleId,
   deleteCastle,
   updateCastle,
+  uploadCastleImages,
+  getCastleImages,
   uploadImageVector,
   uploadDocumentVector,
   addNearbyPlace,
@@ -40,6 +42,10 @@ export default function ManageCastle() {
   const [loading, setLoading] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedCastle, setSelectedCastle] = useState<CastleType | null>(null);
+  const [existingImageCount, setExistingImageCount] = useState(0);
+  const [editImageFiles, setEditImageFiles] = useState<File[]>([]);
+  const [editImageDescriptions, setEditImageDescriptions] = useState<string[]>([]);
+  const [editCoverIndex, setEditCoverIndex] = useState(0);
 
   // STATE Nearby
   const [nearbyPlaces, setNearbyPlaces] = useState<any[]>([]);
@@ -180,35 +186,76 @@ export default function ManageCastle() {
   };
 
   const handleUpdate = async () => {
-    if (!selectedCastle) return;
+  if (!selectedCastle) return;
 
-    const castleId = getCastleId(selectedCastle);
-    if (!castleId) return;
+  const castleId = getCastleId(selectedCastle);
+  if (!castleId) return;
 
-    try {
-      const payload = {
-        castle_name: selectedCastle.castle_name,
-        castle_description: selectedCastle.castle_description || "",
-        era: selectedCastle.era || "",
-        architecture_detail: selectedCastle.architecture_detail || "",
-        type_id: Number(selectedCastle.type_id) || 0,
-        province: selectedCastle.province || "",
-        district: selectedCastle.district || "",
-        sub_district: selectedCastle.sub_district || "",
-        latitude: Number(selectedCastle.latitude) || 0,
-        longitude: Number(selectedCastle.longitude) || 0,
-      };
+  try {
+    const payload = {
+      castle_name: selectedCastle.castle_name?.trim() || "",
+      castle_description: selectedCastle.castle_description || "",
+      era: selectedCastle.era || "",
+      architecture_detail: selectedCastle.architecture_detail || "",
+      type_id: Number(selectedCastle.type_id),
+      province: selectedCastle.province || "",
+      district: selectedCastle.district || "",
+      sub_district: selectedCastle.sub_district || "",
+      latitude: Number(selectedCastle.latitude),
+      longitude: Number(selectedCastle.longitude),
+    };
 
-      await updateCastle(castleId, payload);
-
-      addToast({ title: "แก้ไขสำเร็จ", color: "success" });
-      setIsEditOpen(false);
-      setSelectedCastle(null);
-      fetchCastles();
-    } catch (error) {
-      console.log("Update Error", error);
+    if (!payload.castle_name) {
+      addToast({ title: "กรุณากรอกชื่อปราสาท", color: "warning" });
+      return;
     }
-  };
+
+    if (!payload.type_id || Number.isNaN(payload.type_id)) {
+      addToast({ title: "กรุณาระบุ Type ID ให้ถูกต้อง", color: "warning" });
+      return;
+    }
+
+    if (Number.isNaN(payload.latitude) || Number.isNaN(payload.longitude)) {
+      addToast({
+        title: "Latitude และ Longitude ต้องเป็นตัวเลข",
+        color: "warning",
+      });
+      return;
+    }
+    if (existingImageCount + editImageFiles.length > 3) {
+      addToast({
+        title: `สถานที่นี้มีได้สูงสุด 3 รูป ปัจจุบันมี ${existingImageCount} รูป`,
+        color: "warning",
+      });
+      return;
+    }
+    await updateCastle(castleId, payload);
+
+    if (editImageFiles.length > 0) {
+      await uploadCastleImages(
+        castleId,
+        editImageFiles,
+        editImageDescriptions,
+        editCoverIndex
+      );
+    }
+
+    addToast({ title: "แก้ไขสำเร็จ", color: "success" });
+    setIsEditOpen(false);
+    setSelectedCastle(null);
+    resetEditImageState();
+    fetchCastles();
+  } catch (error: any) {
+    console.log("Update Error", error);
+    console.log("error.response", error?.response);
+    console.log("error.response.data", error?.response?.data);
+
+    addToast({
+      title: error?.response?.data?.detail || "แก้ไขไม่สำเร็จ",
+      color: "danger",
+    });
+  }
+};
 
   const handleUpdateNearby = async () => {
     if (!selectedNearby) return;
@@ -233,10 +280,25 @@ export default function ManageCastle() {
     }
   };
 
-  const openEditModal = (castle: CastleType) => {
-    setSelectedCastle(castle);
-    setIsEditOpen(true);
-  };
+  const openEditModal = async (castle: CastleType) => {
+  setSelectedCastle(castle);
+  resetEditImageState();
+
+  const castleId = getCastleId(castle);
+  if (castleId) {
+    try {
+      const imgs = await getCastleImages(castleId);
+      setExistingImageCount(imgs.length);
+    } catch (error) {
+      console.log("Load castle images error", error);
+      setExistingImageCount(0);
+    }
+  } else {
+    setExistingImageCount(0);
+  }
+
+  setIsEditOpen(true);
+};
 
   const resetVectorModal = () => {
     setSelectedVectorCastleId("");
@@ -244,6 +306,42 @@ export default function ManageCastle() {
     setSelectedDocCastleId("");
     setSelectedDocFile(null);
   };
+  const resetEditImageState = () => {
+  setEditImageFiles([]);
+  setEditImageDescriptions([]);
+  setEditCoverIndex(0);
+};
+
+const handleEditImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const files = Array.from(e.target.files || []);
+  const remaining = 3 - existingImageCount;
+
+  if (remaining <= 0) {
+    addToast({
+      title: "สถานที่นี้มีรูปครบ 3 รูปแล้ว",
+      color: "warning",
+    });
+    return;
+  }
+
+  if (files.length > remaining) {
+    addToast({
+      title: `เพิ่มได้อีก ${remaining} รูปเท่านั้น`,
+      color: "warning",
+    });
+    return;
+  }
+
+  setEditImageFiles(files);
+  setEditImageDescriptions(files.map((f) => f.name));
+  setEditCoverIndex(0);
+};
+
+const handleEditImageDescriptionChange = (index: number, value: string) => {
+  setEditImageDescriptions((prev) =>
+    prev.map((item, i) => (i === index ? value : item))
+  );
+};
 
   return (
     <section className="min-h-screen bg-stone-50 relative pb-10">
@@ -810,6 +908,7 @@ export default function ManageCastle() {
             if (!open) {
               setIsEditOpen(false);
               setSelectedCastle(null);
+              resetEditImageState();
             }
           }}
           size="2xl"
@@ -859,6 +958,22 @@ export default function ManageCastle() {
                           value={selectedCastle.architecture_detail || ""}
                           onChange={(e) => setSelectedCastle({ ...selectedCastle, architecture_detail: e.target.value })}
                         />
+                          <div className="flex flex-col gap-1 w-full">
+                        <label className="text-sm font-bold text-stone-700">
+                          Type ID <span className="text-danger">*</span>
+                        </label>
+                        <Input
+                          type="number"
+                          className="font-bold"
+                          placeholder="Type ID"
+                          startContent={<TextAlignJustify size={18} className="text-stone-400" />}
+                          variant="bordered"
+                          value={String(selectedCastle.type_id || "")}
+                          onChange={(e) =>
+                            setSelectedCastle({ ...selectedCastle, type_id: e.target.value })
+                          }
+                        />
+                      </div>
                       </div>
                       <div className="flex flex-col gap-1 w-full">
                         <label className="text-sm font-bold text-stone-700">Province</label>
@@ -933,12 +1048,64 @@ export default function ManageCastle() {
                     </div>
                   </Form>
                 </ModalBody>
+                <div className="w-full flex flex-col gap-3 rounded-2xl border border-stone-200 p-4 bg-stone-50 mt-4">
+  <label className="text-sm font-bold text-stone-700">
+    เพิ่มรูปให้ปราสาทนี้
+  </label>
+  <p className="text-xs text-stone-500">
+    สถานที่นี้มีรูปแล้ว {existingImageCount} / 3 รูป
+  </p>
+  <input
+    type="file"
+    accept="image/*"
+    multiple
+    onChange={handleEditImageChange}
+    className="w-full border-2 border-stone-100 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-orange-400"
+  />
+
+  {editImageFiles.length > 0 && (
+    <div className="space-y-3">
+      {editImageFiles.map((file, index) => (
+        <div
+          key={`${file.name}-${index}`}
+          className="rounded-xl border border-stone-200 bg-white p-3"
+        >
+          <div className="text-sm font-semibold text-stone-700 mb-2">
+            {file.name}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-center">
+            <Input
+              variant="bordered"
+              placeholder="คำอธิบายรูป"
+              value={editImageDescriptions[index] || ""}
+              onChange={(e) =>
+                handleEditImageDescriptionChange(index, e.target.value)
+              }
+            />
+
+            <label className="flex items-center gap-2 text-sm font-medium text-stone-700">
+              <input
+                type="radio"
+                name="edit-cover-image"
+                checked={editCoverIndex === index}
+                onChange={() => setEditCoverIndex(index)}
+              />
+              ตั้งเป็นรูปปก
+            </label>
+          </div>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
                 <ModalFooter className="pb-8">
                   <Button
                     variant="light"
                     onClick={() => {
                       setIsEditOpen(false);
                       setSelectedCastle(null);
+                      resetEditImageState();
                     }}
                     className="text-stone-500 font-bold"
                   >

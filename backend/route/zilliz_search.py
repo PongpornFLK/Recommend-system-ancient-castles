@@ -237,6 +237,7 @@ def detect_castle_from_query(db: Session, query: str) -> Optional[Dict[str, Any]
 # DB Helpers
 # =========================
 def fetch_castles_map(db: Session, castle_ids: List[int]) -> Dict[int, Dict[str, Any]]:
+    
     if not castle_ids:
         return {}
 
@@ -275,7 +276,27 @@ def fetch_castles_map(db: Session, castle_ids: List[int]) -> Dict[int, Dict[str,
     rows = db.execute(sql).mappings().all()
     return {r["castle_id"]: dict(r) for r in rows}
 
+def fetch_cover_images_map(db: Session, castle_ids: List[int]) -> Dict[int, Optional[str]]:
+    if not castle_ids:
+        return {}
 
+    ids = list(set([int(cid) for cid in castle_ids if cid is not None]))
+    if not ids:
+        return {}
+
+    placeholders = ", ".join([str(cid) for cid in ids])
+
+    sql = text(f"""
+        SELECT DISTINCT ON (i.castle_id)
+            i.castle_id,
+            i.img_url
+        FROM images i
+        WHERE i.castle_id IN ({placeholders})
+        ORDER BY i.castle_id, i.is_cover DESC, i.sort_order ASC, i.img_id ASC
+    """)
+
+    rows = db.execute(sql).mappings().all()
+    return {r["castle_id"]: r["img_url"] for r in rows}
 def get_castle_location(db: Session, castle_id: int) -> Optional[Dict[str, Any]]:
     sql = text("""
         SELECT
@@ -624,6 +645,7 @@ def qa(req: QAReq, db: Session = Depends(get_db)):
         # TRAVEL QUERY
         if intents["is_travel_query"]:
             if matched_castle_id is None:
+                cover_map = fetch_cover_images_map(db, [matched_castle_id] if matched_castle_id else [])
                 return {
                     "answer": "### แนะนำการเดินทาง\nขออภัย ระบบยังไม่สามารถระบุสถานที่ปลายทางจากคำถามนี้ได้",
                     "intent": "travel_no_castle",
@@ -663,7 +685,12 @@ def qa(req: QAReq, db: Session = Depends(get_db)):
                     events,
                 ),
                 "intent": "travel",
-                "castles": [current_castle_info] if current_castle_info else [],
+                "castles": [
+                        {
+                            **current_castle_info,
+                            "cover_image": cover_map.get(matched_castle_id)
+                        }
+                    ] if current_castle_info else [],
                 "hits": [],
                 "nearby_places": nearby_places,
                 "events": events,
@@ -686,14 +713,19 @@ def qa(req: QAReq, db: Session = Depends(get_db)):
         # NEARBY QUERY
         if intents["is_nearby_query"] and matched_castle_id:
             nearby_places = get_nearby_places(db, matched_castle_id, limit=10)
-
+            cover_map = fetch_cover_images_map(db, [matched_castle_id])
             return {
                 "answer": build_nearby_answer(
                     current_castle_info or {"castle_name": "ไม่ระบุ"},
                     nearby_places
                 ),
                 "intent": "nearby",
-                "castles": [current_castle_info] if current_castle_info else [],
+                "castles": [
+                    {
+                        **current_castle_info,
+                        "cover_image": cover_map.get(matched_castle_id)
+                    }
+                ] if current_castle_info else [],
                 "hits": [],
                 "nearby_places": nearby_places,
                 "events": [],
@@ -720,7 +752,7 @@ def qa(req: QAReq, db: Session = Depends(get_db)):
                 only_upcoming=intents["is_upcoming_query"],
                 limit=10,
             )
-
+            cover_map = fetch_cover_images_map(db, [matched_castle_id])
             return {
                 "answer": build_event_answer(
                     current_castle_info or {"castle_name": "ไม่ระบุ"},
@@ -729,7 +761,12 @@ def qa(req: QAReq, db: Session = Depends(get_db)):
                     is_upcoming_query=intents["is_upcoming_query"],
                 ),
                 "intent": "event",
-                "castles": [current_castle_info] if current_castle_info else [],
+                "castles": [
+                    {
+                        **current_castle_info,
+                        "cover_image": cover_map.get(matched_castle_id)
+                    }
+                ] if current_castle_info else [],
                 "hits": [],
                 "nearby_places": [],
                 "events": events,
@@ -920,7 +957,7 @@ def qa(req: QAReq, db: Session = Depends(get_db)):
             info = castle_map.get(cid)
             if not info:
                 continue
-
+            cover_map = fetch_cover_images_map(db, list(related_castles))
             castles_out.append({
                 "castle_id": info["castle_id"],
                 "castle_name": info["castle_name"],
@@ -929,8 +966,8 @@ def qa(req: QAReq, db: Session = Depends(get_db)):
                 "type_detail": info["type_detail"],
                 "architecture": info["architecture"],
                 "festivals": info.get("festivals_info") or "ไม่มีกิจกรรม",
+                "cover_image": cover_map.get(cid),
             })
-
         final_intent = "general_vector_with_keyword" if matched_castle_id else "general_vector_direct"
 
         return {
@@ -1013,6 +1050,7 @@ def search_images(
             }
 
         castle_map = fetch_castles_map(db, list(set(castle_ids)))
+        cover_map = fetch_cover_images_map(db, list(set(castle_ids)))
         
         #จัดกลุ่มผลลัพธ์ภาพและส่งกลับสู่ Front-end
         best_by_castle = {}
@@ -1039,8 +1077,8 @@ def search_images(
                 "architecture": c["architecture"] or "ไม่มีข้อมูล",
                 "festivals": c.get("festivals_info") or "ไม่มีข้อมูลกิจกรรม",
                 "best_score": float(best),
+                "cover_image": cover_map.get(cid),
             })
-
         return {"hits": hits, "castles": castles}
 
     except Exception as e:

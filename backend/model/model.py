@@ -176,8 +176,17 @@ class Image(Base):
     __tablename__ = "images"
 
     img_id = Column(Integer, primary_key=True, index=True)
-    castle_id = Column(Integer, ForeignKey("castles.castle_id"))
-    img_description = Column(Text)    
+    castle_id = Column(
+        Integer,
+        ForeignKey("castles.castle_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+    img_description = Column(Text, nullable=True)
+    img_url = Column(Text, nullable=False)
+    is_cover = Column(Boolean, nullable=False, server_default="false")
+    sort_order = Column(Integer, nullable=False, server_default="0")
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     # image_vector = Column(Vector(512))
 
     castle = relationship("Castle", back_populates="images")

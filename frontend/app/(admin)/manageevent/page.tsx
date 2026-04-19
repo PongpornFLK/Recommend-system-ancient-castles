@@ -92,13 +92,19 @@ export default function ManageEvent() {
     [deleteEventHook, fetchEvents, page, rowSize],
   );
 
+  const formatLocalDate = (date: Date) => {
+    const offset = date.getTimezoneOffset();
+    const adjustedDate = new Date(date.getTime() - offset * 60 * 1000);
+    return adjustedDate.toISOString().split("T")[0];
+  };
+
   const updateEvent = async () => {
     try {
       await updateEventHook(eventId, {
         event_name: eventName,
         event_description: description,
-        event_start_date: startDate.toISOString().split("T")[0], // Format as YYYY-MM-DD
-        event_end_date: endDate.toISOString().split("T")[0],
+        event_start_date: formatLocalDate(startDate),
+        event_end_date: formatLocalDate(endDate),
         event_start_time: starTime?.toString(),
         event_end_time: endTime?.toString(),
         castle_id: parseInt(castleId),

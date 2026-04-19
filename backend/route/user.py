@@ -111,7 +111,7 @@ def createUser(user: UserCreate, db: Session = Depends(get_db)):
 @router.get("", response_model=Page[UserResponse])
 def readUserAll(
     page: int = 1,
-    size: int = 10,
+    size: int = 20,
     db: Session = Depends(get_db),
     current_user: Annotated[dict, Depends(getCurrentUser)] = None,
 ):

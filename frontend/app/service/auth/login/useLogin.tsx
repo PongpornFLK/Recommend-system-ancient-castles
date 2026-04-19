@@ -51,7 +51,9 @@ export default function useLogin() {
           title: "Login Success",
           description: "Role : User",
           classNames: {
-            closeButton: "opacity-100 absolute right-4 top-1/2 -translate-y-1/2 font-bold",
+            title: "text-white text-md font-semibold",
+            description: "text-white",
+            closeButton: "opacity-100 absolute right-4 top-1/2 -translate-y-1/2 font-bold text-white",
           },
           closeIcon: <X />,
           color: "success",
@@ -63,7 +65,9 @@ export default function useLogin() {
           title: "Login Success",
           description: "Role : Admin",
           classNames: {
-            closeButton: "opacity-100 absolute right-4 top-1/2 -translate-y-1/2 font-bold",
+            title: "text-white text-md font-semibold",
+            description: "text-white",
+            closeButton: "opacity-100 absolute right-4 top-1/2 -translate-y-1/2 font-bold text-white",
           },
           closeIcon: <X />,
           color: "success",

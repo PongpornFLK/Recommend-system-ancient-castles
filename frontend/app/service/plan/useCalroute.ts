@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useJsApiLoader } from "@react-google-maps/api";
 
 export default function useCalroute() {
-  const { isLoaded } = useJsApiLoader({
+  const { isLoaded } = useJsApiLoader({ // โหลด Google Maps API
     id: "google-map-script",
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string,
   });
@@ -36,12 +36,12 @@ export default function useCalroute() {
         waypoints:
           nearbyplace && nearbyplace.length > 0
             ? nearbyplace.map((place) => ({
-                location: new google.maps.LatLng(
-                  place.latitude,
-                  place.longitude,
-                ),
-                stopover: true,
-              }))
+              location: new google.maps.LatLng(
+                place.latitude,
+                place.longitude,
+              ),
+              stopover: true,
+            }))
             : [],
         destination: new google.maps.LatLng(
           destination.location.latitude,
@@ -51,10 +51,10 @@ export default function useCalroute() {
       },
       (result, status) => {
         if (status === "OK" && result) {
-          const current = result.routes[0];
+          const current = result.routes[0]; // routes[0] คือเส้นทางแรก
           let totalDistance = 0;
           let totalTime = 0;
-          current.legs.forEach((leg) => {
+          current.legs.forEach((leg) => { // legs คือข้อมูลของแต่ละเส้นทาง
             totalDistance += leg.distance?.value || 0;
             totalTime += leg.duration?.value || 0;
           });
@@ -66,5 +66,5 @@ export default function useCalroute() {
     setLoading(false);
   };
 
-  return { calRoute, loading,kilo , hours ,minute};
+  return { calRoute, loading, kilo, hours, minute };
 }

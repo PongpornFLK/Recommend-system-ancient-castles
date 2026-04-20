@@ -9,12 +9,12 @@ import Direction from "./direction";
 
 export default function ViewMap() {
   const { routeData } = useRoutedata();
-  const { isLoaded } = useJsApiLoader({
+  const { isLoaded } = useJsApiLoader({ // โหลด Google Maps API
     id: "google-map-script",
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string,
   });
   const [direction, setDirection] =
-    useState<google.maps.DirectionsResult | null>(null);
+    useState<google.maps.DirectionsResult | null>(null); // เก็บข้อมูลทิศทาง
 
   console.log("routeData:", routeData);
 

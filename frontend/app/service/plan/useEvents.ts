@@ -27,6 +27,7 @@ export default function useEvents() {
       try {
         const response = await api.get(`/event/description/${castle_id}`);
         setEvents(response.data);
+        console.log("Get Events Data :", response.data);
       } catch (err) {
         console.error("Failed to fetch events", err);
       } finally {
@@ -35,6 +36,7 @@ export default function useEvents() {
     };
     fetchEvents();
   }, [castle_id]);
+  // re-useEffect เมื่อ castle_id เปลี่ยน
 
   return { events, loading };
 }

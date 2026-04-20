@@ -21,7 +21,7 @@ export default function useRoutedata() {
       if (myRoute) {
         const route = JSON.parse(myRoute);
         setRouteData(route);
-        // console.log("Route Data :", route);
+        console.log("Get Route Data :", route);
 
       } else {
         console.log("No route data found in localStorage");

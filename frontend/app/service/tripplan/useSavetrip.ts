@@ -27,6 +27,7 @@ export default function useSaveTrip() {
     try {
       const data = { ...tripData, itinerary_data: itinerary };
       const response = await api.post("/trip/create", data);
+
       console.log("Save", response.data);
       router.push("/tripplan");
     } catch (err) {

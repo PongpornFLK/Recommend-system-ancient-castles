@@ -20,7 +20,7 @@ export default function useCurrentuser(namePlace: (address: string) => void) {
       const lng = pos.coords.longitude;
 
       setLocation({ lat: lat, lng: lng });
-      // console.log("lat:", lat, "lng:", lng);
+      console.log("lat:", lat, "lng:", lng);
 
       if (isLoaded && window.google) {
         const geocoder = new window.google.maps.Geocoder();
